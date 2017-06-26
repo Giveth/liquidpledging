@@ -32,11 +32,16 @@ contract LiquidPledging is LiquidPledgingBase {
             PaymentState.NotPaid);
 
 
-        doTransfer(0, idNote, amount);
+        Note nTo = findNote(idNote);
+        nTo.amount += amount;
+
+        Transfer(0, idNote, amount);
 
         transfer(idDonor, idNote, amount, idReceiver);
     }
 
+    uint64 public test;
+    uint64 public test2;
 
     function transfer(uint64 idSender, uint64 idNote, uint amount, uint64 idReceiver) {
 
@@ -123,7 +128,7 @@ contract LiquidPledging is LiquidPledgingBase {
             n.delegationChain,
             0,
             0,
-            idNote,
+            n.oldNote,
             PaymentState.Paying
         );
 
@@ -144,7 +149,7 @@ contract LiquidPledging is LiquidPledgingBase {
             n.delegationChain,
             0,
             0,
-            idNote,
+            n.oldNote,
             PaymentState.Paid
         );
 
@@ -162,7 +167,7 @@ contract LiquidPledging is LiquidPledgingBase {
             n.delegationChain,
             0,
             0,
-            idNote,
+            n.oldNote,
             PaymentState.NotPaid
         );
 
@@ -234,6 +239,9 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             n.oldNote,
             PaymentState.NotPaid);
+
+        // If the owner does not change, then just let it this way.
+        if (n.owner == idReceiver) return;
         uint64 toNote = findNote(
                 idReceiver,
                 new uint64[](0),
@@ -286,13 +294,15 @@ contract LiquidPledging is LiquidPledgingBase {
                 n.owner,
                 n.delegationChain,
                 idReceiver,
-                uint64(now + owner.commitTime),
+                uint64(getTime() + owner.commitTime),
                 n.oldNote,
                 PaymentState.NotPaid);
         doTransfer(idNote, toNote, amount);
     }
 
     function doTransfer(uint64 from, uint64 to, uint amount) internal {
+        if (from == to) return;
+        if (amount == 0) return;
         Note nFrom = findNote(from);
         Note nTo = findNote(to);
         if (nFrom.amount < amount) throw;
@@ -307,7 +317,7 @@ contract LiquidPledging is LiquidPledgingBase {
         if (n.paymentState != PaymentState.NotPaid) return idNote;
 
         // First send to a project if it's proposed and commited
-        if ((n.proposedProject > 0) && ( now > n.commmitTime)) {
+        if ((n.proposedProject > 0) && ( getTime() > n.commmitTime)) {
             uint64 oldNote = findNote(
                 n.owner,
                 n.delegationChain,
@@ -323,12 +333,23 @@ contract LiquidPledging is LiquidPledgingBase {
                 oldNote,
                 PaymentState.NotPaid);
             doTransfer(idNote, toNote, n.amount);
+            idNote = toNote;
         }
 
         toNote = getOldestNoteNotCanceled(idNote);
         if (toNote != idNote) {
             doTransfer(idNote, toNote, n.amount);
         }
+
+        return toNote;
+    }
+
+/////////////
+// Test functions
+/////////////
+
+    function getTime() internal returns (uint) {
+        return now;
     }
 
     event Transfer(uint64 indexed from, uint64 indexed to, uint amount);

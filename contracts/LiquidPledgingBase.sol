@@ -1,12 +1,11 @@
 pragma solidity ^0.4.11;
 
-import "./ILiquidPledging.sol";
+import "./Vault.sol";
 
-contract Vault {
-    function authorizePayment(bytes32 ref, address dest, uint amount);
-}
+contract LiquidPledgingBase {
 
-contract LiquidPledgingBase is ILiquidPledging {
+    enum NoteManagerType { Donor, Delegate, Project }
+    enum PaymentState {NotPaid, Paying, Paid}
 
     struct NoteManager {
         NoteManagerType managerType;
@@ -185,13 +184,13 @@ contract LiquidPledgingBase is ILiquidPledging {
         string name
     ) {
         Note n = findNote(idNote);
-        idDelegate = n.delegationChain[idxDelegate];
+        idDelegate = n.delegationChain[idxDelegate - 1];
         NoteManager delegate = findManager(idDelegate);
         addr = delegate.addr;
         name = delegate.name;
     }
 
-    function numberOfManagers() constant returns(uint) {
+    function numberOfNoteManagers() constant returns(uint) {
         return managers.length - 1;
     }
 
@@ -229,6 +228,7 @@ contract LiquidPledgingBase is ILiquidPledging {
         uint64 idx = hNote2ddx[hNote];
         if (idx > 0) return idx;
         idx = uint64(notes.length);
+        hNote2ddx[hNote] = idx;
         notes.push(Note(0, owner, delegationChain, proposedProject, commmitTime, oldNote, paid));
         return idx;
     }

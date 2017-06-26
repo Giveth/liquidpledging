@@ -24,7 +24,7 @@ contract ILiquidPledging {
     );
 
 
-    function numberOfManagers() constant returns(uint);
+    function numberOfNoteManagers() constant returns(uint);
 
     function getNoteManager(uint64 idManager) constant returns (
         NoteManagerType managerType,
@@ -34,14 +34,20 @@ contract ILiquidPledging {
         address reviewer,
         bool canceled);
 
-    function addDonor(string name, uint commitTime);
-    function updateDonor(uint64 idDonor, address newAddr, string newName, uint newCommitTime);
+    event DonorAdded(uint64 indexed idMember);
+
+    function addDonor(string name, uint64 commitTime);
+    function updateDonor(
+        uint64 idDonor,
+        address newAddr,
+        string newName,
+        uint64 newCommitTime);
 
     function addDelegate(string name);
     function updateDelegate(uint64 idDelegate, address newAddr, string newName);
 
-    function addProject(string name, address canceler, uint commitTime) ;
-    function updateProject(uint64 idProject, address newAddr, string newName, uint newCommitTime);
+    function addProject(string name, address canceler, uint64 commitTime) ;
+    function updateProject(uint64 idProject, address newAddr, string newName, uint64 newCommitTime);
     function updateProjectCanceler(uint64 idProject, address newCanceler);
 
     function donate(uint64 idDonor, uint64 idReceiver) payable;

@@ -1,0 +1,43 @@
+{
+  "name": "liquidpledging",
+  "version": "0.0.1",
+  "description": "Liquid Pledging Smart Contract",
+  "main": "index.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "truffle test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Giveth/liquidpledging.git"
+  },
+  "keywords": [
+    "liquid",
+    "pledging",
+    "tracking",
+    "smart",
+    "contract",
+    "solidity",
+    "donation"
+  ],
+  "author": "Jordi Baylina",
+  "license": "GPL-3.0",
+  "bugs": {
+    "url": "https://github.com/Giveth/liquidpledging/issues"
+  },
+  "devDependencies": {
+    "async": "^2.4.0",
+    "bignumber.js": "^4.0.2",
+    "ethereumjs-testrpc": "^3.0.5",
+    "random-bytes": "^1.0.0",
+    "truffle": "3.2.4",
+    "truffle-hdwallet-provider": "0.0.3",
+    "web3": "^0.18.4"
+  },
+  "homepage": "https://github.com/Giveth/liquidpledging#readme",
+  "dependencies": {
+    "babel-eslint": "^7.2.3"
+  }
+}
