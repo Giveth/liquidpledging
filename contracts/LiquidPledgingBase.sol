@@ -21,7 +21,7 @@ contract LiquidPledgingBase {
         uint64 owner;
         uint64[] delegationChain;
         uint64 proposedProject;
-        uint64 commmitTime;  // At what time the upcoming time will become an owner.
+        uint64 commitTime;  // At what time the upcoming time will become an owner.
         uint64 oldNote;
         PaymentState paymentState;
     }
@@ -164,7 +164,7 @@ contract LiquidPledgingBase {
         uint64 owner,
         uint64 nDelegates,
         uint64 proposedProject,
-        uint64 commmitTime,
+        uint64 commitTime,
         uint64 oldNote,
         PaymentState paymentState
     ) {
@@ -173,7 +173,7 @@ contract LiquidPledgingBase {
         owner = n.owner;
         nDelegates = uint64(n.delegationChain.length);
         proposedProject = n.proposedProject;
-        commmitTime = n.commmitTime;
+        commitTime = n.commitTime;
         oldNote = n.oldNote;
         paymentState = n.paymentState;
     }
@@ -219,17 +219,17 @@ contract LiquidPledgingBase {
         uint64 owner,
         uint64[] delegationChain,
         uint64 proposedProject,
-        uint64 commmitTime,
+        uint64 commitTime,
         uint64 oldNote,
         PaymentState paid
         ) internal returns (uint64)
     {
-        bytes32 hNote = sha3(owner, delegationChain, proposedProject, commmitTime, oldNote, paid);
+        bytes32 hNote = sha3(owner, delegationChain, proposedProject, commitTime, oldNote, paid);
         uint64 idx = hNote2ddx[hNote];
         if (idx > 0) return idx;
         idx = uint64(notes.length);
         hNote2ddx[hNote] = idx;
-        notes.push(Note(0, owner, delegationChain, proposedProject, commmitTime, oldNote, paid));
+        notes.push(Note(0, owner, delegationChain, proposedProject, commitTime, oldNote, paid));
         return idx;
     }
 
@@ -243,23 +243,21 @@ contract LiquidPledgingBase {
         return notes[idNote];
     }
 
-    function getOldestNoteNotCanceled(uint64 idProject) internal constant returns(uint64) {
-        if (idProject == 0) return 0;
-        Note n = findNote(idProject);
+    function getOldestNoteNotCanceled(uint64 idNote) internal constant returns(uint64) {
+        if (idNote == 0) return 0;
+        Note n = findNote(idNote);
         NoteManager owner = findManager(n.owner);
-        if (owner.managerType == NoteManagerType.Donor) return idProject;
+        if (owner.managerType == NoteManagerType.Donor) return idNote;
 
         uint64 parentProject = getOldestNoteNotCanceled(n.oldNote);
-        if (parentProject == n.oldNote) {
-            return idProject;
-        } else {
+
+        if (owner.canceled) {    // Current project is canceled.
+            return parentProject;
+        } else if (parentProject == n.oldNote) {   // None of the top projects is canceled
+            return idNote;
+        } else {                        // Current is not canceled but some ont the top yes
             return parentProject;
         }
-    }
-
-    function isProjectCanceled(uint64 idProject) internal constant returns(bool){
-        uint parentProject = getOldestNoteNotCanceled(idProject);
-        return (parentProject != idProject);
     }
 
     uint64 constant  NOTFOUND = 0xFFFFFFFFFFFFFFFF;

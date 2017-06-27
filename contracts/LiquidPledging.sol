@@ -142,7 +142,8 @@ contract LiquidPledging is LiquidPledgingBase {
 
         if (n.paymentState != PaymentState.Paying) throw;
 
-        if (isProjectCanceled(n.owner)) throw;
+        // Check the project is not canceled in the while.
+        if (getOldestNoteNotCanceled(idNote) != idNote) throw;
 
         uint64 idNewNote = findNote(
             n.owner,
@@ -178,9 +179,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
     function cancelProject(uint64 idProject) {
         NoteManager project = findManager(idProject);
-        if  (  (project.reviewer != msg.sender)
-             &&(project.addr != msg.sender))
-            throw;
+        require((project.reviewer == msg.sender) || (project.addr == msg.sender));
         project.canceled = true;
     }
 
@@ -317,7 +316,7 @@ contract LiquidPledging is LiquidPledgingBase {
         if (n.paymentState != PaymentState.NotPaid) return idNote;
 
         // First send to a project if it's proposed and commited
-        if ((n.proposedProject > 0) && ( getTime() > n.commmitTime)) {
+        if ((n.proposedProject > 0) && ( getTime() > n.commitTime)) {
             uint64 oldNote = findNote(
                 n.owner,
                 n.delegationChain,
@@ -334,6 +333,7 @@ contract LiquidPledging is LiquidPledgingBase {
                 PaymentState.NotPaid);
             doTransfer(idNote, toNote, n.amount);
             idNote = toNote;
+            n = findNote(idNote);
         }
 
         toNote = getOldestNoteNotCanceled(idNote);
@@ -343,7 +343,6 @@ contract LiquidPledging is LiquidPledgingBase {
 
         return toNote;
     }
-
 /////////////
 // Test functions
 /////////////
