@@ -40,9 +40,6 @@ contract LiquidPledging is LiquidPledgingBase {
         transfer(idDonor, idNote, amount, idReceiver);
     }
 
-    uint64 public test;
-    uint64 public test2;
-
     function transfer(uint64 idSender, uint64 idNote, uint amount, uint64 idReceiver) {
 
         idNote = normalizeNote(idNote);

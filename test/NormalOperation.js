@@ -332,7 +332,6 @@ contract("LiquidPledging", (accounts) => {
         await liquidPledging.withdraw(4, web3.toWei(0.1), {from: donor1});
 
         await liquidPledging.withdraw(8, web3.toWei(0.03), {from: donor1});
-        const test = await liquidPledging.test();
         await liquidPledging.withdraw(9, web3.toWei(0.01), {from: donor1});
 
         const initialBalance = await web3.eth.getBalance(donor1);
