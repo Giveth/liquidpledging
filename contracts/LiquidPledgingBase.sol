@@ -268,4 +268,10 @@ contract LiquidPledgingBase {
         return NOTFOUND;
     }
 
+    function getProjectLevel(Note n) internal returns(uint) {
+        if (n.oldNote == 0) return 1;
+        Note oldN = findNote(n.oldNote);
+        return getProjectLevel(oldN) + 1;
+    }
+
 }

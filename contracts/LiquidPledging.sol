@@ -5,6 +5,8 @@ import "./LiquidPledgingBase.sol";
 
 contract LiquidPledging is LiquidPledgingBase {
 
+    uint constant MAX_DELEGATES = 20;
+    uint constant MAX_SUBPROJECT_LEVEL = 20;
 //////
 // Constructor
 //////
@@ -12,6 +14,12 @@ contract LiquidPledging is LiquidPledgingBase {
     function LiquidPledging(address _vault) LiquidPledgingBase(_vault) {
     }
 
+    /// @notice This is the main entry of Ether to the system. Ethether goes to
+    ///  the vault and then the Note for the donor withou delegates is increased.
+    ///  After that, a normal transfer is done to the idReceiver.
+    /// @param idDonor Id of the donor thats donating.
+    /// @param idReceiver To who it's transfered. Can ve the same donnor, another
+    ///  donor, a delegate or a project
     function donate(uint64 idDonor, uint64 idReceiver) payable {
         NoteManager sender = findManager(idDonor);
 
@@ -40,6 +48,14 @@ contract LiquidPledging is LiquidPledgingBase {
         transfer(idDonor, idNote, amount, idReceiver);
     }
 
+
+    /// @notice This is the main function to move Ether from one Note to the other
+    /// @param idSender Id of the donor, delegate or project manager that is transferin
+    ///  the funds from Note to note. This manager must have permisions to move the Ether
+    /// @param idNote Id of the note that's moving the Ether.
+    /// @param amount Quantity of Ether that's moving.
+    /// @param idReceiver Destination of the Ether, can be a donor to move Ether between donors,
+    ///  A delegate to delegate that Ether, or a project to commit or precommit it to that project.
     function transfer(uint64 idSender, uint64 idNote, uint amount, uint64 idReceiver) {
 
         idNote = normalizeNote(idNote);
@@ -53,9 +69,10 @@ contract LiquidPledging is LiquidPledgingBase {
 
         // If the sender is the owner
         if (n.owner == idSender) {
-            if ((receiver.managerType == NoteManagerType.Donor) ||
-                (receiver.managerType == NoteManagerType.Project)) {
-                transferOwnership(idNote, amount, idReceiver);
+            if (receiver.managerType == NoteManagerType.Donor) {
+                transferOwnershipToDonor(idNote, amount, idReceiver);
+            } else if (receiver.managerType == NoteManagerType.Project) {
+                transferOwnershipToProject(idNote, amount, idReceiver);
             } else if (receiver.managerType == NoteManagerType.Delegate) {
                 appendDelegate(idNote, amount, idReceiver);
             } else {
@@ -108,6 +125,12 @@ contract LiquidPledging is LiquidPledgingBase {
         throw;  // It is not the owner nor any delegate.
     }
 
+
+    /// @notice This method is used to withdraw Ether from the system. This can be used
+    ///  from the doonurs to rollback a not commited donation or by project manager to use
+    ///  the Ether.
+    /// @param idNote Id of the note that wants to be withdrawed.
+    /// @param amount Quantity of Ether that wants to be withdrawed.
     function withdraw(uint64 idNote, uint amount) {
 
         idNote = normalizeNote(idNote);
@@ -134,6 +157,9 @@ contract LiquidPledging is LiquidPledgingBase {
         vault.authorizePayment(bytes32(idNewNote), owner.addr, amount);
     }
 
+    /// @notice Method called by the vault to confirm a payment.
+    /// @param idNote Id of the note that wants to be withdrawed.
+    /// @param amount Quantity of Ether that wants to be withdrawed.
     function confirmPayment(uint64 idNote, uint amount) onlyVault {
         Note n = findNote(idNote);
 
@@ -154,6 +180,9 @@ contract LiquidPledging is LiquidPledgingBase {
         doTransfer(idNote, idNewNote, amount);
     }
 
+    /// @notice Method called by the vault to cancel a payment.
+    /// @param idNote Id of the note that wants to be canceled for withdraw.
+    /// @param amount Quantity of Ether that wants to be rolled back.
     function cancelPayment(uint64 idNote, uint amount) onlyVault {
         Note n = findNote(idNote);
 
@@ -174,6 +203,8 @@ contract LiquidPledging is LiquidPledgingBase {
         doTransfer(idNote, oldNote, amount);
     }
 
+    /// @notice Method called by the reviewer of a project to cancel this project.
+    /// @param idProject Id of the projct that wants to be canceled.
     function cancelProject(uint64 idProject) {
         NoteManager project = findManager(idProject);
         require((project.reviewer == msg.sender) || (project.addr == msg.sender));
@@ -226,8 +257,10 @@ contract LiquidPledging is LiquidPledgingBase {
 ///////
 
 
-    function transferOwnership(uint64 idNote, uint amount, uint64 idReceiver) internal  {
+    function transferOwnershipToProject(uint64 idNote, uint amount, uint64 idReceiver) internal  {
         Note n = findNote(idNote);
+
+        if (getProjectLevel(n) >= MAX_SUBPROJECT_LEVEL) throw;
         uint64 oldNote = findNote(
             n.owner,
             n.delegationChain,
@@ -248,8 +281,25 @@ contract LiquidPledging is LiquidPledgingBase {
         doTransfer(idNote, toNote, amount);
     }
 
+    function transferOwnershipToDonor(uint64 idNote, uint amount, uint64 idReceiver) internal  {
+        // If the owner does not change, then just let it this way.
+        Note n = findNote(idNote);
+
+        if (n.owner == idReceiver) return;
+        uint64 toNote = findNote(
+                idReceiver,
+                new uint64[](0),
+                0,
+                0,
+                0,
+                PaymentState.NotPaid);
+        doTransfer(idNote, toNote, amount);
+    }
+
     function appendDelegate(uint64 idNote, uint amount, uint64 idReceiver) internal  {
         Note n = findNote(idNote);
+
+        if (n.delegationChain.length >= MAX_DELEGATES) throw;
         uint64[] memory newDelegationChain = new uint64[](n.delegationChain.length + 1);
         for (uint i=0; i<n.delegationChain.length; i++) {
             newDelegationChain[i] = n.delegationChain[i];
@@ -285,6 +335,9 @@ contract LiquidPledging is LiquidPledgingBase {
 
     function proposeAssignProject(uint64 idNote, uint amount, uint64 idReceiver) internal {
         Note n = findNote(idNote);
+
+        if (getProjectLevel(n) >= MAX_SUBPROJECT_LEVEL) throw;
+
         NoteManager owner = findManager(n.owner);
         uint64 toNote = findNote(
                 n.owner,
