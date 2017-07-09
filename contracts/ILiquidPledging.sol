@@ -2,7 +2,9 @@ pragma solidity ^0.4.11;
 
 contract ILiquidPledging {
 
-    enum NoteManagerType { Donor, Delegate, Project }
+// TODO: make this enum its own contract... or at least make it so that an owner
+// can add a new NoteManagerType 
+    enum NoteManagerType { Donor, Delegate, Project}
     enum PaymentState {NotPaid, Paying, Paid}
 
     function numberOfNotes() constant returns (uint);
