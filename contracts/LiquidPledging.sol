@@ -5,22 +5,24 @@ import "./LiquidPledgingBase.sol";
 
 contract LiquidPledging is LiquidPledgingBase {
 
-    uint constant MAX_DELEGATES = 20;
-    uint constant MAX_SUBPROJECT_LEVEL = 20;
+
 //////
 // Constructor
 //////
 
+    // This constructor actualy also calls the constructor for the
+    // `LiquidPledgingBase` contract
     function LiquidPledging(address _vault) LiquidPledgingBase(_vault) {
     }
 
-    /// @notice This is the main entry of Ether to the system. Ethether goes to
-    ///  the vault and then the Note for the donor withou delegates is increased.
+    /// @notice This is how value enters into the system which creates notes. The
+    ///  token of value goes into the vault and then the amount in the Note
+    /// relevant to this donor without delegates is increased.
     ///  After that, a normal transfer is done to the idReceiver.
-    /// @param idDonor Id of the donor thats donating.
-    /// @param idReceiver To who it's transfered. Can ve the same donnor, another
+    /// @param idDonor Identifier of the donor thats donating.
+    /// @param idReceiver To whom it's transfered. Can be the same donor, another
     ///  donor, a delegate or a project
-    function donate(uint64 idDonor, uint64 idReceiver) payable {
+    function donate(uint64 idDonor, uint64 idReceiver) payable {// TODO change to `pledge()`
         NoteManager storage sender = findManager(idDonor);
 
         require(sender.managerType == NoteManagerType.Donor);
@@ -30,10 +32,10 @@ contract LiquidPledging is LiquidPledgingBase {
 
         require(amount > 0);
 
-        vault.transfer(amount);
+        vault.transfer(amount); // transfers the baseToken to the Vault
         uint64 idNote = findNote(
             idDonor,
-            new uint64[](0),
+            new uint64[](0), //what is new
             0,
             0,
             0,
@@ -49,13 +51,13 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
 
-    /// @notice This is the main function to move Ether from one Note to the other
-    /// @param idSender Id of the donor, delegate or project manager that is transferin
-    ///  the funds from Note to note. This manager must have permisions to move the Ether
-    /// @param idNote Id of the note that's moving the Ether.
-    /// @param amount Quantity of Ether that's moving.
-    /// @param idReceiver Destination of the Ether, can be a donor to move Ether between donors,
-    ///  A delegate to delegate that Ether, or a project to commit or precommit it to that project.
+    /// @notice This is the main function to move value from one Note to the other
+    /// @param idSender ID of the donor, delegate or project manager that is transfering
+    ///  the funds from Note to Note. This manager must have permisions to move the value
+    /// @param idNote Id of the note that's moving the value
+    /// @param amount Quantity of value that's being moved
+    /// @param idReceiver Destination of the value, can be a donor sending to a donor or
+    ///  a delegate, a delegate to another delegate or a project to precommit it to that project
     function transfer(uint64 idSender, uint64 idNote, uint amount, uint64 idReceiver) {
 
         idNote = normalizeNote(idNote);
@@ -85,7 +87,7 @@ contract LiquidPledging is LiquidPledgingBase {
         uint senderDIdx = getDelegateIdx(n, idSender);
         if (senderDIdx != NOTFOUND) {
 
-            // If the receiver is another doner
+            // If the receiver is another donor
             if (receiver.managerType == NoteManagerType.Donor) {
                 // Only accept to change to the original donor to remove all delegates
                 assert(n.owner == idReceiver);
@@ -96,23 +98,32 @@ contract LiquidPledging is LiquidPledgingBase {
             // If the receiver is another delegate
             if (receiver.managerType == NoteManagerType.Delegate) {
                 uint receiverDIdx = getDelegateIdx(n, idReceiver);
+
                 // If the receiver is not in the delegate list
                 if (receiverDIdx == NOTFOUND) {
                     undelegate(idNote, amount, n.delegationChain.length - senderDIdx - 1);
                     appendDelegate(idNote, amount, idReceiver);
-                // If the receiver is after the delegate list and is not the next one.
-                // Canccel delegations an redelegate
+
+                // If the receiver is already part of the delegate chain and is
+                // after the sender, then all of the other delegates after the sender are
+                // removed and the receiver is appended at the end of the delegation chain
                 } else if (receiverDIdx > senderDIdx) {
                     undelegate(idNote, amount, n.delegationChain.length - senderDIdx - 1);
                     appendDelegate(idNote, amount, idReceiver);
-                // If it's before the list cancel thelegations until him
+
+                // If the receiver is already part of the delegate chain and is
+                // before the sender, then the sender and all of the other
+                // delegates after the RECEIVER are revomved from the chain,
+                // this is interesting because the delegate undelegates from the
+                // delegates that delegated to this delegate... game theory issues? should this be allowed
                 } else if (receiverDIdx <= senderDIdx) {
                     undelegate(idNote, amount, n.delegationChain.length - receiverDIdx -1);
                 }
                 return;
             }
 
-            // If the delegate chose a project to assign
+            // If the delegate wants to support a project, they undelegate all
+            // the delegates after them in the chain and choose a project
             if (receiver.managerType == NoteManagerType.Project) {
                 undelegate(idNote, amount, n.delegationChain.length - senderDIdx - 1);
                 proposeAssignProject(idNote, amount, idReceiver);
@@ -123,8 +134,8 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
 
-    /// @notice This method is used to withdraw Ether from the system. This can be used
-    ///  from the doonurs to rollback a not commited donation or by project manager to use
+    /// @notice This method is used to withdraw value from the system. This can be used
+    ///  by the donors to avoid committing the donation or by project manager to use
     ///  the Ether.
     /// @param idNote Id of the note that wants to be withdrawed.
     /// @param amount Quantity of Ether that wants to be withdrawed.
@@ -183,7 +194,7 @@ contract LiquidPledging is LiquidPledgingBase {
     function cancelPayment(uint64 idNote, uint amount) onlyVault {
         Note storage n = findNote(idNote);
 
-        require(n.paymentState == PaymentState.Paying);
+        require(n.paymentState == PaymentState.Paying); //TODO change to revert
 
         // When a payment is cacnceled, never is assigned to a project.
         uint64 oldNote = findNote(
@@ -212,6 +223,8 @@ contract LiquidPledging is LiquidPledgingBase {
 // Multi note methods
 ////////
 
+    // This set of functions makes moving a lot of notes around much more
+    // efficient (saves gas) than calling these functions in series
     uint constant D64 = 0x10000000000000000;
     function mTransfer(uint64 idSender, uint[] notesAmounts, uint64 idReceiver) {
         for (uint i = 0; i < notesAmounts.length; i++ ) {
@@ -253,7 +266,8 @@ contract LiquidPledging is LiquidPledgingBase {
 // Private methods
 ///////
 
-
+    // this function is obvious, but it can also be called to undelegate everyone
+    // by setting your self as teh idReceiver
     function transferOwnershipToProject(uint64 idNote, uint amount, uint64 idReceiver) internal  {
         Note storage n = findNote(idNote);
 
@@ -265,24 +279,19 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             n.oldNote,
             PaymentState.NotPaid);
-
-        // If the owner does not change, then just let it this way.
-        if (n.owner == idReceiver) return;
         uint64 toNote = findNote(
-                idReceiver,
-                new uint64[](0),
-                0,
-                0,
-                oldNote,
-                PaymentState.NotPaid);
+            idReceiver,
+            new uint64[](0),
+            0,
+            0,
+            oldNote,
+            PaymentState.NotPaid);
         doTransfer(idNote, toNote, amount);
     }
 
     function transferOwnershipToDonor(uint64 idNote, uint amount, uint64 idReceiver) internal  {
-        // If the owner does not change, then just let it this way.
         Note storage n = findNote(idNote);
 
-        if (n.owner == idReceiver) return;
         uint64 toNote = findNote(
                 idReceiver,
                 new uint64[](0),
@@ -296,12 +305,15 @@ contract LiquidPledging is LiquidPledgingBase {
     function appendDelegate(uint64 idNote, uint amount, uint64 idReceiver) internal  {
         Note storage n= findNote(idNote);
 
-        require(n.delegationChain.length < MAX_DELEGATES);
+        require(n.delegationChain.length < MAX_DELEGATES); //TODO change to revert and say the error
         uint64[] memory newDelegationChain = new uint64[](n.delegationChain.length + 1);
         for (uint i=0; i<n.delegationChain.length; i++) {
             newDelegationChain[i] = n.delegationChain[i];
         }
+
+        // Make the last item in the array the idReceiver
         newDelegationChain[n.delegationChain.length] = idReceiver;
+
         uint64 toNote = findNote(
                 n.owner,
                 newDelegationChain,
@@ -330,7 +342,7 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
 
-    function proposeAssignProject(uint64 idNote, uint amount, uint64 idReceiver) internal {
+    function proposeAssignProject(uint64 idNote, uint amount, uint64 idReceiver) internal {// Todo rename
         Note storage n = findNote(idNote);
 
         require(getProjectLevel(n) < MAX_SUBPROJECT_LEVEL);
@@ -358,8 +370,16 @@ contract LiquidPledging is LiquidPledgingBase {
         Transfer(from, to, amount);
     }
 
+    // This function does 2 things, #1: it checks to make sure that the pledges are correct
+    // if the a pledged project has already been commited then it changes the owner
+    // to be the proposed project (Note that the UI will have to read the commit time and manually
+    // do what this function does to the note for the end user at the expiration of the committime)
+    // #2: It checks to make sure that if there has been a cancellation in the chain of projects,
+    // then it adjusts the note's owner appropriately.
     function normalizeNote(uint64 idNote) internal returns(uint64) {
         Note storage n = findNote(idNote);
+
+        // Check to make sure this note hasnt already been used or is in the process of being used
         if (n.paymentState != PaymentState.NotPaid) return idNote;
 
         // First send to a project if it's proposed and commited
@@ -383,7 +403,7 @@ contract LiquidPledging is LiquidPledgingBase {
             n = findNote(idNote);
         }
 
-        toNote = getOldestNoteNotCanceled(idNote);
+        toNote = getOldestNoteNotCanceled(idNote);// TODO toNote is note defined
         if (toNote != idNote) {
             doTransfer(idNote, toNote, n.amount);
         }

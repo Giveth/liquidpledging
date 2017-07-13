@@ -6,14 +6,18 @@ contract Vault {
 
 contract LiquidPledgingBase {
 
-    enum NoteManagerType { Donor, Delegate, Project }
-    enum PaymentState {NotPaid, Paying, Paid}
+    uint constant MAX_DELEGATES = 20;
+    uint constant MAX_SUBPROJECT_LEVEL = 20;
 
-    struct NoteManager {
+    enum NoteManagerType { Donor, Delegate, Project }// todo change name
+    enum PaymentState { NotPaid, Paying, Paid }
+
+    // This struct defines the details of each the NoteManager, these NoteManagers can create
+    struct NoteManager {// change manager
         NoteManagerType managerType;
         address addr;
         string name;
-        uint64 commitTime;  // Only used in donors and campaigns
+        uint64 commitTime;  // Only used in donors and projects, its the precommitment time
         address reviewer;  // Only for project
         bool canceled;      // Only for project
     }
@@ -21,19 +25,19 @@ contract LiquidPledgingBase {
     struct Note {
         uint amount;
         uint64 owner;
-        uint64[] delegationChain;
-        uint64 proposedProject;
+        uint64[] delegationChain; //index numbers!!!!!
+        uint64 proposedProject; // TODO change the name only used for when delegates are precommiting to a project
         uint64 commitTime;  // At what time the upcoming time will become an owner.
-        uint64 oldNote;
+        uint64 oldNote; // this points to the Note[] index that the Note was derived from
         PaymentState paymentState;
     }
 
     Note[] notes;
-    NoteManager[] managers;
+    NoteManager[] managers; // the list of all the note managers 0 is reserved for no manager
     Vault public vault;
 
-
-    mapping (bytes32 => uint64) hNote2ddx;
+    // this mapping allows you to search for a specific note's index number by the hash of that note
+    mapping (bytes32 => uint64) hNote2ddx;//TODO Fix typo
 
 
 /////
@@ -51,8 +55,8 @@ contract LiquidPledgingBase {
 //////
 
     function LiquidPledgingBase(address _vault) {
-        managers.length = 1;
-        notes.length = 1;
+        managers.length = 1; // we reserve the 0 manager
+        notes.length = 1; // we reserve the 0 note
         vault = Vault(_vault);
     }
 
@@ -61,7 +65,7 @@ contract LiquidPledgingBase {
 // Managers functions
 //////
 
-    function addDonor(string name, uint64 commitTime) {
+    function addDonor(string name, uint64 commitTime) {//Todo return idManager
         managers.push(NoteManager(
             NoteManagerType.Donor,
             msg.sender,
@@ -73,7 +77,7 @@ contract LiquidPledgingBase {
         DonorAdded(uint64(managers.length-1));
     }
 
-    event DonorAdded(uint64 indexed idMember);
+    event DonorAdded(uint64 indexed idDonor);
 
     function updateDonor(
         uint64 idDonor,
@@ -90,9 +94,9 @@ contract LiquidPledgingBase {
         DonorUpdated(idDonor);
     }
 
-    event DonorUpdated(uint64 indexed idMember);
+    event DonorUpdated(uint64 indexed idDonor);
 
-    function addDelegate(string name) {
+    function addDelegate(string name) { //TODO return index number
         managers.push(NoteManager(
             NoteManagerType.Delegate,
             msg.sender,
@@ -104,7 +108,7 @@ contract LiquidPledgingBase {
         DeegateAdded(uint64(managers.length-1));
     }
 
-    event DeegateAdded(uint64 indexed idMember);
+    event DeegateAdded(uint64 indexed idDelegate);
 
     function updateDelegate(uint64 idDelegate, address newAddr, string newName) {
         NoteManager storage delegate = findManager(idDelegate);
@@ -115,7 +119,7 @@ contract LiquidPledgingBase {
         DelegateUpdated(idDelegate);
     }
 
-    event DelegateUpdated(uint64 indexed idMember);
+    event DelegateUpdated(uint64 indexed idDelegate);
 
     function addProject(string name, address reviewer, uint64 commitTime) {
         managers.push(NoteManager(
@@ -129,7 +133,7 @@ contract LiquidPledgingBase {
         ProjectAdded(uint64(managers.length-1));
     }
 
-    event ProjectAdded(uint64 indexed idMember);
+    event ProjectAdded(uint64 indexed idProject);
 
     function updateProject(uint64 idProject, address newAddr, string newName, uint64 newCommitTime) {
         NoteManager storage project = findManager(idProject);
@@ -141,7 +145,7 @@ contract LiquidPledgingBase {
         ProjectUpdated(idProject);
     }
 
-    function updateProjectCanceler(uint64 idProject, address newReviewer) {
+    function updateProjectReviewer(uint64 idProject, address newReviewer) {
         NoteManager storage project = findManager(idProject);
         require(project.managerType == NoteManagerType.Project);
         require(project.reviewer == msg.sender);
@@ -149,7 +153,7 @@ contract LiquidPledgingBase {
         ProjectUpdated(idProject);
     }
 
-    event ProjectUpdated(uint64 indexed idMember);
+    event ProjectUpdated(uint64 indexed idManager);
 
 
 //////////
@@ -179,7 +183,7 @@ contract LiquidPledgingBase {
         oldNote = n.oldNote;
         paymentState = n.paymentState;
     }
-
+    // This is to return the delegates one by one, because you can not return an array
     function getNoteDelegate(uint64 idNote, uint idxDelegate) constant returns(
         uint64 idDelegate,
         address addr,
@@ -217,6 +221,9 @@ contract LiquidPledgingBase {
 // Private methods
 ///////
 
+    // All notes exist... but if the note hasn't been created in this system yet then it wouldn't
+    // be in the hash array hNoteddx[]
+    // this function creates a balloon if one is not created already... this ballon has 0 for the amount
     function findNote(
         uint64 owner,
         uint64[] delegationChain,
@@ -245,12 +252,35 @@ contract LiquidPledgingBase {
         return notes[idNote];
     }
 
-    function getOldestNoteNotCanceled(uint64 idNote) internal constant returns(uint64) {
+    // a constant for the case that a delegate is requested that is not a delegate in the system
+    uint64 constant  NOTFOUND = 0xFFFFFFFFFFFFFFFF;
+
+    // helper function that searches the delegationChain fro a specific delegate and
+    // level of delegation returns their idx in the delegation cahin which reflect their level of authority
+    function getDelegateIdx(Note n, uint64 idDelegate) internal returns(uint64) {
+        for (uint i=0; i<n.delegationChain.length; i++) {
+            if (n.delegationChain[i] == idDelegate) return uint64(i);
+        }
+        return NOTFOUND;
+    }
+
+    // helper function that returns the project level solely to check that there
+    // are not too many Projects that violate MAX_SUBPROJECT_LEVEL
+    function getProjectLevel(Note n) internal returns(uint) {
+        if (n.oldNote == 0) return 0;//changed
+        Note oldN = findNote(n.oldNote);
+        return getProjectLevel(oldN) + 1;
+    }
+    // this makes it easy to cancel projects
+    // @param idNote the note that may or may not be cancelled
+    function getOldestNoteNotCanceled(uint64 idNote) internal constant returns(uint64) { //todo rename
         if (idNote == 0) return 0;
         Note storage n = findNote(idNote);
         NoteManager storage owner = findManager(n.owner);
         if (owner.managerType == NoteManagerType.Donor) return idNote;
 
+        // This function calls itself to iterate up the chain to check which
+        // projects are cancelled, confirming that it is returning the Oldest valid Note
         uint64 parentProject = getOldestNoteNotCanceled(n.oldNote);
 
         if (owner.canceled) {    // Current project is canceled.
@@ -260,20 +290,6 @@ contract LiquidPledgingBase {
         } else {                        // Current is not canceled but some ont the top yes
             return parentProject;
         }
-    }
-
-    uint64 constant  NOTFOUND = 0xFFFFFFFFFFFFFFFF;
-    function getDelegateIdx(Note n, uint64 idDelegate) internal returns(uint64) {
-        for (uint i=0; i<n.delegationChain.length; i++) {
-            if (n.delegationChain[i] == idDelegate) return uint64(i);
-        }
-        return NOTFOUND;
-    }
-
-    function getProjectLevel(Note n) internal returns(uint) {
-        if (n.oldNote == 0) return 1;
-        Note storage oldN = findNote(n.oldNote);
-        return getProjectLevel(oldN) + 1;
     }
 
 }
