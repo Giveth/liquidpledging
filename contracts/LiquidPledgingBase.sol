@@ -1,6 +1,8 @@
 pragma solidity ^0.4.11;
 
-import "./Vault.sol";
+contract Vault {
+    function authorizePayment(bytes32 _ref, address _dest, uint _amount);
+}
 
 contract LiquidPledgingBase {
 
@@ -39,7 +41,7 @@ contract LiquidPledgingBase {
 /////
 
     modifier onlyVault() {
-        if (msg.sender != address(vault)) throw;
+        require(msg.sender == address(vault));
         _;
     }
 
@@ -79,9 +81,9 @@ contract LiquidPledgingBase {
         string newName,
         uint64 newCommitTime)
     {
-        NoteManager donor = findManager(idDonor);
-        if (donor.managerType != NoteManagerType.Donor) throw;
-        if (donor.addr != msg.sender) throw;
+        NoteManager storage donor = findManager(idDonor);
+        require(donor.managerType == NoteManagerType.Donor);
+        require(donor.addr == msg.sender);
         donor.addr = newAddr;
         donor.name = newName;
         donor.commitTime = newCommitTime;
@@ -105,9 +107,9 @@ contract LiquidPledgingBase {
     event DeegateAdded(uint64 indexed idMember);
 
     function updateDelegate(uint64 idDelegate, address newAddr, string newName) {
-        NoteManager delegate = findManager(idDelegate);
-        if (delegate.managerType != NoteManagerType.Delegate) throw;
-        if (delegate.addr != msg.sender) throw;
+        NoteManager storage delegate = findManager(idDelegate);
+        require(delegate.managerType == NoteManagerType.Delegate);
+        require(delegate.addr == msg.sender);
         delegate.addr = newAddr;
         delegate.name = newName;
         DelegateUpdated(idDelegate);
@@ -130,9 +132,9 @@ contract LiquidPledgingBase {
     event ProjectAdded(uint64 indexed idMember);
 
     function updateProject(uint64 idProject, address newAddr, string newName, uint64 newCommitTime) {
-        NoteManager project = findManager(idProject);
-        if (project.managerType != NoteManagerType.Project) throw;
-        if (project.addr != msg.sender) throw;
+        NoteManager storage project = findManager(idProject);
+        require(project.managerType == NoteManagerType.Project);
+        require(project.addr == msg.sender);
         project.addr = newAddr;
         project.name = newName;
         project.commitTime = newCommitTime;
@@ -140,9 +142,9 @@ contract LiquidPledgingBase {
     }
 
     function updateProjectCanceler(uint64 idProject, address newReviewer) {
-        NoteManager project = findManager(idProject);
-        if (project.managerType != NoteManagerType.Project) throw;
-        if (project.reviewer != msg.sender) throw;
+        NoteManager storage project = findManager(idProject);
+        require(project.managerType == NoteManagerType.Project);
+        require(project.reviewer == msg.sender);
         project.reviewer = newReviewer;
         ProjectUpdated(idProject);
     }
@@ -168,7 +170,7 @@ contract LiquidPledgingBase {
         uint64 oldNote,
         PaymentState paymentState
     ) {
-        Note n = findNote(idNote);
+        Note storage n = findNote(idNote);
         amount = n.amount;
         owner = n.owner;
         nDelegates = uint64(n.delegationChain.length);
@@ -183,9 +185,9 @@ contract LiquidPledgingBase {
         address addr,
         string name
     ) {
-        Note n = findNote(idNote);
+        Note storage n = findNote(idNote);
         idDelegate = n.delegationChain[idxDelegate - 1];
-        NoteManager delegate = findManager(idDelegate);
+        NoteManager storage delegate = findManager(idDelegate);
         addr = delegate.addr;
         name = delegate.name;
     }
@@ -202,7 +204,7 @@ contract LiquidPledgingBase {
         address reviewer,
         bool canceled)
     {
-        NoteManager m = findManager(idManager);
+        NoteManager storage m = findManager(idManager);
         managerType = m.managerType;
         addr = m.addr;
         name = m.name;
@@ -234,19 +236,19 @@ contract LiquidPledgingBase {
     }
 
     function findManager(uint64 idManager) internal returns (NoteManager storage) {
-        if (idManager >= managers.length) throw;
+        require(idManager < managers.length);
         return managers[idManager];
     }
 
     function findNote(uint64 idNote) internal returns (Note storage) {
-        if (idNote >= notes.length) throw;
+        require(idNote < notes.length);
         return notes[idNote];
     }
 
     function getOldestNoteNotCanceled(uint64 idNote) internal constant returns(uint64) {
         if (idNote == 0) return 0;
-        Note n = findNote(idNote);
-        NoteManager owner = findManager(n.owner);
+        Note storage n = findNote(idNote);
+        NoteManager storage owner = findManager(n.owner);
         if (owner.managerType == NoteManagerType.Donor) return idNote;
 
         uint64 parentProject = getOldestNoteNotCanceled(n.oldNote);
@@ -270,7 +272,7 @@ contract LiquidPledgingBase {
 
     function getProjectLevel(Note n) internal returns(uint) {
         if (n.oldNote == 0) return 1;
-        Note oldN = findNote(n.oldNote);
+        Note storage oldN = findNote(n.oldNote);
         return getProjectLevel(oldN) + 1;
     }
 

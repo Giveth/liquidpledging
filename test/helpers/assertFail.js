@@ -1,3 +1,6 @@
+const chai = require('chai');
+const assert = chai.assert;
+
 module.exports = async function(callback) {
     let web3_error_thrown = false;
     try {

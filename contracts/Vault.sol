@@ -1,7 +1,11 @@
 pragma solidity ^0.4.11;
 
 import "./Owned.sol";
-import "./LiquidPledging.sol";
+
+contract LiquidPledging {
+    function confirmPayment(uint64 idNote, uint amount);
+    function cancelPayment(uint64 idNote, uint amount);
+}
 
 contract Vault is Owned {
 
@@ -66,7 +70,7 @@ contract Vault is Owned {
 
     function doConfirmPayment(uint _idPayment) internal {
         require(_idPayment < payments.length);
-        Payment p = payments[_idPayment];
+        Payment storage p = payments[_idPayment];
         require(p.state == PaymentState.Pending);
 
         p.state = PaymentState.Paid;
@@ -83,7 +87,7 @@ contract Vault is Owned {
 
     function doCancelPayment(uint _idPayment) internal {
         require(_idPayment < payments.length);
-        Payment p = payments[_idPayment];
+        Payment storage p = payments[_idPayment];
         require(p.state == PaymentState.Pending);
 
         p.state = PaymentState.Canceled;

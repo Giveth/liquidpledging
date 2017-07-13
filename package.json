@@ -42,6 +42,9 @@
   },
   "homepage": "https://github.com/Giveth/liquidpledging#readme",
   "dependencies": {
-    "babel-eslint": "^7.2.3"
+    "babel-eslint": "^7.2.3",
+    "chai": "^4.1.0",
+    "ethconnector": "0.0.25",
+    "runethtx": "0.0.9"
   }
 }

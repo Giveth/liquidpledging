@@ -1,8 +1,8 @@
 pragma solidity ^0.4.11;
 
-import '../LiquidPledging.sol';
+import "./LiquidPledging.sol";
 
-// @dev DevTokensHolderMock mocks current block number
+// @dev LiquidPledgingMock mocks current block number
 
 contract LiquidPledgingMock is LiquidPledging {
 

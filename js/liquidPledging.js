@@ -1,9 +1,17 @@
-const LiquidPledgingAbi = require("../build/contracts/LiquidPledging.json").abi;
+const LiquidPledgingAbi = require("../build/LiquidPledging.sol").LiquidPledgingAbi;
+const LiquidPledgingCode = require("../build/LiquidPledging.sol").LiquidPledgingByteCode;
+const LiquidPledgingMockAbi = require("../build/LiquidPledgingMock.sol").LiquidPledgingMockAbi;
+const LiquidPledgingMockCode = require("../build/LiquidPledgingMock.sol").LiquidPledgingMockByteCode;
+const runethtx = require("runethtx");
 
-module.exports = class LiquidPledging {
+module.exports = (test) => {
+  const LiquidPladgingContract = test ?
+        runethtx.generateClass(LiquidPledgingMockAbi, LiquidPledgingMockCode) :
+        runethtx.generateClass(LiquidPledgingAbi, LiquidPledgingCode);
+
+  return class LiquidPledging extends LiquidPladgingContract {
     constructor(web3, address) {
-        this.web3 = web3;
-        this.address = address;
+        super(web3, address);
         this.notes = [];
         this.managers = [];
     }
@@ -110,4 +118,5 @@ module.exports = class LiquidPledging {
 
         this.donorsState = donorsState;
     }
+  };
 };

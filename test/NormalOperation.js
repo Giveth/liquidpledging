@@ -1,6 +1,10 @@
-const LiquidPledging = artifacts.require("LiquidPledgingMock");
-const Vault = artifacts.require("Vault");
+const ethConnector = require('ethconnector');
+const chai = require('chai');
+const assert = chai.assert;
+const LiquidPledging = require('../js/liquidPledging.js')(true);
+const Vault = require('../js/vault.js');
 const assertFail = require("./helpers/assertFail");
+const getBalance = require("runethtx").getBalance;
 
 const getNote = async (liquidPledging, idNote) => {
     const note = {
@@ -90,21 +94,36 @@ const printBalances = async(liquidPledging) => {
     }
 };
 
-
-contract("LiquidPledging", (accounts) => {
+describe("LiquidPledging test", () => {
+    let web3;
+    let accounts;
     let liquidPledging;
     let vault;
-    let donor1 = accounts[1];
-    let delegate1 = accounts[2];
-    let adminProject1 = accounts[3];
-    let adminProject2 = accounts[4];
-    let adminProject2a = accounts[5];
-    let delegate2 = accounts[6];
-    let reviewer = accounts[7];
+    let donor1;
+    let delegate1;
+    let adminProject1;
+    let adminProject2;
+    let adminProject2a;
+    let delegate2;
+    let reviewer;
+    before((done) => {
+        ethConnector.init("testrpc", { gasLimit: 4000000 }, () => {
+            web3 = ethConnector.web3;
+            accounts = ethConnector.accounts;
+            donor1 = accounts[1];
+            delegate1 = accounts[2];
+            adminProject1 = accounts[3];
+            adminProject2 = accounts[4];
+            adminProject2a = accounts[5];
+            delegate2 = accounts[6];
+            reviewer = accounts[7];
+            done();
+        });
+    });
     it("Should deploy LiquidPledgin contract", async () => {
-        vault = await Vault.new();
-        liquidPledging = await LiquidPledging.new(vault.address);
-        await vault.setLiquidPledging(liquidPledging.address);
+        vault = await Vault.new(web3);
+        liquidPledging = await LiquidPledging.new(web3, vault.$address);
+        await vault.setLiquidPledging(liquidPledging.$address);
     });
     it("Should create a donor", async () => {
         await liquidPledging.addDonor("Donor1", 86400, {from: donor1});
@@ -181,7 +200,7 @@ contract("LiquidPledging", (accounts) => {
         assert.equal(res3[1].toNumber(), 1); // Owner
         assert.equal(res3[2].toNumber(), 1); // Delegates
         assert.equal(res3[3].toNumber(), 3); // Proposed Project
-        assert.isAbove(res3[4], n + 86000);
+        assert.isAbove(res3[4].toNumber(), n + 86000);
         assert.equal(res3[5].toNumber(), 0); // Old Node
         assert.equal(res3[6].toNumber(), 0); // Not Paid
     });
@@ -224,10 +243,10 @@ contract("LiquidPledging", (accounts) => {
         assert.equal(res6[6].toNumber(), 1); // Peinding paid Paid
     });
     it("Should collect the Ether", async () => {
-        const initialBalance = await web3.eth.getBalance(adminProject1);
+        const initialBalance = await getBalance(web3, adminProject1);
 
         await vault.confirmPayment(0);
-        const finalBalance = await web3.eth.getBalance(adminProject1);
+        const finalBalance = await getBalance(web3, adminProject1);
 
         const collected = web3.fromWei(finalBalance.sub(initialBalance)).toNumber();
 
@@ -257,7 +276,7 @@ contract("LiquidPledging", (accounts) => {
         });
     });
     it("Delegate should send part of this ETH to project2", async () => {
-        await liquidPledging.transfer(2, 5, web3.toWei(0.03), 4, {from: delegate1});
+        await liquidPledging.transfer(2, 5, web3.toWei(0.03), 4,{$extraGas: 100000}, {from: delegate1});
         const st = await getState(liquidPledging);
         assert.equal(st.notes.length, 9);
         assert.equal(web3.fromWei(st.notes[ 8 ].amount).toNumber(), 0.03);
@@ -292,7 +311,7 @@ contract("LiquidPledging", (accounts) => {
         assert.equal(st.notes.length, 11);
         assert.equal(web3.fromWei(st.notes[ 9 ].amount).toNumber(), 0.01);
         assert.equal(web3.fromWei(st.notes[ 10 ].amount).toNumber(), 0.01);
-    });
+    }).timeout(4000);
     it("project2a authorize to spend a little", async () => {
         const n = Math.floor(new Date().getTime() / 1000);
         await liquidPledging.setMockedTime(n + 86401*3);
@@ -302,7 +321,7 @@ contract("LiquidPledging", (accounts) => {
         assert.equal(web3.fromWei(st.notes[ 10 ].amount).toNumber(), 0);
         assert.equal(web3.fromWei(st.notes[ 11 ].amount).toNumber(), 0.005);
         assert.equal(web3.fromWei(st.notes[ 12 ].amount).toNumber(), 0.005);
-    });
+    }).timeout(4000);
     it("project2 is canceled", async () => {
         await liquidPledging.cancelProject(4, {from: reviewer});
     });
@@ -326,21 +345,20 @@ contract("LiquidPledging", (accounts) => {
     });
     it("original owner should recover the remaining funds", async () => {
         const st = await getState(liquidPledging);
-
         await liquidPledging.withdraw(1, web3.toWei(0.5), {from: donor1});
         await liquidPledging.withdraw(2, web3.toWei(0.31), {from: donor1});
         await liquidPledging.withdraw(4, web3.toWei(0.1), {from: donor1});
 
-        await liquidPledging.withdraw(8, web3.toWei(0.03), {from: donor1});
+        await liquidPledging.withdraw(8, web3.toWei(0.03), {$extraGas: 100000}, {from: donor1});
         await liquidPledging.withdraw(9, web3.toWei(0.01), {from: donor1});
 
-        const initialBalance = await web3.eth.getBalance(donor1);
+        const initialBalance = await getBalance(web3, donor1);
         await vault.multiConfirm([2,3,4,5,6]);
 
-        const finalBalance = await web3.eth.getBalance(donor1);
+        const finalBalance = await getBalance(web3, donor1);
         const collected = web3.fromWei(finalBalance.sub(initialBalance)).toNumber();
 
         assert.equal(collected, 0.95);
-    });
+    }).timeout(8000);
 
 });

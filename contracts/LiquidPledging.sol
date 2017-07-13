@@ -21,14 +21,14 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idReceiver To who it's transfered. Can ve the same donnor, another
     ///  donor, a delegate or a project
     function donate(uint64 idDonor, uint64 idReceiver) payable {
-        NoteManager sender = findManager(idDonor);
+        NoteManager storage sender = findManager(idDonor);
 
-        if (sender.managerType != NoteManagerType.Donor) throw;
-        if (sender.addr != msg.sender) throw;
+        require(sender.managerType == NoteManagerType.Donor);
+        require(sender.addr == msg.sender);
 
         uint amount = msg.value;
 
-        if (amount == 0) throw;
+        require(amount > 0);
 
         vault.transfer(amount);
         uint64 idNote = findNote(
@@ -40,7 +40,7 @@ contract LiquidPledging is LiquidPledgingBase {
             PaymentState.NotPaid);
 
 
-        Note nTo = findNote(idNote);
+        Note storage nTo = findNote(idNote);
         nTo.amount += amount;
 
         Transfer(0, idNote, amount);
@@ -60,12 +60,12 @@ contract LiquidPledging is LiquidPledgingBase {
 
         idNote = normalizeNote(idNote);
 
-        Note n = findNote(idNote);
-        NoteManager receiver = findManager(idReceiver);
-        NoteManager sender = findManager(idSender);
+        Note storage n = findNote(idNote);
+        NoteManager storage receiver = findManager(idReceiver);
+        NoteManager storage sender = findManager(idSender);
 
-        if (sender.addr != msg.sender) throw;
-        if (n.paymentState != PaymentState.NotPaid) throw;
+        require(sender.addr == msg.sender);
+        require(n.paymentState == PaymentState.NotPaid);
 
         // If the sender is the owner
         if (n.owner == idSender) {
@@ -76,7 +76,7 @@ contract LiquidPledging is LiquidPledgingBase {
             } else if (receiver.managerType == NoteManagerType.Delegate) {
                 appendDelegate(idNote, amount, idReceiver);
             } else {
-                throw;
+                assert(false);
             }
             return;
         }
@@ -88,11 +88,8 @@ contract LiquidPledging is LiquidPledgingBase {
             // If the receiver is another doner
             if (receiver.managerType == NoteManagerType.Donor) {
                 // Only accept to change to the original donor to remove all delegates
-                if (n.owner == idReceiver) {
-                    undelegate(idNote, amount, n.delegationChain.length);
-                } else {
-                    throw;
-                }
+                assert(n.owner == idReceiver);
+                undelegate(idNote, amount, n.delegationChain.length);
                 return;
             }
 
@@ -122,7 +119,7 @@ contract LiquidPledging is LiquidPledgingBase {
                 return;
             }
         }
-        throw;  // It is not the owner nor any delegate.
+        assert(false);  // It is not the owner nor any delegate.
     }
 
 
@@ -135,13 +132,13 @@ contract LiquidPledging is LiquidPledgingBase {
 
         idNote = normalizeNote(idNote);
 
-        Note n = findNote(idNote);
+        Note storage n = findNote(idNote);
 
-        if (n.paymentState != PaymentState.NotPaid) throw;
+        require(n.paymentState == PaymentState.NotPaid);
 
-        NoteManager owner = findManager(n.owner);
+        NoteManager storage owner = findManager(n.owner);
 
-        if (owner.addr != msg.sender) throw;
+        require(owner.addr == msg.sender);
 
         uint64 idNewNote = findNote(
             n.owner,
@@ -161,12 +158,12 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idNote Id of the note that wants to be withdrawed.
     /// @param amount Quantity of Ether that wants to be withdrawed.
     function confirmPayment(uint64 idNote, uint amount) onlyVault {
-        Note n = findNote(idNote);
+        Note storage n = findNote(idNote);
 
-        if (n.paymentState != PaymentState.Paying) throw;
+        require(n.paymentState == PaymentState.Paying);
 
         // Check the project is not canceled in the while.
-        if (getOldestNoteNotCanceled(idNote) != idNote) throw;
+        require(getOldestNoteNotCanceled(idNote) == idNote);
 
         uint64 idNewNote = findNote(
             n.owner,
@@ -184,9 +181,9 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idNote Id of the note that wants to be canceled for withdraw.
     /// @param amount Quantity of Ether that wants to be rolled back.
     function cancelPayment(uint64 idNote, uint amount) onlyVault {
-        Note n = findNote(idNote);
+        Note storage n = findNote(idNote);
 
-        if (n.paymentState != PaymentState.Paying) throw;
+        require(n.paymentState == PaymentState.Paying);
 
         // When a payment is cacnceled, never is assigned to a project.
         uint64 oldNote = findNote(
@@ -206,7 +203,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @notice Method called by the reviewer of a project to cancel this project.
     /// @param idProject Id of the projct that wants to be canceled.
     function cancelProject(uint64 idProject) {
-        NoteManager project = findManager(idProject);
+        NoteManager storage project = findManager(idProject);
         require((project.reviewer == msg.sender) || (project.addr == msg.sender));
         project.canceled = true;
     }
@@ -258,9 +255,9 @@ contract LiquidPledging is LiquidPledgingBase {
 
 
     function transferOwnershipToProject(uint64 idNote, uint amount, uint64 idReceiver) internal  {
-        Note n = findNote(idNote);
+        Note storage n = findNote(idNote);
 
-        if (getProjectLevel(n) >= MAX_SUBPROJECT_LEVEL) throw;
+        require(getProjectLevel(n) < MAX_SUBPROJECT_LEVEL);
         uint64 oldNote = findNote(
             n.owner,
             n.delegationChain,
@@ -283,7 +280,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
     function transferOwnershipToDonor(uint64 idNote, uint amount, uint64 idReceiver) internal  {
         // If the owner does not change, then just let it this way.
-        Note n = findNote(idNote);
+        Note storage n = findNote(idNote);
 
         if (n.owner == idReceiver) return;
         uint64 toNote = findNote(
@@ -297,9 +294,9 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
     function appendDelegate(uint64 idNote, uint amount, uint64 idReceiver) internal  {
-        Note n = findNote(idNote);
+        Note storage n= findNote(idNote);
 
-        if (n.delegationChain.length >= MAX_DELEGATES) throw;
+        require(n.delegationChain.length < MAX_DELEGATES);
         uint64[] memory newDelegationChain = new uint64[](n.delegationChain.length + 1);
         for (uint i=0; i<n.delegationChain.length; i++) {
             newDelegationChain[i] = n.delegationChain[i];
@@ -317,7 +314,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
     /// @param q Unmber of undelegations
     function undelegate(uint64 idNote, uint amount, uint q) internal {
-        Note n = findNote(idNote);
+        Note storage n = findNote(idNote);
         uint64[] memory newDelegationChain = new uint64[](n.delegationChain.length - q);
         for (uint i=0; i<n.delegationChain.length - q; i++) {
             newDelegationChain[i] = n.delegationChain[i];
@@ -334,11 +331,11 @@ contract LiquidPledging is LiquidPledgingBase {
 
 
     function proposeAssignProject(uint64 idNote, uint amount, uint64 idReceiver) internal {
-        Note n = findNote(idNote);
+        Note storage n = findNote(idNote);
 
-        if (getProjectLevel(n) >= MAX_SUBPROJECT_LEVEL) throw;
+        require(getProjectLevel(n) < MAX_SUBPROJECT_LEVEL);
 
-        NoteManager owner = findManager(n.owner);
+        NoteManager storage owner = findManager(n.owner);
         uint64 toNote = findNote(
                 n.owner,
                 n.delegationChain,
@@ -352,9 +349,9 @@ contract LiquidPledging is LiquidPledgingBase {
     function doTransfer(uint64 from, uint64 to, uint amount) internal {
         if (from == to) return;
         if (amount == 0) return;
-        Note nFrom = findNote(from);
-        Note nTo = findNote(to);
-        if (nFrom.amount < amount) throw;
+        Note storage nFrom = findNote(from);
+        Note storage nTo = findNote(to);
+        require(nFrom.amount >= amount);
         nFrom.amount -= amount;
         nTo.amount += amount;
 
@@ -362,7 +359,7 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
     function normalizeNote(uint64 idNote) internal returns(uint64) {
-        Note n = findNote(idNote);
+        Note storage n = findNote(idNote);
         if (n.paymentState != PaymentState.NotPaid) return idNote;
 
         // First send to a project if it's proposed and commited
