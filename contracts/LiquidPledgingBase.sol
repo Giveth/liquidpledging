@@ -2,6 +2,7 @@ pragma solidity ^0.4.11;
 
 contract Vault {
     function authorizePayment(bytes32 _ref, address _dest, uint _amount);
+    function () payable;
 }
 
 contract LiquidPledgingBase {
@@ -268,7 +269,7 @@ contract LiquidPledgingBase {
     // are not too many Projects that violate MAX_SUBPROJECT_LEVEL
     function getProjectLevel(Note n) internal returns(uint) {
         if (n.oldNote == 0) return 0;//changed
-        Note oldN = findNote(n.oldNote);
+        Note storage oldN = findNote(n.oldNote);
         return getProjectLevel(oldN) + 1;
     }
     // this makes it easy to cancel projects
