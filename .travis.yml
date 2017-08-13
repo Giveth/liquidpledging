@@ -1,12 +1,3 @@
-dist: trusty
-sudo: false
-group: beta
-language: node_js
+language: 'node_js'
 node_js:
-  - "7"
-before_install:
-  - npm install truffle@3.2.3 -g
-  - npm i -g ethereumjs-testrpc
-script:
-  - testrpc -l 100000000 -i 15 > /dev/null &
-  - truffle test
+  - '8'
