@@ -1,10 +1,11 @@
-contract PledgedTokens {
-
-    MinimeToken
-}
 
 
 contract LiquidPledgingInterface {
+
+    function addUser
+    function updateUser
+    function addCause
+
 
     function deposit(uint64 user) payable;
 
@@ -14,11 +15,31 @@ contract LiquidPledgingInterface {
     function undelegate(uint64 user, uint64 idNote, uint amount);
 
 
-    function propose(uint user, uint64 idNote, uint64 recipient, uint amount);
-    function unPropose(uint user, uint64 idNote, uint amount);
+    function precommit(uint user, uint64 idNote, uint64 recipient, uint amount);
+    function unPrecommit(uint user, uint64 idNote, uint amount);
 
     function transfer(uint64 user, uint64 idNote, uint64 recipient, uint amount);
 }
+
+            owner       project    out
+owner       transfer    invest     withdrow
+project     uninvest    detail     spend
+in          deposit     xx         xx
+
+Who owns
+
+////
+
+Liquid LiquidPledging
+
+//////
+
+Funding part
+
+/////
+
+Executive part
+
 
 
 

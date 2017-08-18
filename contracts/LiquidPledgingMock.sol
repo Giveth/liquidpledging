@@ -6,7 +6,7 @@ import "./LiquidPledging.sol";
 
 contract LiquidPledgingMock is LiquidPledging {
 
-    uint mock_time;
+    uint public mock_time;
 
     function LiquidPledgingMock(address _vault) LiquidPledging(_vault) {
         mock_time = now;

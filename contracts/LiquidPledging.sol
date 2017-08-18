@@ -211,11 +211,11 @@ contract LiquidPledging is LiquidPledgingBase {
         doTransfer(idNote, oldNote, amount);
     }
 
-    /// @notice Method called by the reviewer of a project to cancel this project.
+    /// @notice Method called to cancel this project.
     /// @param idProject Id of the projct that wants to be canceled.
     function cancelProject(uint64 idProject) {
         NoteManager storage project = findManager(idProject);
-        require((project.reviewer == msg.sender) || (project.addr == msg.sender));
+        require(project.addr == msg.sender);
         project.canceled = true;
     }
 
@@ -271,7 +271,7 @@ contract LiquidPledging is LiquidPledgingBase {
     function transferOwnershipToProject(uint64 idNote, uint amount, uint64 idReceiver) internal  {
         Note storage n = findNote(idNote);
 
-        require(getProjectLevel(n) < MAX_SUBPROJECT_LEVEL);
+        require(getNoteLevel(n) < MAX_INTERPROJECT_LEVEL);
         uint64 oldNote = findNote(
             n.owner,
             n.delegationChain,
@@ -345,7 +345,7 @@ contract LiquidPledging is LiquidPledgingBase {
     function proposeAssignProject(uint64 idNote, uint amount, uint64 idReceiver) internal {// Todo rename
         Note storage n = findNote(idNote);
 
-        require(getProjectLevel(n) < MAX_SUBPROJECT_LEVEL);
+        require(getNoteLevel(n) < MAX_SUBPROJECT_LEVEL);
 
         NoteManager storage owner = findManager(n.owner);
         uint64 toNote = findNote(
@@ -410,6 +410,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         return toNote;
     }
+
 /////////////
 // Test functions
 /////////////

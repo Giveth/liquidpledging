@@ -9,6 +9,7 @@ contract LiquidPledgingBase {
 
     uint constant MAX_DELEGATES = 20;
     uint constant MAX_SUBPROJECT_LEVEL = 20;
+    uint constant MAX_INTERPROJECT_LEVEL = 20;
 
     enum NoteManagerType { Donor, Delegate, Project }// todo change name
     enum PaymentState { NotPaid, Paying, Paid }
@@ -19,7 +20,7 @@ contract LiquidPledgingBase {
         address addr;
         string name;
         uint64 commitTime;  // Only used in donors and projects, its the precommitment time
-        address reviewer;  // Only for project
+        uint64 parentProject;  // Only for projects
         bool canceled;      // Only for project
     }
 
@@ -72,7 +73,7 @@ contract LiquidPledgingBase {
             msg.sender,
             name,
             commitTime,
-            0x0,
+            0,
             false));
 
         DonorAdded(uint64(managers.length-1));
@@ -103,7 +104,7 @@ contract LiquidPledgingBase {
             msg.sender,
             name,
             0,
-            0x0,
+            0,
             false));
 
         DeegateAdded(uint64(managers.length-1));
@@ -122,13 +123,19 @@ contract LiquidPledgingBase {
 
     event DelegateUpdated(uint64 indexed idDelegate);
 
-    function addProject(string name, address reviewer, uint64 commitTime) {
+    function addProject(string name, address projectManager, uint64 parentProject, uint64 commitTime) {
+        if (parentProject != 0) {
+            NoteManager storage pm = findManager(parentProject);
+            require(pm.managerType == NoteManagerType.Project);
+            require(pm.addr == msg.sender);
+            require(getProjectLevel(pm) < MAX_SUBPROJECT_LEVEL);
+        }
         managers.push(NoteManager(
             NoteManagerType.Project,
-            msg.sender,
+            projectManager,
             name,
             commitTime,
-            reviewer,
+            parentProject,
             false));
 
         ProjectAdded(uint64(managers.length-1));
@@ -143,14 +150,6 @@ contract LiquidPledgingBase {
         project.addr = newAddr;
         project.name = newName;
         project.commitTime = newCommitTime;
-        ProjectUpdated(idProject);
-    }
-
-    function updateProjectReviewer(uint64 idProject, address newReviewer) {
-        NoteManager storage project = findManager(idProject);
-        require(project.managerType == NoteManagerType.Project);
-        require(project.reviewer == msg.sender);
-        project.reviewer = newReviewer;
         ProjectUpdated(idProject);
     }
 
@@ -206,7 +205,7 @@ contract LiquidPledgingBase {
         address addr,
         string name,
         uint64 commitTime,
-        address reviewer,
+        uint64 parentProject,
         bool canceled)
     {
         NoteManager storage m = findManager(idManager);
@@ -214,7 +213,7 @@ contract LiquidPledgingBase {
         addr = m.addr;
         name = m.name;
         commitTime = m.commitTime;
-        reviewer = m.reviewer;
+        parentProject = m.parentProject;
         canceled = m.canceled;
     }
 
@@ -265,32 +264,56 @@ contract LiquidPledgingBase {
         return NOTFOUND;
     }
 
-    // helper function that returns the project level solely to check that there
-    // are not too many Projects that violate MAX_SUBPROJECT_LEVEL
-    function getProjectLevel(Note n) internal returns(uint) {
+    // helper function that returns the note level solely to check that transfers
+    // between Projects not violate MAX_INTERPROJECT_LEVEL
+    function getNoteLevel(Note n) internal returns(uint) {
         if (n.oldNote == 0) return 0;//changed
         Note storage oldN = findNote(n.oldNote);
-        return getProjectLevel(oldN) + 1;
+        return getNoteLevel(oldN) + 1;
     }
+
+
+    // helper function that returns the project level solely to check that there
+    // are not too many Projects that violate MAX_SUBPROJECT_LEVEL
+    function getProjectLevel(NoteManager m) internal returns(uint) {
+        assert(m.managerType == NoteManagerType.Project);
+        if (m.parentProject == 0) return(1);
+        NoteManager storage parentNM = findManager(m.parentProject);
+        return getProjectLevel(parentNM);
+    }
+
+    function isProjectCanceled(uint64 projectId) constant returns (bool) {
+        NoteManager storage m = findManager(projectId);
+        if (m.managerType == NoteManagerType.Donor) return false;
+        assert(m.managerType == NoteManagerType.Project);
+        if (m.canceled) return true;
+        if (m.parentProject == 0) return false;
+        return isProjectCanceled(m.parentProject);
+    }
+
+    function isProjectCanceled2(uint64 projectId) constant returns (bool) {
+        NoteManager storage m = findManager(projectId);
+        return false;
+        if (m.managerType == NoteManagerType.Donor) return false;
+        assert(m.managerType == NoteManagerType.Project);
+        if (m.canceled) return true;
+        if (m.parentProject == 0) return false;
+        return isProjectCanceled2(m.parentProject);
+    }
+
     // this makes it easy to cancel projects
     // @param idNote the note that may or may not be cancelled
     function getOldestNoteNotCanceled(uint64 idNote) internal constant returns(uint64) { //todo rename
         if (idNote == 0) return 0;
         Note storage n = findNote(idNote);
-        NoteManager storage owner = findManager(n.owner);
-        if (owner.managerType == NoteManagerType.Donor) return idNote;
+        NoteManager storage manager = findManager(n.owner);
+        if (manager.managerType == NoteManagerType.Donor) return idNote;
 
-        // This function calls itself to iterate up the chain to check which
-        // projects are cancelled, confirming that it is returning the Oldest valid Note
-        uint64 parentProject = getOldestNoteNotCanceled(n.oldNote);
+        assert(manager.managerType == NoteManagerType.Project);
 
-        if (owner.canceled) {    // Current project is canceled.
-            return parentProject;
-        } else if (parentProject == n.oldNote) {   // None of the top projects is canceled
-            return idNote;
-        } else {                        // Current is not canceled but some ont the top yes
-            return parentProject;
-        }
+        if (!isProjectCanceled(n.owner)) return idNote;
+
+        return getOldestNoteNotCanceled(n.oldNote);
     }
 
 }
