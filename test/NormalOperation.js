@@ -3,10 +3,11 @@
 const ethConnector = require('ethconnector');
 const chai = require('chai');
 const getBalance = require('runethtx').getBalance;
-const LiquidPledging = require('../js/liquidPledging.js')(true);
-const Vault = require('../js/vault.js');
+const liquidpledging = require('../index.js');
 const assertFail = require('./helpers/assertFail');
 
+const LiquidPledging = liquidpledging.LiquidPledging(true);
+const Vault = liquidpledging.Vault;
 const assert = chai.assert;
 
 
