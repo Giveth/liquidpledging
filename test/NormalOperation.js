@@ -66,7 +66,7 @@ describe('LiquidPledging test', () => {
     await vault.setLiquidPledging(liquidPledging.$address);
   }).timeout(6000);
   it('Should create a donor', async () => {
-    await liquidPledging.addDonor('Donor1', 86400, { from: donor1 });
+    await liquidPledging.addDonor('Donor1', 86400, 0, { from: donor1 });
     const nManagers = await liquidPledging.numberOfNoteManagers();
     assert.equal(nManagers, 1);
     const res = await liquidPledging.getNoteManager(1);
@@ -82,7 +82,7 @@ describe('LiquidPledging test', () => {
     await liquidPledging.getNote(1);
   }).timeout(6000);
   it('Should create a delegate', async () => {
-    await liquidPledging.addDelegate('Delegate1', { from: delegate1 });
+    await liquidPledging.addDelegate('Delegate1', 0, 0, { from: delegate1 });
     const nManagers = await liquidPledging.numberOfNoteManagers();
     assert.equal(nManagers, 2);
     const res = await liquidPledging.getNoteManager(2);
@@ -106,7 +106,7 @@ describe('LiquidPledging test', () => {
     assert.equal(d[2], 'Delegate1');
   }).timeout(6000);
   it('Should create a 2 projects', async () => {
-    await liquidPledging.addProject('Project1', adminProject1, 0, 86400, { from: adminProject1 });
+    await liquidPledging.addProject('Project1', adminProject1, 0, 86400, 0, { from: adminProject1 });
 
     const nManagers = await liquidPledging.numberOfNoteManagers();
     assert.equal(nManagers, 3);
@@ -118,7 +118,7 @@ describe('LiquidPledging test', () => {
     assert.equal(res[4], 0);
     assert.equal(res[5], false);
 
-    await liquidPledging.addProject('Project2', adminProject2, 0, 86400, { from: adminProject2 });
+    await liquidPledging.addProject('Project2', adminProject2, 0, 86400, 0, { from: adminProject2 });
 
     const nManagers2 = await liquidPledging.numberOfNoteManagers();
     assert.equal(nManagers2, 4);
@@ -234,8 +234,8 @@ describe('LiquidPledging test', () => {
     assert.equal(web3.fromWei(st.notes[4].amount).toNumber(), 0.12);
   }).timeout(6000);
   it('A subproject 2a and a delegate2 is created', async () => {
-    await liquidPledging.addProject('Project2a', adminProject2a, 4, 86400, { from: adminProject2 });
-    await liquidPledging.addDelegate('Delegate2', { from: delegate2 });
+    await liquidPledging.addProject('Project2a', adminProject2a, 4, 86400, 0, { from: adminProject2 });
+    await liquidPledging.addDelegate('Delegate2', 0, 0, { from: delegate2 });
     const nManagers = await liquidPledging.numberOfNoteManagers();
     assert.equal(nManagers, 6);
   }).timeout(6000);

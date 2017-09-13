@@ -1,6 +1,28 @@
 
+//File: contracts/ILiquidPledgingPlugin.sol
+pragma solidity ^0.4.11;
+
+contract ILiquidPledgingPlugin {
+
+    /// @param context In which context it is affected.
+    ///  0 -> owner from
+    ///  1 -> First delegate from
+    ///  2 -> Second delegate from
+    ///  ...
+    ///  255 -> proposedProject from
+    ///
+    ///  256 -> owner to
+    ///  257 -> First delegate to
+    ///  258 -> Second delegate to
+    ///  ...
+    ///  511 -> proposedProject to
+    function onTransfer(uint64 noteManager, uint64 noteFrom, uint64 noteTo, uint64 context, uint amount) returns (uint maxAllowed);
+}
+
 //File: contracts/LiquidPledgingBase.sol
 pragma solidity ^0.4.11;
+
+
 
 contract Vault {
     function authorizePayment(bytes32 _ref, address _dest, uint _amount);
@@ -24,6 +46,7 @@ contract LiquidPledgingBase {
         uint64 commitTime;  // Only used in donors and projects, its the precommitment time
         uint64 parentProject;  // Only for projects
         bool canceled;      // Only for project
+        ILiquidPledgingPlugin plugin;     // Handler that is called when one call is affected.
     }
 
     struct Note {
@@ -69,14 +92,15 @@ contract LiquidPledgingBase {
 // Managers functions
 //////
 
-    function addDonor(string name, uint64 commitTime) {//Todo return idManager
+    function addDonor(string name, uint64 commitTime, ILiquidPledgingPlugin plugin) {//Todo return idManager
         managers.push(NoteManager(
             NoteManagerType.Donor,
             msg.sender,
             name,
             commitTime,
             0,
-            false));
+            false,
+            plugin));
 
         DonorAdded(uint64(managers.length-1));
     }
@@ -87,7 +111,8 @@ contract LiquidPledgingBase {
         uint64 idDonor,
         address newAddr,
         string newName,
-        uint64 newCommitTime)
+        uint64 newCommitTime,
+        ILiquidPledgingPlugin newPlugin)
     {
         NoteManager storage donor = findManager(idDonor);
         require(donor.managerType == NoteManagerType.Donor);
@@ -95,37 +120,46 @@ contract LiquidPledgingBase {
         donor.addr = newAddr;
         donor.name = newName;
         donor.commitTime = newCommitTime;
+        donor.plugin = newPlugin;
         DonorUpdated(idDonor);
     }
 
     event DonorUpdated(uint64 indexed idDonor);
 
-    function addDelegate(string name) { //TODO return index number
+    function addDelegate(string name, uint64 commitTime, ILiquidPledgingPlugin plugin) { //TODO return index number
         managers.push(NoteManager(
             NoteManagerType.Delegate,
             msg.sender,
             name,
+            commitTime,
             0,
-            0,
-            false));
+            false,
+            plugin));
 
         DeegateAdded(uint64(managers.length-1));
     }
 
     event DeegateAdded(uint64 indexed idDelegate);
 
-    function updateDelegate(uint64 idDelegate, address newAddr, string newName) {
+    function updateDelegate(
+        uint64 idDelegate,
+        address newAddr,
+        string newName,
+        uint64 newCommitTime,
+        ILiquidPledgingPlugin newPlugin) {
         NoteManager storage delegate = findManager(idDelegate);
         require(delegate.managerType == NoteManagerType.Delegate);
         require(delegate.addr == msg.sender);
         delegate.addr = newAddr;
         delegate.name = newName;
+        delegate.commitTime = newCommitTime;
+        delegate.plugin = newPlugin;
         DelegateUpdated(idDelegate);
     }
 
     event DelegateUpdated(uint64 indexed idDelegate);
 
-    function addProject(string name, address projectManager, uint64 parentProject, uint64 commitTime) {
+    function addProject(string name, address projectManager, uint64 parentProject, uint64 commitTime, ILiquidPledgingPlugin plugin) {
         if (parentProject != 0) {
             NoteManager storage pm = findManager(parentProject);
             require(pm.managerType == NoteManagerType.Project);
@@ -138,20 +172,22 @@ contract LiquidPledgingBase {
             name,
             commitTime,
             parentProject,
-            false));
+            false,
+            plugin));
 
         ProjectAdded(uint64(managers.length-1));
     }
 
     event ProjectAdded(uint64 indexed idProject);
 
-    function updateProject(uint64 idProject, address newAddr, string newName, uint64 newCommitTime) {
+    function updateProject(uint64 idProject, address newAddr, string newName, uint64 newCommitTime, ILiquidPledgingPlugin newPlugin) {
         NoteManager storage project = findManager(idProject);
         require(project.managerType == NoteManagerType.Project);
         require(project.addr == msg.sender);
         project.addr = newAddr;
         project.name = newName;
         project.commitTime = newCommitTime;
+        project.plugin = newPlugin;
         ProjectUpdated(idProject);
     }
 
@@ -274,6 +310,17 @@ contract LiquidPledgingBase {
         return getNoteLevel(oldN) + 1;
     }
 
+    // helper function that returns the max commit time of the owner and all the
+    // delegates
+    function maxCommitTime(Note n) internal returns(uint commitTime) {
+        NoteManager storage m = findManager(n.owner);
+        commitTime = m.commitTime;
+
+        for (uint i=0; i<n.delegationChain.length; i++) {
+            m = findManager(n.delegationChain[i]);
+            if (m.commitTime > commitTime) commitTime = m.commitTime;
+        }
+    }
 
     // helper function that returns the project level solely to check that there
     // are not too many Projects that violate MAX_SUBPROJECT_LEVEL
@@ -670,18 +717,18 @@ contract LiquidPledging is LiquidPledgingBase {
 
         require(getNoteLevel(n) < MAX_SUBPROJECT_LEVEL);
 
-        NoteManager storage owner = findManager(n.owner);
         uint64 toNote = findNote(
                 n.owner,
                 n.delegationChain,
                 idReceiver,
-                uint64(getTime() + owner.commitTime),
+                uint64(getTime() + maxCommitTime(n)),
                 n.oldNote,
                 PaymentState.NotPaid);
         doTransfer(idNote, toNote, amount);
     }
 
-    function doTransfer(uint64 from, uint64 to, uint amount) internal {
+    function doTransfer(uint64 from, uint64 to, uint _amount) internal {
+        uint amount = callPlugins(from, to, _amount);
         if (from == to) return;
         if (amount == 0) return;
         Note storage nFrom = findNote(from);
@@ -732,6 +779,43 @@ contract LiquidPledging is LiquidPledgingBase {
         }
 
         return toNote;
+    }
+
+/////////////
+// Plugins
+/////////////
+
+    function callPlugin(uint64 managerId, uint64 fromNote, uint64 toNote, uint64 context, uint amount) internal returns (uint allowedAmount) {
+        allowedAmount = amount;
+        NoteManager storage manager = findManager(managerId);
+        if ((address(manager.plugin) != 0) && (allowedAmount > 0)) {
+            uint newAmount = manager.plugin.onTransfer(managerId, fromNote, toNote, context, amount);
+            require(newAmount <= allowedAmount);
+            allowedAmount = newAmount;
+        }
+    }
+
+    function callPluginsNote(uint64 idNote, uint64 fromNote, uint64 toNote, uint amount) internal returns (uint allowedAmount) {
+        uint64 offset = idNote == fromNote ? 0 : 256;
+        allowedAmount = amount;
+        Note storage n = findNote(idNote);
+
+        allowedAmount = callPlugin(n.owner, fromNote, toNote, offset, allowedAmount);
+
+        for (uint64 i=0; i<n.delegationChain.length; i++) {
+            allowedAmount = callPlugin(n.delegationChain[i], fromNote, toNote, offset + i+1, allowedAmount);
+        }
+
+        if (n.proposedProject > 0) {
+            allowedAmount = callPlugin(n.proposedProject, fromNote, toNote, offset + 255, allowedAmount);
+        }
+    }
+
+    function callPlugins(uint64 fromNote, uint64 toNote, uint amount) internal returns (uint allowedAmount) {
+        allowedAmount = amount;
+
+        allowedAmount = callPluginsNote(fromNote, fromNote, toNote, allowedAmount);
+        allowedAmount = callPluginsNote(toNote, fromNote, toNote, allowedAmount);
     }
 
 /////////////

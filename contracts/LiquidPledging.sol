@@ -347,18 +347,18 @@ contract LiquidPledging is LiquidPledgingBase {
 
         require(getNoteLevel(n) < MAX_SUBPROJECT_LEVEL);
 
-        NoteManager storage owner = findManager(n.owner);
         uint64 toNote = findNote(
                 n.owner,
                 n.delegationChain,
                 idReceiver,
-                uint64(getTime() + owner.commitTime),
+                uint64(getTime() + maxCommitTime(n)),
                 n.oldNote,
                 PaymentState.NotPaid);
         doTransfer(idNote, toNote, amount);
     }
 
-    function doTransfer(uint64 from, uint64 to, uint amount) internal {
+    function doTransfer(uint64 from, uint64 to, uint _amount) internal {
+        uint amount = callPlugins(from, to, _amount);
         if (from == to) return;
         if (amount == 0) return;
         Note storage nFrom = findNote(from);
@@ -409,6 +409,43 @@ contract LiquidPledging is LiquidPledgingBase {
         }
 
         return toNote;
+    }
+
+/////////////
+// Plugins
+/////////////
+
+    function callPlugin(uint64 managerId, uint64 fromNote, uint64 toNote, uint64 context, uint amount) internal returns (uint allowedAmount) {
+        allowedAmount = amount;
+        NoteManager storage manager = findManager(managerId);
+        if ((address(manager.plugin) != 0) && (allowedAmount > 0)) {
+            uint newAmount = manager.plugin.onTransfer(managerId, fromNote, toNote, context, amount);
+            require(newAmount <= allowedAmount);
+            allowedAmount = newAmount;
+        }
+    }
+
+    function callPluginsNote(uint64 idNote, uint64 fromNote, uint64 toNote, uint amount) internal returns (uint allowedAmount) {
+        uint64 offset = idNote == fromNote ? 0 : 256;
+        allowedAmount = amount;
+        Note storage n = findNote(idNote);
+
+        allowedAmount = callPlugin(n.owner, fromNote, toNote, offset, allowedAmount);
+
+        for (uint64 i=0; i<n.delegationChain.length; i++) {
+            allowedAmount = callPlugin(n.delegationChain[i], fromNote, toNote, offset + i+1, allowedAmount);
+        }
+
+        if (n.proposedProject > 0) {
+            allowedAmount = callPlugin(n.proposedProject, fromNote, toNote, offset + 255, allowedAmount);
+        }
+    }
+
+    function callPlugins(uint64 fromNote, uint64 toNote, uint amount) internal returns (uint allowedAmount) {
+        allowedAmount = amount;
+
+        allowedAmount = callPluginsNote(fromNote, fromNote, toNote, allowedAmount);
+        allowedAmount = callPluginsNote(toNote, fromNote, toNote, allowedAmount);
     }
 
 /////////////
