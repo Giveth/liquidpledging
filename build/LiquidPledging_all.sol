@@ -93,7 +93,10 @@ contract LiquidPledgingBase {
 // Managers functions
 //////
 
-    function addDonor(string name, uint64 commitTime, ILiquidPledgingPlugin plugin) {//Todo return idManager
+    function addDonor(string name, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idDonor) {//Todo return idManager
+
+        idDonor = uint64(managers.length);
+
         managers.push(NoteManager(
             NoteManagerType.Donor,
             msg.sender,
@@ -103,7 +106,7 @@ contract LiquidPledgingBase {
             false,
             plugin));
 
-        DonorAdded(uint64(managers.length-1));
+        DonorAdded(idDonor);
     }
 
     event DonorAdded(uint64 indexed idDonor);
@@ -127,7 +130,10 @@ contract LiquidPledgingBase {
 
     event DonorUpdated(uint64 indexed idDonor);
 
-    function addDelegate(string name, uint64 commitTime, ILiquidPledgingPlugin plugin) { //TODO return index number
+    function addDelegate(string name, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idDelegate) { //TODO return index number
+
+        idDelegate = uint64(managers.length);
+
         managers.push(NoteManager(
             NoteManagerType.Delegate,
             msg.sender,
@@ -137,7 +143,7 @@ contract LiquidPledgingBase {
             false,
             plugin));
 
-        DeegateAdded(uint64(managers.length-1));
+        DeegateAdded(idDelegate);
     }
 
     event DeegateAdded(uint64 indexed idDelegate);
@@ -160,13 +166,16 @@ contract LiquidPledgingBase {
 
     event DelegateUpdated(uint64 indexed idDelegate);
 
-    function addProject(string name, address projectManager, uint64 parentProject, uint64 commitTime, ILiquidPledgingPlugin plugin) {
+    function addProject(string name, address projectManager, uint64 parentProject, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idProject) {
         if (parentProject != 0) {
             NoteManager storage pm = findManager(parentProject);
             require(pm.managerType == NoteManagerType.Project);
             require(pm.addr == msg.sender);
             require(getProjectLevel(pm) < MAX_SUBPROJECT_LEVEL);
         }
+
+        idProject = uint64(managers.length);
+
         managers.push(NoteManager(
             NoteManagerType.Project,
             projectManager,
@@ -176,7 +185,8 @@ contract LiquidPledgingBase {
             false,
             plugin));
 
-        ProjectAdded(uint64(managers.length-1));
+
+        ProjectAdded(idProject);
     }
 
     event ProjectAdded(uint64 indexed idProject);
