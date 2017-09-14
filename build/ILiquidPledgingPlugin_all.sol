@@ -16,5 +16,6 @@ contract ILiquidPledgingPlugin {
     ///  258 -> Second delegate to
     ///  ...
     ///  511 -> proposedProject to
-    function onTransfer(uint64 noteManager, uint64 noteFrom, uint64 noteTo, uint64 context, uint amount) returns (uint maxAllowed);
+    function beforeTransfer(uint64 noteManager, uint64 noteFrom, uint64 noteTo, uint64 context, uint amount) returns (uint maxAllowed);
+    function afterTransfer(uint64 noteManager, uint64 noteFrom, uint64 noteTo, uint64 context, uint amount);
 }

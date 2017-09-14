@@ -26,15 +26,15 @@ const printBalances = async(liquidPledging) => {
 };
 
 const readTest = async(liquidPledging) => {
-  t1 = await liquidPledging.test1();
-  t2 = await liquidPledging.test2();
-  t3 = await liquidPledging.test3();
-  t4 = await liquidPledging.test4();
-  console.log("t1: ", t1.toNumber());
-  console.log("t2: ", t2.toNumber());
-  console.log("t3: ", t3.toNumber());
-  console.log("t4: ", t4.toNumber());
-}
+  const t1 = await liquidPledging.test1();
+  const t2 = await liquidPledging.test2();
+  const t3 = await liquidPledging.test3();
+  const t4 = await liquidPledging.test4();
+  console.log('t1: ', t1.toNumber());
+  console.log('t2: ', t2.toNumber());
+  console.log('t3: ', t3.toNumber());
+  console.log('t4: ', t4.toNumber());
+};
 
 describe('LiquidPledging test', () => {
   let web3;

@@ -16,7 +16,8 @@ contract ILiquidPledgingPlugin {
     ///  258 -> Second delegate to
     ///  ...
     ///  511 -> proposedProject to
-    function onTransfer(uint64 noteManager, uint64 noteFrom, uint64 noteTo, uint64 context, uint amount) returns (uint maxAllowed);
+    function beforeTransfer(uint64 noteManager, uint64 noteFrom, uint64 noteTo, uint64 context, uint amount) returns (uint maxAllowed);
+    function afterTransfer(uint64 noteManager, uint64 noteFrom, uint64 noteTo, uint64 context, uint amount);
 }
 
 //File: contracts/LiquidPledgingBase.sol
@@ -660,8 +661,6 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
     function transferOwnershipToDonor(uint64 idNote, uint amount, uint64 idReceiver) internal  {
-        Note storage n = findNote(idNote);
-
         uint64 toNote = findNote(
                 idReceiver,
                 new uint64[](0),
@@ -728,7 +727,7 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
     function doTransfer(uint64 from, uint64 to, uint _amount) internal {
-        uint amount = callPlugins(from, to, _amount);
+        uint amount = callPlugins(true, from, to, _amount);
         if (from == to) return;
         if (amount == 0) return;
         Note storage nFrom = findNote(from);
@@ -738,6 +737,7 @@ contract LiquidPledging is LiquidPledgingBase {
         nTo.amount += amount;
 
         Transfer(from, to, amount);
+        callPlugins(false, from, to, amount);
     }
 
     // This function does 2 things, #1: it checks to make sure that the pledges are correct
@@ -785,37 +785,42 @@ contract LiquidPledging is LiquidPledgingBase {
 // Plugins
 /////////////
 
-    function callPlugin(uint64 managerId, uint64 fromNote, uint64 toNote, uint64 context, uint amount) internal returns (uint allowedAmount) {
+    function callPlugin(bool before, uint64 managerId, uint64 fromNote, uint64 toNote, uint64 context, uint amount) internal returns (uint allowedAmount) {
+        uint newAmount;
         allowedAmount = amount;
         NoteManager storage manager = findManager(managerId);
         if ((address(manager.plugin) != 0) && (allowedAmount > 0)) {
-            uint newAmount = manager.plugin.onTransfer(managerId, fromNote, toNote, context, amount);
-            require(newAmount <= allowedAmount);
-            allowedAmount = newAmount;
+            if (before) {
+                newAmount = manager.plugin.beforeTransfer(managerId, fromNote, toNote, context, amount);
+                require(newAmount <= allowedAmount);
+                allowedAmount = newAmount;
+            } else {
+                manager.plugin.afterTransfer(managerId, fromNote, toNote, context, amount);
+            }
         }
     }
 
-    function callPluginsNote(uint64 idNote, uint64 fromNote, uint64 toNote, uint amount) internal returns (uint allowedAmount) {
+    function callPluginsNote(bool before, uint64 idNote, uint64 fromNote, uint64 toNote, uint amount) internal returns (uint allowedAmount) {
         uint64 offset = idNote == fromNote ? 0 : 256;
         allowedAmount = amount;
         Note storage n = findNote(idNote);
 
-        allowedAmount = callPlugin(n.owner, fromNote, toNote, offset, allowedAmount);
+        allowedAmount = callPlugin(before, n.owner, fromNote, toNote, offset, allowedAmount);
 
         for (uint64 i=0; i<n.delegationChain.length; i++) {
-            allowedAmount = callPlugin(n.delegationChain[i], fromNote, toNote, offset + i+1, allowedAmount);
+            allowedAmount = callPlugin(before, n.delegationChain[i], fromNote, toNote, offset + i+1, allowedAmount);
         }
 
         if (n.proposedProject > 0) {
-            allowedAmount = callPlugin(n.proposedProject, fromNote, toNote, offset + 255, allowedAmount);
+            allowedAmount = callPlugin(before, n.proposedProject, fromNote, toNote, offset + 255, allowedAmount);
         }
     }
 
-    function callPlugins(uint64 fromNote, uint64 toNote, uint amount) internal returns (uint allowedAmount) {
+    function callPlugins(bool before, uint64 fromNote, uint64 toNote, uint amount) internal returns (uint allowedAmount) {
         allowedAmount = amount;
 
-        allowedAmount = callPluginsNote(fromNote, fromNote, toNote, allowedAmount);
-        allowedAmount = callPluginsNote(toNote, fromNote, toNote, allowedAmount);
+        allowedAmount = callPluginsNote(before, fromNote, fromNote, toNote, allowedAmount);
+        allowedAmount = callPluginsNote(before, toNote, fromNote, toNote, allowedAmount);
     }
 
 /////////////
