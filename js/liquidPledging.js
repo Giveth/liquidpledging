@@ -3,49 +3,99 @@ const LiquidPledgingAbi = require('../build/LiquidPledging.sol').LiquidPledgingA
 const LiquidPledgingCode = require('../build/LiquidPledging.sol').LiquidPledgingByteCode;
 const LiquidPledgingMockAbi = require('../build/LiquidPledgingMock.sol').LiquidPledgingMockAbi;
 const LiquidPledgingMockCode = require('../build/LiquidPledgingMock.sol').LiquidPledgingMockByteCode;
-const runethtx = require('runethtx');
+
+function checkWeb3(web3) {
+  if (typeof web3.version !== 'string' || !web3.version.startsWith('1.')) {
+    throw new Error('web3 version 1.x is required');
+  }
+}
+
+const estimateGas = (web3, method, opts) => {
+  if (opts.$noEstimateGas) return Promise.resolve(4700000);
+  if (opts.$gas || opts.gas) return Promise.resolve(opts.$gas || opts.gas);
+
+  return method.estimateGas(opts)
+    // eslint-disable-next-line no-confusing-arrow
+    .then(gas => opts.$extraGas ? gas + opts.$extraGas : Math.floor(gas * 1.1));
+};
+
+// estimate gas before send if necessary
+const sendWithDefaults = (web3, txObject) => {
+  const origSend = txObject.send;
+
+  // eslint-disable-next-line no-param-reassign
+  txObject.send = (opts = {}, cb) => estimateGas(web3, txObject, opts)
+      .then((gas) => {
+        Object.assign(opts, { gas });
+        return (cb) ? origSend(opts, cb) : origSend(opts);
+      });
+
+  return txObject;
+};
+
+const extendMethod = (web3, method) => (...args) => sendWithDefaults(web3, method(...args));
 
 
 module.exports = (test) => {
-  const LiquidPladgingContract = test ?
-  runethtx.generateClass(LiquidPledgingMockAbi, LiquidPledgingMockCode) :
-  runethtx.generateClass(LiquidPledgingAbi, LiquidPledgingCode);
+  const $abi = (test) ? LiquidPledgingMockAbi : LiquidPledgingAbi;
+  const $byteCode = (test) ? LiquidPledgingMockCode : LiquidPledgingCode;
 
-  return class LiquidPledging extends LiquidPladgingContract {
+
+  return class LiquidPledging {
     constructor(web3, address) {
-      super(web3, address);
+      checkWeb3(web3);
+
+      this.$web3 = web3;
+      this.$address = address;
+      this.$contract = new web3.eth.Contract($abi, address);
+      this.$abi = $abi;
+      this.$byteCode = $byteCode;
+
+      // helpers
+      this.$toNumber = web3.utils.toBN;
+      this.$toDecimal = web3.utils.toDecimal;
+
       this.notes = [];
       this.managers = [];
-      this.b = "xxxxxxx b xxxxxxxx";
+
+      Object.keys(this.$contract.methods).forEach((key) => {
+        this[key] = extendMethod(web3, this.$contract.methods[key]);
+      });
+
+      // set default from address
+      web3.eth.getAccounts()
+        .then((accounts) => {
+          this.$contract.options.from = (accounts.length > 0) ? accounts[0] : undefined;
+        });
     }
 
     async $getNote(idNote) {
       const note = {
         delegates: [],
       };
-      const res = await this.getNote(idNote);
-      note.amount = res[0];
-      note.owner = res[1];
-      for (let i = 1; i <= res[2].toNumber(); i += 1) {
+      const res = await this.getNote(idNote).call();
+      note.amount = this.$toNumber(res.amount);
+      note.owner = res.owner;
+      for (let i = 1; i <= this.$toDecimal(res.nDelegates); i += 1) {
         const delegate = {};
-        const resd = await this.getNoteDelegate(idNote, i);
-        delegate.id = resd[0].toNumber();
-        delegate.addr = resd[1];
-        delegate.name = resd[2];
+        const resd = await this.getNoteDelegate(idNote, i).call();
+        delegate.id = this.$toDecimal(resd.idDelegate);
+        delegate.addr = resd.addr;
+        delegate.name = resd.name;
         note.delegates.push(delegate);
       }
-      if (res[3].toNumber()) {
-        note.proposedProject = res[3].toNumber();
-        note.commmitTime = res[4].toNumber();
+      if (res.proposedProject) {
+        note.proposedProject = this.$toDecimal(res.proposedProject);
+        note.commmitTime = this.$toDecimal(res.commitTime);
       }
-      if (res[5].toNumber()) {
-        note.oldProject = res[5].toNumber();
+      if (res.oldNote) {
+        note.oldProject = this.$toDecimal(res.oldNote);
       }
-      if (res[6].toNumber() === 0) {
+      if (res.paymentState === '0') {
         note.paymentState = 'NotPaid';
-      } else if (res[6].toNumber() === 1) {
+      } else if (res.paymentState === '1') {
         note.paymentState = 'Paying';
-      } else if (res[6].toNumber() === 2) {
+      } else if (res.paymentState === '2') {
         note.paymentState = 'Paid';
       } else {
         note.paymentState = 'Unknown';
@@ -55,22 +105,22 @@ module.exports = (test) => {
 
     async $getManager(idManager) {
       const manager = {};
-      const res = await this.getNoteManager(idManager);
-      if (res[0].toNumber() === 0) {
-        manager.paymentState = 'Donor';
-      } else if (res[0].toNumber() === 1) {
-        manager.paymentState = 'Delegate';
-      } else if (res[0].toNumber() === 2) {
-        manager.paymentState = 'Project';
+      const res = await this.getNoteManager(idManager).call();
+      if (res.managerType === '0') {
+        manager.type = 'Donor';
+      } else if (res.managerType === '1') {
+        manager.type = 'Delegate';
+      } else if (res.managerType === '2') {
+        manager.type = 'Project';
       } else {
-        manager.paymentState = 'Unknown';
+        manager.type = 'Unknown';
       }
-      manager.addr = res[1];
-      manager.name = res[2];
-      manager.commitTime = res[3].toNumber();
+      manager.addr = res.addr;
+      manager.name = res.name;
+      manager.commitTime = this.$toDecimal(res.commitTime);
       if (manager.paymentState === 'Project') {
-        manager.parentProject = res[4];
-        manager.canceled = res[5];
+        manager.parentProject = res.parentProject;
+        manager.canceled = res.canceled;
       }
       return manager;
     }
@@ -80,13 +130,13 @@ module.exports = (test) => {
         notes: [null],
         managers: [null],
       };
-      const nNotes = await this.numberOfNotes();
+      const nNotes = await this.numberOfNotes().call();
       for (let i = 1; i <= nNotes; i += 1) {
         const note = await this.$getNote(i);
         st.notes.push(note);
       }
 
-      const nManagers = await this.numberOfNoteManagers();
+      const nManagers = await this.numberOfNoteManagers().call();
       for (let i = 1; i <= nManagers; i += 1) {
         const manager = await this.$getManager(i);
         st.managers.push(manager);
@@ -193,6 +243,27 @@ module.exports = (test) => {
       }
 
       this.donorsState = donorsState;
+    }
+
+    static new(web3, vault, opts = {}) {
+      const deploy = new web3.eth.Contract($abi)
+              .deploy({
+                data: $byteCode,
+                arguments: [vault],
+              });
+
+      const getAccount = () => {
+        if (opts.from) return Promise.resolve(opts.from);
+
+        return web3.eth.getAccounts()
+            // eslint-disable-next-line no-confusing-arrow
+            .then(accounts => (accounts.length > 0) ? accounts[0] : undefined);
+      };
+
+      return getAccount()
+          .then(account => Object.assign(opts, { from: account }))
+          .then(() => sendWithDefaults(web3, deploy).send(opts))
+          .then(contract => new LiquidPledging(web3, contract.options.address));
     }
   };
 };

@@ -43,7 +43,6 @@
   "dependencies": {
     "async": "^2.4.0",
     "ethconnector": "0.0.25",
-    "runethtx": "0.1.1",
     "chai": "^4.1.0"
   }
 }
