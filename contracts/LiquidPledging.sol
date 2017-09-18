@@ -280,7 +280,7 @@ contract LiquidPledging is LiquidPledgingBase {
         for (uint i = 0; i < notes.length; i++ ) {
             uint64 idNote = uint64( notes[i] & (D64-1) );
 
-            normalizeNote(idNote, amount);
+            normalizeNote(idNote);
         }
     }
 

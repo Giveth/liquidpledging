@@ -664,6 +664,14 @@ contract LiquidPledging is LiquidPledgingBase {
         }
     }
 
+    function mNormalizeNote(uint[] notes) returns(uint64) {
+        for (uint i = 0; i < notes.length; i++ ) {
+            uint64 idNote = uint64( notes[i] & (D64-1) );
+
+            normalizeNote(idNote);
+        }
+    }
+
 ////////
 // Private methods
 ///////
@@ -777,7 +785,9 @@ contract LiquidPledging is LiquidPledgingBase {
     // do what this function does to the note for the end user at the expiration of the committime)
     // #2: It checks to make sure that if there has been a cancellation in the chain of projects,
     // then it adjusts the note's owner appropriately.
-    function normalizeNote(uint64 idNote) internal returns(uint64) {
+    // This call can be called from any body at any time on any node. In general it can be called
+    // to froce the calls of the affected plugins.
+    function normalizeNote(uint64 idNote) returns(uint64) {
         Note storage n = findNote(idNote);
 
         // Check to make sure this note hasnt already been used or is in the process of being used
