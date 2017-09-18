@@ -92,8 +92,7 @@ contract LiquidPledgingBase {
         uint64 idDonor,
         address newAddr,
         string newName,
-        uint64 newCommitTime,
-        ILiquidPledgingPlugin newPlugin)
+        uint64 newCommitTime)
     {
         NoteManager storage donor = findManager(idDonor);
         require(donor.managerType == NoteManagerType.Donor);
@@ -101,7 +100,6 @@ contract LiquidPledgingBase {
         donor.addr = newAddr;
         donor.name = newName;
         donor.commitTime = newCommitTime;
-        donor.plugin = newPlugin;
         DonorUpdated(idDonor);
     }
 
@@ -129,15 +127,13 @@ contract LiquidPledgingBase {
         uint64 idDelegate,
         address newAddr,
         string newName,
-        uint64 newCommitTime,
-        ILiquidPledgingPlugin newPlugin) {
+        uint64 newCommitTime) {
         NoteManager storage delegate = findManager(idDelegate);
         require(delegate.managerType == NoteManagerType.Delegate);
         require(delegate.addr == msg.sender);
         delegate.addr = newAddr;
         delegate.name = newName;
         delegate.commitTime = newCommitTime;
-        delegate.plugin = newPlugin;
         DelegateUpdated(idDelegate);
     }
 
@@ -168,14 +164,18 @@ contract LiquidPledgingBase {
 
     event ProjectAdded(uint64 indexed idProject);
 
-    function updateProject(uint64 idProject, address newAddr, string newName, uint64 newCommitTime, ILiquidPledgingPlugin newPlugin) {
+    function updateProject(
+        uint64 idProject,
+        address newAddr,
+        string newName,
+        uint64 newCommitTime)
+    {
         NoteManager storage project = findManager(idProject);
         require(project.managerType == NoteManagerType.Project);
         require(project.addr == msg.sender);
         project.addr = newAddr;
         project.name = newName;
         project.commitTime = newCommitTime;
-        project.plugin = newPlugin;
         ProjectUpdated(idProject);
     }
 
@@ -352,5 +352,12 @@ contract LiquidPledgingBase {
 
         return getOldestNoteNotCanceled(n.oldNote);
     }
+
+    function checkManagerOwner(NoteManager m) internal constant {
+        require((msg.sender == m.addr) || (msg.sender == address(m.plugin)));
+    }
+
+
+
 
 }

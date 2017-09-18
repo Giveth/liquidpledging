@@ -48,7 +48,7 @@ describe('LiquidPledging test', () => {
   let adminProject2a;
   let delegate2;
   before((done) => {
-    ethConnector.init('testrpc', { gasLimit: 4700000 }, () => {
+    ethConnector.init('testrpc', { gasLimit: 5200000 }, () => {
       web3 = ethConnector.web3;
       accounts = ethConnector.accounts;
       donor1 = accounts[1];
@@ -62,7 +62,7 @@ describe('LiquidPledging test', () => {
   });
   it('Should deploy LiquidPledgin contract', async () => {
     vault = await Vault.new(web3);
-    liquidPledging = await LiquidPledging.new(web3, vault.$address);
+    liquidPledging = await LiquidPledging.new(web3, vault.$address, { gas: 5200000 });
     await vault.setLiquidPledging(liquidPledging.$address);
   }).timeout(6000);
   it('Should create a donor', async () => {

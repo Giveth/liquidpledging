@@ -25,8 +25,9 @@ contract LiquidPledging is LiquidPledgingBase {
     function donate(uint64 idDonor, uint64 idReceiver) payable {// TODO change to `pledge()`
         NoteManager storage sender = findManager(idDonor);
 
+        checkManagerOwner(sender);
+
         require(sender.managerType == NoteManagerType.Donor);
-        require(sender.addr == msg.sender);
 
         uint amount = msg.value;
 
@@ -66,7 +67,7 @@ contract LiquidPledging is LiquidPledgingBase {
         NoteManager storage receiver = findManager(idReceiver);
         NoteManager storage sender = findManager(idSender);
 
-        require(sender.addr == msg.sender);
+        checkManagerOwner(sender);
         require(n.paymentState == PaymentState.NotPaid);
 
         // If the sender is the owner
@@ -149,7 +150,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         NoteManager storage owner = findManager(n.owner);
 
-        require(owner.addr == msg.sender);
+        checkManagerOwner(owner);
 
         uint64 idNewNote = findNote(
             n.owner,
@@ -215,9 +216,22 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idProject Id of the projct that wants to be canceled.
     function cancelProject(uint64 idProject) {
         NoteManager storage project = findManager(idProject);
-        require(project.addr == msg.sender);
+        checkManagerOwner(project);
         project.canceled = true;
     }
+
+
+    function cancelNote(uint64 idNote, uint amount) {
+        idNote = normalizeNote(idNote);
+
+        Note storage n = findNote(idNote);
+
+        NoteManager storage m = findManager(n.owner);
+        checkManagerOwner(m);
+
+        doTransfer(idNote, n.oldNote, amount);
+    }
+
 
 ////////
 // Multi note methods
@@ -259,6 +273,14 @@ contract LiquidPledging is LiquidPledgingBase {
             uint amount = notesAmounts[i] / D64;
 
             cancelPayment(idNote, amount);
+        }
+    }
+
+    function mNormalizeNote(uint[] notes) returns(uint64) {
+        for (uint i = 0; i < notes.length; i++ ) {
+            uint64 idNote = uint64( notes[i] & (D64-1) );
+
+            normalizeNote(idNote, amount);
         }
     }
 
@@ -375,7 +397,9 @@ contract LiquidPledging is LiquidPledgingBase {
     // do what this function does to the note for the end user at the expiration of the committime)
     // #2: It checks to make sure that if there has been a cancellation in the chain of projects,
     // then it adjusts the note's owner appropriately.
-    function normalizeNote(uint64 idNote) internal returns(uint64) {
+    // This call can be called from any body at any time on any node. In general it can be called
+    // to froce the calls of the affected plugins.
+    function normalizeNote(uint64 idNote) returns(uint64) {
         Note storage n = findNote(idNote);
 
         // Check to make sure this note hasnt already been used or is in the process of being used

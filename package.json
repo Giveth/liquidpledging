@@ -1,6 +1,6 @@
 {
   "name": "liquidpledging",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "description": "Liquid Pledging Smart Contract",
   "main": "index.js",
   "directories": {
