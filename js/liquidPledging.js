@@ -19,21 +19,31 @@ const estimateGas = (web3, method, opts) => {
     .then(gas => opts.$extraGas ? gas + opts.$extraGas : Math.floor(gas * 1.1));
 };
 
-// estimate gas before send if necessary
-const sendWithDefaults = (web3, txObject) => {
-  const origSend = txObject.send;
+// if constant method, executes a call, otherwise, estimates gas and executes send
+const execute = (web3, txObject, opts, cb) => {
+  const { _method } = txObject;
 
-  // eslint-disable-next-line no-param-reassign
-  txObject.send = (opts = {}, cb) => estimateGas(web3, txObject, opts)
-      .then((gas) => {
-        Object.assign(opts, { gas });
-        return (cb) ? origSend(opts, cb) : origSend(opts);
-      });
+  if (_method.constant) return txObject.call(opts);
 
-  return txObject;
+    // eslint-disable-next-line no-param-reassign
+  return estimateGas(web3, txObject, opts)
+        .then((gas) => {
+          Object.assign(opts, { gas });
+          return (cb) ? txObject.send(opts, cb) : txObject.send(opts);
+        });
 };
 
-const extendMethod = (web3, method) => (...args) => sendWithDefaults(web3, method(...args));
+const methodWrapper = (web3, method, ...args) => {
+  let cb;
+  let opts = {};
+
+  if (typeof args[args.length - 1] === 'function') cb = args.pop();
+  if (typeof args[args.length - 1] === 'object') opts = args.pop();
+
+  const txObject = method(...args);
+
+  return execute(web3, txObject, opts, cb);
+};
 
 
 module.exports = (test) => {
@@ -58,9 +68,11 @@ module.exports = (test) => {
       this.notes = [];
       this.managers = [];
 
-      Object.keys(this.$contract.methods).forEach((key) => {
-        this[key] = extendMethod(web3, this.$contract.methods[key]);
-      });
+      Object.keys(this.$contract.methods)
+          .filter(key => !key.startsWith('0x'))
+          .forEach((key) => {
+            this[key] = (...args) => methodWrapper(web3, this.$contract.methods[key], ...args);
+          });
 
       // set default from address
       web3.eth.getAccounts()
@@ -73,12 +85,12 @@ module.exports = (test) => {
       const note = {
         delegates: [],
       };
-      const res = await this.getNote(idNote).call();
+      const res = await this.getNote(idNote);
       note.amount = this.$toNumber(res.amount);
       note.owner = res.owner;
       for (let i = 1; i <= this.$toDecimal(res.nDelegates); i += 1) {
         const delegate = {};
-        const resd = await this.getNoteDelegate(idNote, i).call();
+        const resd = await this.getNoteDelegate(idNote, i);
         delegate.id = this.$toDecimal(resd.idDelegate);
         delegate.addr = resd.addr;
         delegate.name = resd.name;
@@ -105,7 +117,7 @@ module.exports = (test) => {
 
     async $getManager(idManager) {
       const manager = {};
-      const res = await this.getNoteManager(idManager).call();
+      const res = await this.getNoteManager(idManager);
       if (res.managerType === '0') {
         manager.type = 'Donor';
       } else if (res.managerType === '1') {
@@ -130,13 +142,13 @@ module.exports = (test) => {
         notes: [null],
         managers: [null],
       };
-      const nNotes = await this.numberOfNotes().call();
+      const nNotes = await this.numberOfNotes();
       for (let i = 1; i <= nNotes; i += 1) {
         const note = await this.$getNote(i);
         st.notes.push(note);
       }
 
-      const nManagers = await this.numberOfNoteManagers().call();
+      const nManagers = await this.numberOfNoteManagers();
       for (let i = 1; i <= nManagers; i += 1) {
         const manager = await this.$getManager(i);
         st.managers.push(manager);
@@ -247,10 +259,10 @@ module.exports = (test) => {
 
     static new(web3, vault, opts = {}) {
       const deploy = new web3.eth.Contract($abi)
-              .deploy({
-                data: $byteCode,
-                arguments: [vault],
-              });
+          .deploy({
+            data: $byteCode,
+            arguments: [vault],
+          });
 
       const getAccount = () => {
         if (opts.from) return Promise.resolve(opts.from);
@@ -262,7 +274,7 @@ module.exports = (test) => {
 
       return getAccount()
           .then(account => Object.assign(opts, { from: account }))
-          .then(() => sendWithDefaults(web3, deploy).send(opts))
+          .then(() => execute(web3, deploy, opts))
           .then(contract => new LiquidPledging(web3, contract.options.address));
     }
   };
