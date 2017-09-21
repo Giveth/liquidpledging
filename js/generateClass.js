@@ -1,3 +1,4 @@
+const Web3PromiEvent = require('web3-core-promievent');
 
 function checkWeb3(web3) {
   if (typeof web3.version !== 'string' || !web3.version.startsWith('1.')) {
@@ -20,12 +21,25 @@ const execute = (web3, txObject, opts, cb) => {
 
   if (_method.constant) return txObject.call(opts);
 
-    // eslint-disable-next-line no-param-reassign
-  return estimateGas(web3, txObject, opts)
+  // we need to create a new PromiEvent here b/c estimateGas returns a regular promise
+  // however on a 'send' we want to return a PromiEvent
+  const defer = new Web3PromiEvent();
+  const relayEvent = event => (...args) => defer.eventEmitter.emit(event, ...args);
+
+  estimateGas(web3, txObject, opts)
     .then((gas) => {
       Object.assign(opts, { gas });
-      return (cb) ? txObject.send(opts, cb) : txObject.send(opts);
-    });
+      return (cb) ? txObject.send(opts, cb) : txObject.send(opts)
+        // relay all events to our promiEvent
+        .on('transactionHash', relayEvent('transactionHash'))
+        .on('confirmation', relayEvent('confirmation'))
+        .on('receipt', relayEvent('receipt'))
+        .on('error', relayEvent('error'));
+    })
+    .then(defer.resolve)
+    .catch(defer.reject);
+
+  return defer.eventEmitter;
 };
 
 const methodWrapper = (web3, method, ...args) => {
