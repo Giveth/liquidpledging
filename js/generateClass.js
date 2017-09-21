@@ -72,7 +72,7 @@ module.exports = (abi, bytecode) => {
         this[key] = (...args) => methodWrapper(web3, this.$contract.methods[key], ...args);
       });
 
-        // set default from address
+    // set default from address
     web3.eth.getAccounts()
       .then((accounts) => {
         this.$contract.options.from = (accounts.length > 0) ? accounts[0] : undefined;

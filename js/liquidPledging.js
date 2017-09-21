@@ -1,4 +1,3 @@
-/* eslint-disable no-await-in-loop */
 const LiquidPledgingAbi = require('../build/LiquidPledging.sol').LiquidPledgingAbi;
 const LiquidPledgingCode = require('../build/LiquidPledging.sol').LiquidPledgingByteCode;
 const LiquidPledgingMockAbi = require('../build/LiquidPledgingMock.sol').LiquidPledgingMockAbi;
@@ -11,86 +10,106 @@ module.exports = (test) => {
 
   const LiquidPledging = generateClass($abi, $byteCode);
 
-  async function $getNote(idNote) {
+  LiquidPledging.prototype.$toDecimal = function (val) { return this.$web3.utils.toDecimal(val); };
+  LiquidPledging.prototype.$toNumber = function (val) { this.$web3.utils.toBN(val); };
+
+  LiquidPledging.prototype.$getNote = function (idNote) {
     const note = {
       delegates: [],
     };
-    const res = await this.getNote(idNote);
-    note.amount = this.$toNumber(res.amount);
-    note.owner = res.owner;
-    for (let i = 1; i <= this.$toDecimal(res.nDelegates); i += 1) {
-      const delegate = {};
-      const resd = await this.getNoteDelegate(idNote, i);
-      delegate.id = this.$toDecimal(resd.idDelegate);
-      delegate.addr = resd.addr;
-      delegate.name = resd.name;
-      note.delegates.push(delegate);
-    }
-    if (res.proposedProject) {
-      note.proposedProject = this.$toDecimal(res.proposedProject);
-      note.commmitTime = this.$toDecimal(res.commitTime);
-    }
-    if (res.oldNote) {
-      note.oldProject = this.$toDecimal(res.oldNote);
-    }
-    if (res.paymentState === '0') {
-      note.paymentState = 'NotPaid';
-    } else if (res.paymentState === '1') {
-      note.paymentState = 'Paying';
-    } else if (res.paymentState === '2') {
-      note.paymentState = 'Paid';
-    } else {
-      note.paymentState = 'Unknown';
-    }
-    return note;
-  }
 
-  LiquidPledging.prototype.$getNote = $getNote;
+    return this.getNote(idNote)
+      .then((res) => {
+        note.amount = this.$toNumber(res.amount);
+        note.owner = res.owner;
 
-  async function $getManager(idManager) {
+        if (res.proposedProject) {
+          note.proposedProject = this.$toDecimal(res.proposedProject);
+          note.commmitTime = this.$toDecimal(res.commitTime);
+        }
+        if (res.oldNote) {
+          note.oldProject = this.$toDecimal(res.oldNote);
+        }
+        if (res.paymentState === '0') {
+          note.paymentState = 'NotPaid';
+        } else if (res.paymentState === '1') {
+          note.paymentState = 'Paying';
+        } else if (res.paymentState === '2') {
+          note.paymentState = 'Paid';
+        } else {
+          note.paymentState = 'Unknown';
+        }
+
+        const promises = [];
+        for (let i = 1; i <= this.$toDecimal(res.nDelegates); i += 1) {
+          promises.push(
+            this.getNoteDelegate(idNote, i)
+              .then(r => ({
+                id: this.$toDecimal(r.idDelegate),
+                addr: r.addr,
+                name: r.name,
+              })),
+          );
+        }
+
+        return Promise.all(promises);
+      })
+      .then((delegates) => {
+        note.delegates = delegates;
+        return note;
+      });
+  };
+
+  LiquidPledging.prototype.$getManager = function (idManager) {
     const manager = {};
-    const res = await this.getNoteManager(idManager);
-    if (res.managerType === '0') {
-      manager.type = 'Donor';
-    } else if (res.managerType === '1') {
-      manager.type = 'Delegate';
-    } else if (res.managerType === '2') {
-      manager.type = 'Project';
-    } else {
-      manager.type = 'Unknown';
-    }
-    manager.addr = res.addr;
-    manager.name = res.name;
-    manager.commitTime = this.$toDecimal(res.commitTime);
-    if (manager.paymentState === 'Project') {
-      manager.parentProject = res.parentProject;
-      manager.canceled = res.canceled;
-    }
-    return manager;
+    return this.getNoteManager(idManager)
+      .then((res) => {
+        if (res.managerType === '0') {
+          manager.type = 'Donor';
+        } else if (res.managerType === '1') {
+          manager.type = 'Delegate';
+        } else if (res.managerType === '2') {
+          manager.type = 'Project';
+        } else {
+          manager.type = 'Unknown';
+        }
+        manager.addr = res.addr;
+        manager.name = res.name;
+        manager.commitTime = this.$toDecimal(res.commitTime);
+        if (manager.paymentState === 'Project') {
+          manager.parentProject = res.parentProject;
+          manager.canceled = res.canceled;
+        }
+        return manager;
+      });
   };
 
-  LiquidPledging.prototype.$getManager = $getManager;
+  LiquidPledging.prototype.getState = function () {
+    const getNotes = () => this.numberOfNotes()
+        .then((nNotes) => {
+          const promises = [];
+          for (let i = 1; i <= nNotes; i += 1) {
+            promises.push(this.$getNote(i));
+          }
+          return Promise.all(promises);
+        });
 
-  async function getState() {
-    const st = {
-      notes: [null],
-      managers: [null],
-    };
-    const nNotes = await this.numberOfNotes();
-    for (let i = 1; i <= nNotes; i += 1) {
-      const note = await this.$getNote(i);
-      st.notes.push(note);
-    }
+    const getManagers = () => this.numberOfNoteManagers()
+      .then((nManagers) => {
+        const promises = [];
+        for (let i = 1; i <= nManagers; i += 1) {
+          promises.push(this.$getManager(i));
+        }
 
-    const nManagers = await this.numberOfNoteManagers();
-    for (let i = 1; i <= nManagers; i += 1) {
-      const manager = await this.$getManager(i);
-      st.managers.push(manager);
-    }
-    return st;
+        return Promise.all(promises);
+      });
+
+    return Promise.all([getNotes(), getManagers()])
+        .then(([notes, managers]) => ({
+          notes: [null, ...notes],
+          managers: [null, ...managers],
+        }));
   };
-
-  LiquidPledging.prototype.getState = getState;
 
   LiquidPledging.prototype.generateDonorsState = function () {
     const donorsState = [];
