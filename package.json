@@ -43,7 +43,7 @@
   "dependencies": {
     "async": "^2.4.0",
     "chai": "^4.1.0",
-    "eth-contract-class": "0.0.1",
+    "eth-contract-class": "0.0.2",
     "ethconnector": "0.0.25"
   }
 }
