@@ -42,8 +42,8 @@
   "homepage": "https://github.com/Giveth/liquidpledging#readme",
   "dependencies": {
     "async": "^2.4.0",
-    "ethconnector": "0.0.25",
     "chai": "^4.1.0",
-    "web3-core-promievent": "^1.0.0-beta.18"
+    "eth-contract-class": "0.0.1",
+    "ethconnector": "0.0.25"
   }
 }

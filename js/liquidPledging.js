@@ -2,7 +2,7 @@ const LiquidPledgingAbi = require('../build/LiquidPledging.sol').LiquidPledgingA
 const LiquidPledgingCode = require('../build/LiquidPledging.sol').LiquidPledgingByteCode;
 const LiquidPledgingMockAbi = require('../build/LiquidPledgingMock.sol').LiquidPledgingMockAbi;
 const LiquidPledgingMockCode = require('../build/LiquidPledgingMock.sol').LiquidPledgingMockByteCode;
-const generateClass = require('./generateClass');
+const generateClass = require('eth-contract-class');
 
 module.exports = (test) => {
   const $abi = (test) ? LiquidPledgingMockAbi : LiquidPledgingAbi;
