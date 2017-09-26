@@ -80,6 +80,7 @@ module.exports = (test) => {
           manager.parentProject = res.parentProject;
           manager.canceled = res.canceled;
         }
+        manager.plugin = res.plugin;
         return manager;
       });
   };
