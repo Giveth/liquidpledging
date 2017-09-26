@@ -14,7 +14,8 @@ contract Owned {
 
     address public owner;
 
-    /// @notice The Constructor assigns the message sender to be `owner`
+    /// @notice The Constructor assigns the account deploying the contract to be
+    ///  the `owner`
     function Owned() {
         owner = msg.sender;
     }
@@ -22,13 +23,16 @@ contract Owned {
     address public newOwner;
 
     /// @notice `owner` can step down and assign some other address to this role
-    /// @param _newOwner The address of the new owner. 0x0 can be used to create
-    ///  an unowned neutral vault, however that cannot be undone
+    ///  but after this function is called the current owner still has ownership
+    ///  powers in this contract; change of ownership is a 2 step process
+    /// @param _newOwner The address of the new owner. A simple contract with
+    ///  the abilitiy to accept ownership but the inability to do anything else
+    ///  can be used to create an unowned contract to achieve decentralization
     function changeOwner(address _newOwner) onlyOwner {
         newOwner = _newOwner;
     }
 
-
+    /// @notice `newOwner` can accept ownership over this contract 
     function acceptOwnership() {
         if (msg.sender == newOwner) {
             owner = newOwner;
