@@ -232,7 +232,8 @@ contract LiquidPledgingBase {
         string name,
         uint64 commitTime,
         uint64 parentProject,
-        bool canceled)
+        bool canceled,
+        address plugin)
     {
         NoteManager storage m = findManager(idManager);
         managerType = m.managerType;
@@ -241,6 +242,7 @@ contract LiquidPledgingBase {
         commitTime = m.commitTime;
         parentProject = m.parentProject;
         canceled = m.canceled;
+        plugin = m.plugin;
     }
 
 ////////
