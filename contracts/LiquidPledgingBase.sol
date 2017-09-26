@@ -242,7 +242,7 @@ contract LiquidPledgingBase {
         commitTime = m.commitTime;
         parentProject = m.parentProject;
         canceled = m.canceled;
-        plugin = m.plugin;
+        plugin = address(m.plugin);
     }
 
 ////////
