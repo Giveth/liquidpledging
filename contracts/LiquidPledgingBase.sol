@@ -67,7 +67,7 @@ contract LiquidPledgingBase {
 // Managers functions
 //////
 
-    function addDonor(string name, uint64 commitTime) {//Todo return idManager
+    function addDonor(string name, uint64 commitTime) returns (uint64 idManager) {
         managers.push(NoteManager(
             NoteManagerType.Donor,
             msg.sender,
@@ -76,7 +76,9 @@ contract LiquidPledgingBase {
             0,
             false));
 
-        DonorAdded(uint64(managers.length-1));
+        idManager = uint64(managers.length-1);
+
+        DonorAdded(idManager);
     }
 
     event DonorAdded(uint64 indexed idDonor);
@@ -107,10 +109,10 @@ contract LiquidPledgingBase {
             0,
             false));
 
-        DeegateAdded(uint64(managers.length-1));
+        DelegateAdded(uint64(managers.length-1));
     }
 
-    event DeegateAdded(uint64 indexed idDelegate);
+    event DelegateAdded(uint64 indexed idDelegate);
 
     function updateDelegate(uint64 idDelegate, address newAddr, string newName) {
         NoteManager storage delegate = findManager(idDelegate);
