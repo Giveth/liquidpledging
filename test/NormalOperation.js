@@ -26,15 +26,15 @@ const printBalances = async(liquidPledging) => {
 };
 
 const readTest = async(liquidPledging) => {
-  t1 = await liquidPledging.test1();
-  t2 = await liquidPledging.test2();
-  t3 = await liquidPledging.test3();
-  t4 = await liquidPledging.test4();
-  console.log("t1: ", t1.toNumber());
-  console.log("t2: ", t2.toNumber());
-  console.log("t3: ", t3.toNumber());
-  console.log("t4: ", t4.toNumber());
-}
+  const t1 = await liquidPledging.test1();
+  const t2 = await liquidPledging.test2();
+  const t3 = await liquidPledging.test3();
+  const t4 = await liquidPledging.test4();
+  console.log('t1: ', t1.toNumber());
+  console.log('t2: ', t2.toNumber());
+  console.log('t3: ', t3.toNumber());
+  console.log('t4: ', t4.toNumber());
+};
 
 describe('LiquidPledging test', () => {
   let web3;
@@ -49,7 +49,7 @@ describe('LiquidPledging test', () => {
   let adminProject2a;
   let delegate2;
   before((done) => {
-    ethConnector.init('testrpc', { gasLimit: 4700000 }, () => {
+    ethConnector.init('testrpc', { gasLimit: 5200000 }, () => {
       web3 = ethConnector.web3;
       accounts = ethConnector.accounts;
       donor1 = accounts[1];
@@ -64,11 +64,11 @@ describe('LiquidPledging test', () => {
   });
   it('Should deploy LiquidPledging contract', async () => {
     vault = await Vault.new(web3);
-    liquidPledging = await LiquidPledging.new(web3, vault.$address);
+    liquidPledging = await LiquidPledging.new(web3, vault.$address, { gas: 5200000 });
     await vault.setLiquidPledging(liquidPledging.$address);
   }).timeout(6000);
   it('Should create a donor', async () => {
-    await liquidPledging.addDonor('Donor1', 86400, { from: donor1 });
+    await liquidPledging.addDonor('Donor1', 86400, 0, { from: donor1 });
     const nManagers = await liquidPledging.numberOfNoteManagers();
     assert.equal(nManagers, 1);
     const res = await liquidPledging.getNoteManager(1);
@@ -84,7 +84,7 @@ describe('LiquidPledging test', () => {
     await liquidPledging.getNote(1);
   }).timeout(6000);
   it('Should create a delegate', async () => {
-    await liquidPledging.addDelegate('Delegate1', { from: delegate1 });
+    await liquidPledging.addDelegate('Delegate1', 0, 0, { from: delegate1 });
     const nManagers = await liquidPledging.numberOfNoteManagers();
     assert.equal(nManagers, 2);
     const res = await liquidPledging.getNoteManager(2);
@@ -108,7 +108,7 @@ describe('LiquidPledging test', () => {
     assert.equal(d[2], 'Delegate1');
   }).timeout(6000);
   it('Should create a 2 projects', async () => {
-    await liquidPledging.addProject('Project1', adminProject1, 0, 86400, { from: adminProject1 });
+    await liquidPledging.addProject('Project1', adminProject1, 0, 86400, 0, { from: adminProject1 });
 
     const nManagers = await liquidPledging.numberOfNoteManagers();
     assert.equal(nManagers, 3);
@@ -120,7 +120,7 @@ describe('LiquidPledging test', () => {
     assert.equal(res[4], 0);
     assert.equal(res[5], false);
 
-    await liquidPledging.addProject('Project2', adminProject2, 0, 86400, { from: adminProject2 });
+    await liquidPledging.addProject('Project2', adminProject2, 0, 86400, 0, { from: adminProject2 });
 
     const nManagers2 = await liquidPledging.numberOfNoteManagers();
     assert.equal(nManagers2, 4);
@@ -236,8 +236,8 @@ describe('LiquidPledging test', () => {
     assert.equal(web3.fromWei(st.notes[4].amount).toNumber(), 0.12);
   }).timeout(6000);
   it('A subproject 2a and a delegate2 is created', async () => {
-    await liquidPledging.addProject('Project2a', adminProject2a, 4, 86400, { from: adminProject2 });
-    await liquidPledging.addDelegate('Delegate2', { from: delegate2 });
+    await liquidPledging.addProject('Project2a', adminProject2a, 4, 86400, 0, { from: adminProject2 });
+    await liquidPledging.addDelegate('Delegate2', 0, 0, { from: delegate2 });
     const nManagers = await liquidPledging.numberOfNoteManagers();
     assert.equal(nManagers, 6);
   }).timeout(6000);

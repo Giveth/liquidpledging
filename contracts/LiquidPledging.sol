@@ -29,8 +29,9 @@ contract LiquidPledging is LiquidPledgingBase {
 
         NoteManager storage sender = findManager(idDonor);
 
+        checkManagerOwner(sender);
+
         require(sender.managerType == NoteManagerType.Donor);
-        require(sender.addr == msg.sender);
 
         uint amount = msg.value;
 
@@ -70,7 +71,7 @@ contract LiquidPledging is LiquidPledgingBase {
         NoteManager storage receiver = findManager(idReceiver);
         NoteManager storage sender = findManager(idSender);
 
-        require(sender.addr == msg.sender);
+        checkManagerOwner(sender);
         require(n.paymentState == PaymentState.NotPaid);
 
         // If the sender is the owner
@@ -153,7 +154,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         NoteManager storage owner = findManager(n.owner);
 
-        require(owner.addr == msg.sender);
+        checkManagerOwner(owner);
 
         uint64 idNewNote = findNote(
             n.owner,
@@ -219,9 +220,22 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idProject Id of the projct that wants to be canceled.
     function cancelProject(uint64 idProject) {
         NoteManager storage project = findManager(idProject);
-        require(project.addr == msg.sender);
+        checkManagerOwner(project);
         project.canceled = true;
     }
+
+
+    function cancelNote(uint64 idNote, uint amount) {
+        idNote = normalizeNote(idNote);
+
+        Note storage n = findNote(idNote);
+
+        NoteManager storage m = findManager(n.owner);
+        checkManagerOwner(m);
+
+        doTransfer(idNote, n.oldNote, amount);
+    }
+
 
 ////////
 // Multi note methods
@@ -266,6 +280,14 @@ contract LiquidPledging is LiquidPledgingBase {
         }
     }
 
+    function mNormalizeNote(uint[] notes) returns(uint64) {
+        for (uint i = 0; i < notes.length; i++ ) {
+            uint64 idNote = uint64( notes[i] & (D64-1) );
+
+            normalizeNote(idNote);
+        }
+    }
+
 ////////
 // Private methods
 ///////
@@ -294,8 +316,6 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
     function transferOwnershipToDonor(uint64 idNote, uint amount, uint64 idReceiver) internal  {
-        Note storage n = findNote(idNote);
-
         uint64 toNote = findNote(
                 idReceiver,
                 new uint64[](0),
@@ -351,18 +371,18 @@ contract LiquidPledging is LiquidPledgingBase {
 
         require(getNoteLevel(n) < MAX_SUBPROJECT_LEVEL);
 
-        NoteManager storage owner = findManager(n.owner);
         uint64 toNote = findNote(
                 n.owner,
                 n.delegationChain,
                 idReceiver,
-                uint64(getTime() + owner.commitTime),
+                uint64(getTime() + maxCommitTime(n)),
                 n.oldNote,
                 PaymentState.NotPaid);
         doTransfer(idNote, toNote, amount);
     }
 
-    function doTransfer(uint64 from, uint64 to, uint amount) internal {
+    function doTransfer(uint64 from, uint64 to, uint _amount) internal {
+        uint amount = callPlugins(true, from, to, _amount);
         if (from == to) return;
         if (amount == 0) return;
         Note storage nFrom = findNote(from);
@@ -372,6 +392,7 @@ contract LiquidPledging is LiquidPledgingBase {
         nTo.amount += amount;
 
         Transfer(from, to, amount);
+        callPlugins(false, from, to, amount);
     }
 
     // This function does 2 things, #1: it checks to make sure that the pledges are correct
@@ -380,7 +401,9 @@ contract LiquidPledging is LiquidPledgingBase {
     // do what this function does to the note for the end user at the expiration of the committime)
     // #2: It checks to make sure that if there has been a cancellation in the chain of projects,
     // then it adjusts the note's owner appropriately.
-    function normalizeNote(uint64 idNote) internal returns(uint64) {
+    // This call can be called from any body at any time on any node. In general it can be called
+    // to froce the calls of the affected plugins.
+    function normalizeNote(uint64 idNote) returns(uint64) {
         Note storage n = findNote(idNote);
 
         // Check to make sure this note hasnt already been used or is in the process of being used
@@ -413,6 +436,48 @@ contract LiquidPledging is LiquidPledgingBase {
         }
 
         return toNote;
+    }
+
+/////////////
+// Plugins
+/////////////
+
+    function callPlugin(bool before, uint64 managerId, uint64 fromNote, uint64 toNote, uint64 context, uint amount) internal returns (uint allowedAmount) {
+        uint newAmount;
+        allowedAmount = amount;
+        NoteManager storage manager = findManager(managerId);
+        if ((address(manager.plugin) != 0) && (allowedAmount > 0)) {
+            if (before) {
+                newAmount = manager.plugin.beforeTransfer(managerId, fromNote, toNote, context, amount);
+                require(newAmount <= allowedAmount);
+                allowedAmount = newAmount;
+            } else {
+                manager.plugin.afterTransfer(managerId, fromNote, toNote, context, amount);
+            }
+        }
+    }
+
+    function callPluginsNote(bool before, uint64 idNote, uint64 fromNote, uint64 toNote, uint amount) internal returns (uint allowedAmount) {
+        uint64 offset = idNote == fromNote ? 0 : 256;
+        allowedAmount = amount;
+        Note storage n = findNote(idNote);
+
+        allowedAmount = callPlugin(before, n.owner, fromNote, toNote, offset, allowedAmount);
+
+        for (uint64 i=0; i<n.delegationChain.length; i++) {
+            allowedAmount = callPlugin(before, n.delegationChain[i], fromNote, toNote, offset + i+1, allowedAmount);
+        }
+
+        if (n.proposedProject > 0) {
+            allowedAmount = callPlugin(before, n.proposedProject, fromNote, toNote, offset + 255, allowedAmount);
+        }
+    }
+
+    function callPlugins(bool before, uint64 fromNote, uint64 toNote, uint amount) internal returns (uint allowedAmount) {
+        allowedAmount = amount;
+
+        allowedAmount = callPluginsNote(before, fromNote, fromNote, toNote, allowedAmount);
+        allowedAmount = callPluginsNote(before, toNote, fromNote, toNote, allowedAmount);
     }
 
 /////////////
