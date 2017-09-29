@@ -26,7 +26,7 @@ contract Owned {
     ///  but after this function is called the current owner still has ownership
     ///  powers in this contract; change of ownership is a 2 step process
     /// @param _newOwner The address of the new owner. A simple contract with
-    ///  the abilitiy to accept ownership but the inability to do anything else
+    ///  the ability to accept ownership but the inability to do anything else
     ///  can be used to create an unowned contract to achieve decentralization
     function changeOwner(address _newOwner) onlyOwner {
         newOwner = _newOwner;
