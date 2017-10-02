@@ -10,9 +10,6 @@ module.exports = (test) => {
 
   const LiquidPledging = generateClass($abi, $byteCode);
 
-  LiquidPledging.prototype.$toDecimal = function (val) { return this.$web3.utils.toDecimal(val); };
-  LiquidPledging.prototype.$toNumber = function (val) { this.$web3.utils.toBN(val); };
-
   LiquidPledging.prototype.$getNote = function (idNote) {
     const note = {
       delegates: [],
@@ -20,15 +17,15 @@ module.exports = (test) => {
 
     return this.getNote(idNote)
       .then((res) => {
-        note.amount = this.$toNumber(res.amount);
+        note.amount = res.amount;
         note.owner = res.owner;
 
         if (res.proposedProject) {
-          note.proposedProject = this.$toDecimal(res.proposedProject);
-          note.commmitTime = this.$toDecimal(res.commitTime);
+          note.proposedProject = res.proposedProject;
+          note.commmitTime = res.commitTime;
         }
         if (res.oldNote) {
-          note.oldProject = this.$toDecimal(res.oldNote);
+          note.oldProject = res.oldNote;
         }
         if (res.paymentState === '0') {
           note.paymentState = 'NotPaid';
@@ -41,11 +38,11 @@ module.exports = (test) => {
         }
 
         const promises = [];
-        for (let i = 1; i <= this.$toDecimal(res.nDelegates); i += 1) {
+        for (let i = 1; i <= res.nDelegates; i += 1) {
           promises.push(
             this.getNoteDelegate(idNote, i)
               .then(r => ({
-                id: this.$toDecimal(r.idDelegate),
+                id: r.idDelegate,
                 addr: r.addr,
                 name: r.name,
               })),
@@ -75,12 +72,13 @@ module.exports = (test) => {
         }
         manager.addr = res.addr;
         manager.name = res.name;
-        manager.commitTime = this.$toDecimal(res.commitTime);
+        manager.commitTime = res.commitTime;
         if (manager.paymentState === 'Project') {
           manager.parentProject = res.parentProject;
           manager.canceled = res.canceled;
         }
         manager.plugin = res.plugin;
+        manager.canceled = res.canceled;
         return manager;
       });
   };
