@@ -10,19 +10,23 @@ contract LiquidPledging is LiquidPledgingBase {
 // Constructor
 //////
 
-    // This constructor actualy also calls the constructor for the
-    // `LiquidPledgingBase` contract
+    // This constructor  also calls the constructor for `LiquidPledgingBase`
     function LiquidPledging(address _vault) LiquidPledgingBase(_vault) {
     }
 
-    /// @notice This is how value enters into the system which creates notes. The
-    ///  token of value goes into the vault and then the amount in the Note
-    /// relevant to this donor without delegates is increased.
-    ///  After that, a normal transfer is done to the idReceiver.
+    /// @notice This is how value enters into the system which creates pledges;
+    ///  the token of value goes into the vault and the amount in the pledge
+    ///  relevant to this Giver without delegates is increased, and a normal
+    ///  transfer is done to the idReceiver
     /// @param idDonor Identifier of the donor thats donating.
     /// @param idReceiver To whom it's transfered. Can be the same donor, another
     ///  donor, a delegate or a project
-    function donate(uint64 idDonor, uint64 idReceiver) payable {// TODO change to `pledge()`
+
+function donate(uint64 idDonor, uint64 idReceiver) payable {
+        if (idDonor == 0) {
+            idDonor = addDonor('', 259200, ILiquidPledgingPlugin(0x0)); // default to 3 day commitTime
+        }
+
         NoteManager storage sender = findManager(idDonor);
 
         checkManagerOwner(sender);
@@ -36,7 +40,7 @@ contract LiquidPledging is LiquidPledgingBase {
         vault.transfer(amount); // transfers the baseToken to the Vault
         uint64 idNote = findNote(
             idDonor,
-            new uint64[](0), //what is new
+            new uint64[](0), //what is new?
             0,
             0,
             0,
@@ -52,9 +56,9 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
 
-    /// @notice This is the main function to move value from one Note to the other
-    /// @param idSender ID of the donor, delegate or project manager that is transfering
-    ///  the funds from Note to Note. This manager must have permisions to move the value
+    /// @notice Moves value between notes
+    /// @param idSender ID of the donor, delegate or project manager that is transferring
+    ///  the funds from Note to Note. This manager must have permissions to move the value
     /// @param idNote Id of the note that's moving the value
     /// @param amount Quantity of value that's being moved
     /// @param idReceiver Destination of the value, can be a donor sending to a donor or
@@ -138,8 +142,8 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @notice This method is used to withdraw value from the system. This can be used
     ///  by the donors to avoid committing the donation or by project manager to use
     ///  the Ether.
-    /// @param idNote Id of the note that wants to be withdrawed.
-    /// @param amount Quantity of Ether that wants to be withdrawed.
+    /// @param idNote Id of the note that wants to be withdrawn.
+    /// @param amount Quantity of Ether that wants to be withdrawn.
     function withdraw(uint64 idNote, uint amount) {
 
         idNote = normalizeNote(idNote);
@@ -167,8 +171,8 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
     /// @notice Method called by the vault to confirm a payment.
-    /// @param idNote Id of the note that wants to be withdrawed.
-    /// @param amount Quantity of Ether that wants to be withdrawed.
+    /// @param idNote Id of the note that wants to be withdrawn.
+    /// @param amount Quantity of Ether that wants to be withdrawn.
     function confirmPayment(uint64 idNote, uint amount) onlyVault {
         Note storage n = findNote(idNote);
 
@@ -197,7 +201,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         require(n.paymentState == PaymentState.Paying); //TODO change to revert
 
-        // When a payment is cacnceled, never is assigned to a project.
+        // When a payment is canceled, never is assigned to a project.
         uint64 oldNote = findNote(
             n.owner,
             n.delegationChain,
@@ -218,6 +222,8 @@ contract LiquidPledging is LiquidPledgingBase {
         NoteManager storage project = findManager(idProject);
         checkManagerOwner(project);
         project.canceled = true;
+
+        CancelProject(idProject);
     }
 
 
@@ -289,7 +295,7 @@ contract LiquidPledging is LiquidPledgingBase {
 ///////
 
     // this function is obvious, but it can also be called to undelegate everyone
-    // by setting your self as teh idReceiver
+    // by setting yourself as the idReceiver
     function transferOwnershipToProject(uint64 idNote, uint amount, uint64 idReceiver) internal  {
         Note storage n = findNote(idNote);
 
@@ -344,7 +350,7 @@ contract LiquidPledging is LiquidPledgingBase {
         doTransfer(idNote, toNote, amount);
     }
 
-    /// @param q Unmber of undelegations
+    /// @param q Number of undelegations
     function undelegate(uint64 idNote, uint amount, uint q) internal {
         Note storage n = findNote(idNote);
         uint64[] memory newDelegationChain = new uint64[](n.delegationChain.length - q);
@@ -392,13 +398,13 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
     // This function does 2 things, #1: it checks to make sure that the pledges are correct
-    // if the a pledged project has already been commited then it changes the owner
+    // if the a pledged project has already been committed then it changes the owner
     // to be the proposed project (Note that the UI will have to read the commit time and manually
-    // do what this function does to the note for the end user at the expiration of the committime)
+    // do what this function does to the note for the end user at the expiration of the commitTime)
     // #2: It checks to make sure that if there has been a cancellation in the chain of projects,
     // then it adjusts the note's owner appropriately.
     // This call can be called from any body at any time on any node. In general it can be called
-    // to froce the calls of the affected plugins.
+    // to force the calls of the affected plugins, which also need to be predicted by the UI
     function normalizeNote(uint64 idNote) returns(uint64) {
         Note storage n = findNote(idNote);
 
@@ -485,5 +491,6 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
     event Transfer(uint64 indexed from, uint64 indexed to, uint amount);
+    event CancelProject(uint64 indexed idProject);
 
 }
