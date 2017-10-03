@@ -38,14 +38,6 @@ const readTest = async (liquidPledging) => {
   console.log('t4: ', t4.toNumber());
 };
 
-const startTestrpc = opts => new Promise((resolve) => {
-  const testrpc = TestRPC.server(opts);
-
-  testrpc.listen(8546, '127.0.0.1', (err) => {
-    resolve();
-  });
-});
-
 describe('LiquidPledging test', () => {
   let web3;
   let accounts;
@@ -59,11 +51,13 @@ describe('LiquidPledging test', () => {
   let adminCampaign2a;
   let delegate2;
   before(async () => {
-    await startTestrpc({
+    const testrpc = TestRPC.server({
       ws: true,
       gasLimit: 5200000,
       total_accounts: 10,
     });
+    
+    testrpc.listen(8546, '127.0.0.1');
 
     web3 = new Web3('ws://localhost:8546');
     accounts = await web3.eth.getAccounts();
