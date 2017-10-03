@@ -34,16 +34,17 @@
     "eslint-plugin-import": "^2.6.0",
     "eslint-plugin-jsx-a11y": "^6.0.2",
     "eslint-plugin-react": "^7.1.0",
-    "ethereumjs-testrpc": "^3.0.5",
+    "ethereumjs-testrpc": "git://github.com/perissology/testrpc.git#81216dbc",
+    "lerna": "^2.2.0",
     "random-bytes": "^1.0.0",
     "mocha": "^3.5.0",
-    "solcpiler": "0.0.4"
+    "solcpiler": "0.0.4",
+    "web3": "git://github.com/perissology/web3.js.git#all_fixes"
   },
   "homepage": "https://github.com/Giveth/liquidpledging#readme",
   "dependencies": {
     "async": "^2.4.0",
     "chai": "^4.1.0",
-    "eth-contract-class": "0.0.3",
-    "ethconnector": "0.0.25"
+    "eth-contract-class": "0.0.4"
   }
 }

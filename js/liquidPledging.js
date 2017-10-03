@@ -25,7 +25,7 @@ module.exports = (test) => {
           note.commmitTime = res.commitTime;
         }
         if (res.oldNote) {
-          note.oldProject = res.oldNote;
+          note.oldNote = res.oldNote;
         }
         if (res.paymentState === '0') {
           note.paymentState = 'NotPaid';
