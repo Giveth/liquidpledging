@@ -21,7 +21,12 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idDonor Identifier of the donor thats donating.
     /// @param idReceiver To whom it's transfered. Can be the same donor, another
     ///  donor, a delegate or a project
-    function donate(uint64 idDonor, uint64 idReceiver) payable {
+
+function donate(uint64 idDonor, uint64 idReceiver) payable {
+        if (idDonor == 0) {
+            idDonor = addDonor('', 259200, ILiquidPledgingPlugin(0x0)); // default to 3 day commitTime
+        }
+
         NoteManager storage sender = findManager(idDonor);
 
         checkManagerOwner(sender);
