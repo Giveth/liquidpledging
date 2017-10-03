@@ -41,8 +41,8 @@ describe('LiquidPledging test', () => {
   let accounts;
   let liquidPledging;
   let vault;
-  let donor1;
-  let donor2;
+  let giver1;
+  let giver2;
   let delegate1;
   let adminProject1;
   let adminProject2;
@@ -52,13 +52,13 @@ describe('LiquidPledging test', () => {
     ethConnector.init('testrpc', { gasLimit: 5200000 }, () => {
       web3 = ethConnector.web3;
       accounts = ethConnector.accounts;
-      donor1 = accounts[1];
+      giver1 = accounts[1];
       delegate1 = accounts[2];
       adminProject1 = accounts[3];
       adminProject2 = accounts[4];
       adminProject2a = accounts[5];
       delegate2 = accounts[6];
-      donor2 = accounts[7];
+      giver2 = accounts[7];
       done();
     });
   });
@@ -67,18 +67,18 @@ describe('LiquidPledging test', () => {
     liquidPledging = await LiquidPledging.new(web3, vault.$address, { gas: 5200000 });
     await vault.setLiquidPledging(liquidPledging.$address);
   }).timeout(6000);
-  it('Should create a donor', async () => {
-    await liquidPledging.addDonor('Donor1', 86400, 0, { from: donor1 });
+  it('Should create a giver', async () => {
+    await liquidPledging.addGiver('Giver1', 86400, 0, { from: giver1 });
     const nManagers = await liquidPledging.numberOfNoteManagers();
     assert.equal(nManagers, 1);
     const res = await liquidPledging.getNoteManager(1);
-    assert.equal(res[0], 0); // Donor
-    assert.equal(res[1], donor1);
-    assert.equal(res[2], 'Donor1');
+    assert.equal(res[0], 0); // Giver
+    assert.equal(res[1], giver1);
+    assert.equal(res[2], 'Giver1');
     assert.equal(res[3], 86400);
   }).timeout(6000);
   it('Should make a donation', async () => {
-    await liquidPledging.donate(1, 1, { from: donor1, value: web3.toWei(1) });
+    await liquidPledging.donate(1, 1, { from: giver1, value: web3.toWei(1) });
     const nNotes = await liquidPledging.numberOfNotes();
     assert.equal(nNotes.toNumber(), 1);
     await liquidPledging.getNote(1);
@@ -88,12 +88,12 @@ describe('LiquidPledging test', () => {
     const nManagers = await liquidPledging.numberOfNoteManagers();
     assert.equal(nManagers, 2);
     const res = await liquidPledging.getNoteManager(2);
-    assert.equal(res[0], 1); // Donor
+    assert.equal(res[0], 1); // Giver
     assert.equal(res[1], delegate1);
     assert.equal(res[2], 'Delegate1');
   }).timeout(6000);
-  it('Donor should delegate on the delegate', async () => {
-    await liquidPledging.transfer(1, 1, web3.toWei(0.5), 2, { from: donor1 });
+  it('Giver should delegate on the delegate', async () => {
+    await liquidPledging.transfer(1, 1, web3.toWei(0.5), 2, { from: giver1 });
     const nNotes = await liquidPledging.numberOfNotes();
     assert.equal(nNotes.toNumber(), 2);
     const res1 = await liquidPledging.getNote(1);
@@ -146,8 +146,8 @@ describe('LiquidPledging test', () => {
     assert.equal(res3[5].toNumber(), 0); // Old Node
     assert.equal(res3[6].toNumber(), 0); // Not Paid
   }).timeout(6000);
-  it('Donor should change his mind and assign half of it to project2', async () => {
-    await liquidPledging.transfer(1, 3, web3.toWei(0.1), 4, { from: donor1 });
+  it('Giver should change his mind and assign half of it to project2', async () => {
+    await liquidPledging.transfer(1, 3, web3.toWei(0.1), 4, { from: giver1 });
     const nNotes = await liquidPledging.numberOfNotes();
     assert.equal(nNotes.toNumber(), 4);
     const res3 = await liquidPledging.getNote(3);
@@ -228,8 +228,8 @@ describe('LiquidPledging test', () => {
     assert.equal(st.notes[8].delegates[0].id, 2);
     assert.equal(st.notes[8].proposedProject, 4);
   }).timeout(6000);
-  it('Donor should be able to send the remaining to project2', async () => {
-    await liquidPledging.transfer(1, 5, web3.toWei(0.02), 4, { from: donor1 });
+  it('Giver should be able to send the remaining to project2', async () => {
+    await liquidPledging.transfer(1, 5, web3.toWei(0.02), 4, { from: giver1 });
     const st = await liquidPledging.getState(liquidPledging);
     assert.equal(st.notes.length, 9);
     assert.equal(web3.fromWei(st.notes[5].amount).toNumber(), 0);
@@ -275,7 +275,7 @@ describe('LiquidPledging test', () => {
   }).timeout(6000);
   it('Should not be able to withdraw it', async () => {
     await assertFail(async () => {
-      await liquidPledging.withdraw(12, web3.toWei(0.005), { from: donor1 });
+      await liquidPledging.withdraw(12, web3.toWei(0.005), { from: giver1 });
     });
   }).timeout(6000);
   it('Should not be able to cancel payment', async () => {
@@ -287,32 +287,32 @@ describe('LiquidPledging test', () => {
     assert.equal(web3.fromWei(st.notes[12].amount).toNumber(), 0);
   }).timeout(6000);
   it('original owner should recover the remaining funds', async () => {
-    await liquidPledging.withdraw(1, web3.toWei(0.5), { from: donor1 });
-    await liquidPledging.withdraw(2, web3.toWei(0.31), { from: donor1 });
-    await liquidPledging.withdraw(4, web3.toWei(0.1), { from: donor1 });
+    await liquidPledging.withdraw(1, web3.toWei(0.5), { from: giver1 });
+    await liquidPledging.withdraw(2, web3.toWei(0.31), { from: giver1 });
+    await liquidPledging.withdraw(4, web3.toWei(0.1), { from: giver1 });
 
-    await liquidPledging.withdraw(8, web3.toWei(0.03), { $extraGas: 100000 }, { from: donor1 });
-    await liquidPledging.withdraw(9, web3.toWei(0.01), { from: donor1 });
+    await liquidPledging.withdraw(8, web3.toWei(0.03), { $extraGas: 100000 }, { from: giver1 });
+    await liquidPledging.withdraw(9, web3.toWei(0.01), { from: giver1 });
 
-    const initialBalance = await getBalance(web3, donor1);
+    const initialBalance = await getBalance(web3, giver1);
     await vault.multiConfirm([2, 3, 4, 5, 6]);
 
-    const finalBalance = await getBalance(web3, donor1);
+    const finalBalance = await getBalance(web3, giver1);
     const collected = web3.fromWei(finalBalance.sub(initialBalance)).toNumber();
 
     assert.equal(collected, 0.95);
   }).timeout(8000);
-  it('Should make a donation and create donor', async () => {
+  it('Should make a donation and create giver', async () => {
     const oldNNotes = await liquidPledging.numberOfNotes();
     const oldNManagers = await liquidPledging.numberOfNoteManagers();
-    await liquidPledging.donate(0, 1, { from: donor2, value: web3.toWei(1) });
+    await liquidPledging.donate(0, 1, { from: giver2, value: web3.toWei(1) });
     const nNotes = await liquidPledging.numberOfNotes();
     assert.equal(nNotes.toNumber(), oldNNotes.toNumber() + 1);
     const nManagers = await liquidPledging.numberOfNoteManagers();
     assert.equal(nManagers.toNumber(), oldNManagers.toNumber() + 1);
     const res = await liquidPledging.getNoteManager(nManagers);
-    assert.equal(res[0], 0); // Donor
-    assert.equal(res[1], donor2);
+    assert.equal(res[0], 0); // Giver
+    assert.equal(res[1], giver2);
     assert.equal(res[2], '');
     assert.equal(res[3], 259200); // default to 3 day commitTime
   }).timeout(6000);

@@ -18,20 +18,20 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  the token of value goes into the vault and the amount in the pledge
     ///  relevant to this Giver without delegates is increased, and a normal
     ///  transfer is done to the idReceiver
-    /// @param idDonor Identifier of the donor thats donating.
-    /// @param idReceiver To whom it's transfered. Can be the same donor, another
-    ///  donor, a delegate or a project
+    /// @param idGiver Identifier of the giver thats donating.
+    /// @param idReceiver To whom it's transfered. Can be the same giver, another
+    ///  giver, a delegate or a project
 
-function donate(uint64 idDonor, uint64 idReceiver) payable {
-        if (idDonor == 0) {
-            idDonor = addDonor('', 259200, ILiquidPledgingPlugin(0x0)); // default to 3 day commitTime
+function donate(uint64 idGiver, uint64 idReceiver) payable {
+        if (idGiver == 0) {
+            idGiver = addGiver('', 259200, ILiquidPledgingPlugin(0x0)); // default to 3 day commitTime
         }
 
-        NoteManager storage sender = findManager(idDonor);
+        NoteManager storage sender = findManager(idGiver);
 
         checkManagerOwner(sender);
 
-        require(sender.managerType == NoteManagerType.Donor);
+        require(sender.managerType == NoteManagerType.Giver);
 
         uint amount = msg.value;
 
@@ -39,7 +39,7 @@ function donate(uint64 idDonor, uint64 idReceiver) payable {
 
         vault.transfer(amount); // transfers the baseToken to the Vault
         uint64 idNote = findNote(
-            idDonor,
+            idGiver,
             new uint64[](0), //what is new?
             0,
             0,
@@ -52,16 +52,16 @@ function donate(uint64 idDonor, uint64 idReceiver) payable {
 
         Transfer(0, idNote, amount);
 
-        transfer(idDonor, idNote, amount, idReceiver);
+        transfer(idGiver, idNote, amount, idReceiver);
     }
 
 
     /// @notice Moves value between notes
-    /// @param idSender ID of the donor, delegate or project manager that is transferring
+    /// @param idSender ID of the giver, delegate or project manager that is transferring
     ///  the funds from Note to Note. This manager must have permissions to move the value
     /// @param idNote Id of the note that's moving the value
     /// @param amount Quantity of value that's being moved
-    /// @param idReceiver Destination of the value, can be a donor sending to a donor or
+    /// @param idReceiver Destination of the value, can be a giver sending to a giver or
     ///  a delegate, a delegate to another delegate or a project to precommit it to that project
     function transfer(uint64 idSender, uint64 idNote, uint amount, uint64 idReceiver) {
 
@@ -76,8 +76,8 @@ function donate(uint64 idDonor, uint64 idReceiver) payable {
 
         // If the sender is the owner
         if (n.owner == idSender) {
-            if (receiver.managerType == NoteManagerType.Donor) {
-                transferOwnershipToDonor(idNote, amount, idReceiver);
+            if (receiver.managerType == NoteManagerType.Giver) {
+                transferOwnershipToGiver(idNote, amount, idReceiver);
             } else if (receiver.managerType == NoteManagerType.Project) {
                 transferOwnershipToProject(idNote, amount, idReceiver);
             } else if (receiver.managerType == NoteManagerType.Delegate) {
@@ -92,9 +92,9 @@ function donate(uint64 idDonor, uint64 idReceiver) payable {
         uint senderDIdx = getDelegateIdx(n, idSender);
         if (senderDIdx != NOTFOUND) {
 
-            // If the receiver is another donor
-            if (receiver.managerType == NoteManagerType.Donor) {
-                // Only accept to change to the original donor to remove all delegates
+            // If the receiver is another giver
+            if (receiver.managerType == NoteManagerType.Giver) {
+                // Only accept to change to the original giver to remove all delegates
                 assert(n.owner == idReceiver);
                 undelegate(idNote, amount, n.delegationChain.length);
                 return;
@@ -140,7 +140,7 @@ function donate(uint64 idDonor, uint64 idReceiver) payable {
 
 
     /// @notice This method is used to withdraw value from the system. This can be used
-    ///  by the donors to avoid committing the donation or by project manager to use
+    ///  by the givers to avoid committing the donation or by project manager to use
     ///  the Ether.
     /// @param idNote Id of the note that wants to be withdrawn.
     /// @param amount Quantity of Ether that wants to be withdrawn.
@@ -317,7 +317,7 @@ function donate(uint64 idDonor, uint64 idReceiver) payable {
         doTransfer(idNote, toNote, amount);
     }
 
-    function transferOwnershipToDonor(uint64 idNote, uint amount, uint64 idReceiver) internal  {
+    function transferOwnershipToGiver(uint64 idNote, uint amount, uint64 idReceiver) internal  {
         uint64 toNote = findNote(
                 idReceiver,
                 new uint64[](0),
