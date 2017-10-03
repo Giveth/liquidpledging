@@ -218,6 +218,8 @@ contract LiquidPledging is LiquidPledgingBase {
         NoteManager storage project = findManager(idProject);
         checkManagerOwner(project);
         project.canceled = true;
+
+        CancelProject(idProject);
     }
 
 
@@ -485,5 +487,6 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
     event Transfer(uint64 indexed from, uint64 indexed to, uint amount);
+    event CancelProject(uint64 indexed idProject);
 
 }
