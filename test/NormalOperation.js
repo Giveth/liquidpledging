@@ -303,12 +303,14 @@ describe('LiquidPledging test', () => {
     assert.equal(collected, 0.95);
   }).timeout(8000);
   it('Should make a donation and create donor', async () => {
+    const oldNNotes = await liquidPledging.numberOfNotes();
+    const oldNManagers = await liquidPledging.numberOfNoteManagers();
     await liquidPledging.donate(0, 1, { from: donor2, value: web3.toWei(1) });
     const nNotes = await liquidPledging.numberOfNotes();
-    assert.equal(nNotes.toNumber(), 14);
+    assert.equal(nNotes.toNumber(), oldNNotes.toNumber() + 1);
     const nManagers = await liquidPledging.numberOfNoteManagers();
-    assert.equal(nManagers.toNumber(), 7);
-    const res = await liquidPledging.getNoteManager(7);
+    assert.equal(nManagers.toNumber(), oldNManagers.toNumber() + 1);
+    const res = await liquidPledging.getNoteManager(nManagers);
     assert.equal(res[0], 0); // Donor
     assert.equal(res[1], donor2);
     assert.equal(res[2], '');
