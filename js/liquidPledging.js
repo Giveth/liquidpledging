@@ -16,7 +16,7 @@ module.exports = (test) => {
       super(web3, address);
       this.notes = [];
       this.managers = [];
-      this.b = "xxxxxxx b xxxxxxxx";
+      this.b = 'xxxxxxx b xxxxxxxx';
     }
 
     async $getNote(idNote) {
@@ -35,11 +35,11 @@ module.exports = (test) => {
         note.delegates.push(delegate);
       }
       if (res[3].toNumber()) {
-        note.proposedProject = res[3].toNumber();
+        note.proposedCampaign = res[3].toNumber();
         note.commmitTime = res[4].toNumber();
       }
       if (res[5].toNumber()) {
-        note.oldProject = res[5].toNumber();
+        note.oldCampaign = res[5].toNumber();
       }
       if (res[6].toNumber() === 0) {
         note.paymentState = 'NotPaid';
@@ -57,19 +57,19 @@ module.exports = (test) => {
       const manager = {};
       const res = await this.getNoteManager(idManager);
       if (res[0].toNumber() === 0) {
-        manager.paymentState = 'Donor';
+        manager.paymentState = 'Giver';
       } else if (res[0].toNumber() === 1) {
         manager.paymentState = 'Delegate';
       } else if (res[0].toNumber() === 2) {
-        manager.paymentState = 'Project';
+        manager.paymentState = 'Campaign';
       } else {
         manager.paymentState = 'Unknown';
       }
       manager.addr = res[1];
       manager.name = res[2];
       manager.commitTime = res[3].toNumber();
-      if (manager.paymentState === 'Project') {
-        manager.parentProject = res[4];
+      if (manager.paymentState === 'Campaign') {
+        manager.parentCampaign = res[4];
         manager.canceled = res[5];
       }
       return manager;
@@ -94,27 +94,27 @@ module.exports = (test) => {
       return st;
     }
 
-    generateDonorsState() {
-      const donorsState = [];
+    generateGiversState() {
+      const giversState = [];
 
-      const getDonor = (idNote) => {
+      const getGiver = (idNote) => {
         let note = this.notes[idNote];
         while (note.oldNode) note = this.notes[idNote];
         return note.owner;
       };
 
-      // Add a donor structure to the list
-      const addDonor = (_list, idDonor) => {
+      // Add a giver structure to the list
+      const addGiver = (_list, idGiver) => {
         const list = _list;
-        if (!list[idDonor]) {
-          list[idDonor] = {
-            idDonor,
+        if (!list[idGiver]) {
+          list[idGiver] = {
+            idGiver,
             notAssigned: {
               notes: [],
               delegates: [],
             },
-            precommitedProjects: [],
-            commitedProjects: [],
+            precommitedCampaigns: [],
+            commitedCampaigns: [],
           };
         }
       };
@@ -132,25 +132,25 @@ module.exports = (test) => {
         }
       };
 
-      const addProject = (_list, idProject) => {
+      const addCampaign = (_list, idCampaign) => {
         const list = _list;
-        if (!list[idProject]) {
-          list[idProject] = {
-            idProject,
+        if (!list[idCampaign]) {
+          list[idCampaign] = {
+            idCampaign,
             notes: [],
-            commitedProjects: [],
-            name: this.managers[idProject].name,
-            commitTime: this.managers[idProject].commitTime,
-            owner: this.managers[idProject].owner,
-            parentProject: this.managers[idProject].parentProject,
+            commitedCampaigns: [],
+            name: this.managers[idCampaign].name,
+            commitTime: this.managers[idCampaign].commitTime,
+            owner: this.managers[idCampaign].owner,
+            parentCampaign: this.managers[idCampaign].parentCampaign,
           };
         }
       };
 
-      const addDelegateNote = (stDonor, idNote) => {
+      const addDelegateNote = (stGiver, idNote) => {
         const note = this.notes[idNote];
-        stDonor.notAssigned.notes.push(idNote);
-        let list = stDonor.notAssigned.delegates;
+        stGiver.notAssigned.notes.push(idNote);
+        let list = stGiver.notAssigned.delegates;
         for (let i = 0; i < note.delegationChain.length; i += 1) {
           const idDelegate = note.delegationChain[i];
           addDelegate(list, idDelegate);
@@ -158,41 +158,41 @@ module.exports = (test) => {
         }
       };
 
-      const addProjectNote = (stDonor, idNote) => {
+      const addCampaignNote = (stGiver, idNote) => {
         const note = this.notes[idNote];
 
-        const projectList = [];
+        const campaignList = [];
         let n = note;
         while (n.oldNode) {
-          projectList.unshift(n.owner);
+          campaignList.unshift(n.owner);
           n = this.notes[n.oldNode];
         }
 
-        let list = stDonor.commitedProjects;
-        for (let j = 0; j < projectList.length; j += 1) {
-          addProject(list, projectList[j]);
-          list[projectList[j]].notes.push(idNote);
-          list = list[projectList[j]].commitedProjects;
+        let list = stGiver.commitedCampaigns;
+        for (let j = 0; j < campaignList.length; j += 1) {
+          addCampaign(list, campaignList[j]);
+          list[campaignList[j]].notes.push(idNote);
+          list = list[campaignList[j]].commitedCampaigns;
         }
       };
 
       for (let i = 0; i < this.notes; i += 1) {
         const idNote = this.notes[i];
-        const idDonor = getDonor(idNote);
-        addDonor(donorsState, idDonor);
-        const stDonor = donorsState[idDonor];
+        const idGiver = getGiver(idNote);
+        addGiver(giversState, idGiver);
+        const stGiver = giversState[idGiver];
         const note = this.notes[idNote];
-        if ((note.owner === idDonor) && (note.precommitedProject === 0)) {
-          addDelegateNote(stDonor, idNote);
-        } else if ((note.owner === idDonor) && (note.precommitedProject !== 0)) {
-          addProject(stDonor.precommitedProjects, note.precommitedProject);
-          stDonor.precommitedProjects[note.precommitedProject].notes.push(idNote);
+        if ((note.owner === idGiver) && (note.precommitedCampaign === 0)) {
+          addDelegateNote(stGiver, idNote);
+        } else if ((note.owner === idGiver) && (note.precommitedCampaign !== 0)) {
+          addCampaign(stGiver.precommitedCampaigns, note.precommitedCampaign);
+          stGiver.precommitedCampaigns[note.precommitedCampaign].notes.push(idNote);
         } else {
-          addProjectNote(stDonor, idNote);
+          addCampaignNote(stGiver, idNote);
         }
       }
 
-      this.donorsState = donorsState;
+      this.giverssState = giversState;
     }
   };
 };

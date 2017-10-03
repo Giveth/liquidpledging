@@ -3,21 +3,21 @@
 pragma solidity ^0.4.11;
 
 contract ILiquidPledgingPlugin {
-    /// @notice Plugins are used (much like web hooks) to initiate an action 
+    /// @notice Plugins are used (much like web hooks) to initiate an action
     ///  upon any donation, delegation, or transfer; this is an optional feature
     ///  and allows for extreme customization of the contract
-    /// @param context The situation that is triggering the plugin: 
-    ///  0 -> Plugin for the owner transferring pledge to another party 
+    /// @param context The situation that is triggering the plugin:
+    ///  0 -> Plugin for the owner transferring pledge to another party
     ///  1 -> Plugin for the first delegate transferring pledge to another party
     ///  2 -> Plugin for the second delegate transferring pledge to another party
     ///  ...
-    ///  255 -> Plugin for the proposedProject transferring pledge to another party
+    ///  255 -> Plugin for the proposedCampaign transferring pledge to another party
     ///
     ///  256 -> Plugin for the owner receiving pledge to another party
     ///  257 -> Plugin for the first delegate receiving pledge to another party
     ///  258 -> Plugin for the second delegate receiving pledge to another party
     ///  ...
-    ///  511 -> Plugin for the proposedProject receiving pledge to another party
+    ///  511 -> Plugin for the proposedCampaign receiving pledge to another party
     function beforeTransfer(
         uint64 noteManager,
         uint64 noteFrom,
@@ -48,10 +48,10 @@ contract Vault {
 contract LiquidPledgingBase {
     // Limits inserted to prevent large loops that could prevent canceling
     uint constant MAX_DELEGATES = 20;
-    uint constant MAX_SUBPROJECT_LEVEL = 20;
-    uint constant MAX_INTERPROJECT_LEVEL = 20;
+    uint constant MAX_SUBCAMPAIGN_LEVEL = 20;
+    uint constant MAX_INTERCAMPAIGN_LEVEL = 20;
 
-    enum NoteManagerType { Giver, Delegate, Project }
+    enum NoteManagerType { Giver, Delegate, Campaign }
     enum PaymentState { NotPaid, Paying, Paid } // TODO name change NotPaid
 
     /// @dev This struct defines the details of each the NoteManager, these
@@ -61,7 +61,7 @@ contract LiquidPledgingBase {
         address addr; // account or contract address for admin
         string name;
         uint64 commitTime;  // In seconds, used for Givers' & Delegates' vetos
-        uint64 parentProject;  // Only for campaigns
+        uint64 parentCampaign;  // Only for campaigns
         bool canceled;      //Always false except for canceled campaigns
         ILiquidPledgingPlugin plugin; // if the plugin is 0x0 then nothing happens if its a contract address than that smart contract is called via the milestone contract
     }
@@ -70,8 +70,8 @@ contract LiquidPledgingBase {
         uint amount;
         uint64 owner; //NoteManager
         uint64[] delegationChain; // list of index numbers
-        uint64 proposedProject; // TODO change the name only used for when delegates are precommiting to a project
-        uint64 commitTime;  // When the proposedProject will become the owner
+        uint64 proposedCampaign; // TODO change the name only used for when delegates are precommiting to a campaign
+        uint64 commitTime;  // When the proposedCampaign will become the owner
         uint64 oldNote; // this points to the Note[] index that the Note was derived from
         PaymentState paymentState;
     }
@@ -186,48 +186,48 @@ contract LiquidPledgingBase {
     event DelegateUpdated(uint64 indexed idDelegate);
 
     /// @notice Creates a new Campaign
-    function addProject(string name, address projectManager, uint64 parentProject, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idProject) {
-        if (parentProject != 0) {
-            NoteManager storage pm = findManager(parentProject);
-            require(pm.managerType == NoteManagerType.Project);
+    function addCampaign(string name, address campaignManager, uint64 parentCampaign, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idCampaign) {
+        if (parentCampaign != 0) {
+            NoteManager storage pm = findManager(parentCampaign);
+            require(pm.managerType == NoteManagerType.Campaign);
             require(pm.addr == msg.sender);
-            require(getProjectLevel(pm) < MAX_SUBPROJECT_LEVEL);
+            require(getCampaignLevel(pm) < MAX_SUBCAMPAIGN_LEVEL);
         }
 
-        idProject = uint64(managers.length);
+        idCampaign = uint64(managers.length);
 
         managers.push(NoteManager(
-            NoteManagerType.Project,
-            projectManager,
+            NoteManagerType.Campaign,
+            campaignManager,
             name,
             commitTime,
-            parentProject,
+            parentCampaign,
             false,
             plugin));
 
 
-        ProjectAdded(idProject);
+        CampaignAdded(idCampaign);
     }
 
-    event ProjectAdded(uint64 indexed idProject);
+    event CampaignAdded(uint64 indexed idCampaign);
 
     ///@notice Changes the address, name or commitTime associated with a specific Campaign
-    function updateProject(
-        uint64 idProject,
+    function updateCampaign(
+        uint64 idCampaign,
         address newAddr,
         string newName,
         uint64 newCommitTime)
     {
-        NoteManager storage project = findManager(idProject);
-        require(project.managerType == NoteManagerType.Project);
-        require(project.addr == msg.sender);
-        project.addr = newAddr;
-        project.name = newName;
-        project.commitTime = newCommitTime;
-        ProjectUpdated(idProject);
+        NoteManager storage campaign = findManager(idCampaign);
+        require(campaign.managerType == NoteManagerType.Campaign);
+        require(campaign.addr == msg.sender);
+        campaign.addr = newAddr;
+        campaign.name = newName;
+        campaign.commitTime = newCommitTime;
+        CampaignUpdated(idCampaign);
     }
 
-    event ProjectUpdated(uint64 indexed idManager);
+    event CampaignUpdated(uint64 indexed idManager);
 
 
 //////////
@@ -243,7 +243,7 @@ contract LiquidPledgingBase {
         uint amount,
         uint64 owner,
         uint64 nDelegates,
-        uint64 proposedProject,
+        uint64 proposedCampaign,
         uint64 commitTime,
         uint64 oldNote,
         PaymentState paymentState
@@ -252,7 +252,7 @@ contract LiquidPledgingBase {
         amount = n.amount;
         owner = n.owner;
         nDelegates = uint64(n.delegationChain.length);
-        proposedProject = n.proposedProject;
+        proposedCampaign = n.proposedCampaign;
         commitTime = n.commitTime;
         oldNote = n.oldNote;
         paymentState = n.paymentState;
@@ -280,7 +280,7 @@ contract LiquidPledgingBase {
         address addr,
         string name,
         uint64 commitTime,
-        uint64 parentProject,
+        uint64 parentCampaign,
         bool canceled,
         address plugin)
     {
@@ -289,7 +289,7 @@ contract LiquidPledgingBase {
         addr = m.addr;
         name = m.name;
         commitTime = m.commitTime;
-        parentProject = m.parentProject;
+        parentCampaign = m.parentCampaign;
         canceled = m.canceled;
         plugin = address(m.plugin);
     }
@@ -305,18 +305,18 @@ contract LiquidPledgingBase {
     function findNote(
         uint64 owner,
         uint64[] delegationChain,
-        uint64 proposedProject,
+        uint64 proposedCampaign,
         uint64 commitTime,
         uint64 oldNote,
         PaymentState paid
         ) internal returns (uint64)
     {
-        bytes32 hNote = sha3(owner, delegationChain, proposedProject, commitTime, oldNote, paid);
+        bytes32 hNote = sha3(owner, delegationChain, proposedCampaign, commitTime, oldNote, paid);
         uint64 idx = hNote2ddx[hNote];
         if (idx > 0) return idx;
         idx = uint64(notes.length);
         hNote2ddx[hNote] = idx;
-        notes.push(Note(0, owner, delegationChain, proposedProject, commitTime, oldNote, paid));
+        notes.push(Note(0, owner, delegationChain, proposedCampaign, commitTime, oldNote, paid));
         return idx;
     }
 
@@ -343,9 +343,9 @@ contract LiquidPledgingBase {
     }
 
     // helper function that returns the note level solely to check that transfers
-    // between Projects not violate MAX_INTERPROJECT_LEVEL
+    // between Campaigns not violate MAX_INTERCAMPAIGN_LEVEL
     function getNoteLevel(Note n) internal returns(uint) {
-        if (n.oldNote == 0) return 0;//changed
+        if (n.oldNote == 0) return 0; //changed
         Note storage oldN = findNote(n.oldNote);
         return getNoteLevel(oldN) + 1;
     }
@@ -362,35 +362,25 @@ contract LiquidPledgingBase {
         }
     }
 
-    // helper function that returns the project level solely to check that there
-    // are not too many Projects that violate MAX_SUBPROJECT_LEVEL
-    function getProjectLevel(NoteManager m) internal returns(uint) {
-        assert(m.managerType == NoteManagerType.Project);
-        if (m.parentProject == 0) return(1);
-        NoteManager storage parentNM = findManager(m.parentProject);
-        return getProjectLevel(parentNM);
+    // helper function that returns the campaign level solely to check that there
+    // are not too many Campaigns that violate MAX_SUBCAMPAIGNS_LEVEL
+    function getCampaignLevel(NoteManager m) internal returns(uint) {
+        assert(m.managerType == NoteManagerType.Campaign);
+        if (m.parentCampaign == 0) return(1);
+        NoteManager storage parentNM = findManager(m.parentCampaign);
+        return getCampaignLevel(parentNM);
     }
 
-    function isProjectCanceled(uint64 projectId) constant returns (bool) {
-        NoteManager storage m = findManager(projectId);
+    function isCampaignCanceled(uint64 campaignId) constant returns (bool) {
+        NoteManager storage m = findManager(campaignId);
         if (m.managerType == NoteManagerType.Giver) return false;
-        assert(m.managerType == NoteManagerType.Project);
+        assert(m.managerType == NoteManagerType.Campaign);
         if (m.canceled) return true;
-        if (m.parentProject == 0) return false;
-        return isProjectCanceled(m.parentProject);
+        if (m.parentCampaign == 0) return false;
+        return isCampaignCanceled(m.parentCampaign);
     }
 
-    function isProjectCanceled2(uint64 projectId) constant returns (bool) {
-        NoteManager storage m = findManager(projectId);
-        return false;
-        if (m.managerType == NoteManagerType.Giver) return false;
-        assert(m.managerType == NoteManagerType.Project);
-        if (m.canceled) return true;
-        if (m.parentProject == 0) return false;
-        return isProjectCanceled2(m.parentProject);
-    }
-
-    // @notice A helper function for canceling projects
+    // @notice A helper function for canceling campaigns
     // @param idNote the note that may or may not be canceled
     function getOldestNoteNotCanceled(uint64 idNote) internal constant returns(uint64) { //todo rename
         if (idNote == 0) return 0;
@@ -398,9 +388,9 @@ contract LiquidPledgingBase {
         NoteManager storage manager = findManager(n.owner);
         if (manager.managerType == NoteManagerType.Giver) return idNote;
 
-        assert(manager.managerType == NoteManagerType.Project);
+        assert(manager.managerType == NoteManagerType.Campaign);
 
-        if (!isProjectCanceled(n.owner)) return idNote;
+        if (!isCampaignCanceled(n.owner)) return idNote;
 
         return getOldestNoteNotCanceled(n.oldNote);
     }
@@ -433,7 +423,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  transfer is done to the idReceiver
     /// @param idGiver Identifier of the giver thats donating.
     /// @param idReceiver To whom it's transfered. Can be the same giver, another
-    ///  giver, a delegate or a project
+    ///  giver, a delegate or a campaign
 
 function donate(uint64 idGiver, uint64 idReceiver) payable {
         if (idGiver == 0) {
@@ -470,12 +460,12 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
 
     /// @notice Moves value between notes
-    /// @param idSender ID of the giver, delegate or project manager that is transferring
+    /// @param idSender ID of the giver, delegate or campaign manager that is transferring
     ///  the funds from Note to Note. This manager must have permissions to move the value
     /// @param idNote Id of the note that's moving the value
     /// @param amount Quantity of value that's being moved
     /// @param idReceiver Destination of the value, can be a giver sending to a giver or
-    ///  a delegate, a delegate to another delegate or a project to precommit it to that project
+    ///  a delegate, a delegate to another delegate or a campaign to precommit it to that campaign
     function transfer(uint64 idSender, uint64 idNote, uint amount, uint64 idReceiver) {
 
         idNote = normalizeNote(idNote);
@@ -491,8 +481,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         if (n.owner == idSender) {
             if (receiver.managerType == NoteManagerType.Giver) {
                 transferOwnershipToGiver(idNote, amount, idReceiver);
-            } else if (receiver.managerType == NoteManagerType.Project) {
-                transferOwnershipToProject(idNote, amount, idReceiver);
+            } else if (receiver.managerType == NoteManagerType.Campaign) {
+                transferOwnershipToCampaign(idNote, amount, idReceiver);
             } else if (receiver.managerType == NoteManagerType.Delegate) {
                 appendDelegate(idNote, amount, idReceiver);
             } else {
@@ -540,11 +530,11 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
                 return;
             }
 
-            // If the delegate wants to support a project, they undelegate all
-            // the delegates after them in the chain and choose a project
-            if (receiver.managerType == NoteManagerType.Project) {
+            // If the delegate wants to support a campaign, they undelegate all
+            // the delegates after them in the chain and choose a campaign
+            if (receiver.managerType == NoteManagerType.Campaign) {
                 undelegate(idNote, amount, n.delegationChain.length - senderDIdx - 1);
-                proposeAssignProject(idNote, amount, idReceiver);
+                proposeAssignCampaign(idNote, amount, idReceiver);
                 return;
             }
         }
@@ -553,7 +543,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
 
     /// @notice This method is used to withdraw value from the system. This can be used
-    ///  by the givers to avoid committing the donation or by project manager to use
+    ///  by the givers to avoid committing the donation or by campaign manager to use
     ///  the Ether.
     /// @param idNote Id of the note that wants to be withdrawn.
     /// @param amount Quantity of Ether that wants to be withdrawn.
@@ -591,7 +581,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
         require(n.paymentState == PaymentState.Paying);
 
-        // Check the project is not canceled in the while.
+        // Check the campaign is not canceled in the while.
         require(getOldestNoteNotCanceled(idNote) == idNote);
 
         uint64 idNewNote = findNote(
@@ -614,7 +604,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
         require(n.paymentState == PaymentState.Paying); //TODO change to revert
 
-        // When a payment is canceled, never is assigned to a project.
+        // When a payment is canceled, never is assigned to a campaign.
         uint64 oldNote = findNote(
             n.owner,
             n.delegationChain,
@@ -629,14 +619,14 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         doTransfer(idNote, oldNote, amount);
     }
 
-    /// @notice Method called to cancel this project.
-    /// @param idProject Id of the projct that wants to be canceled.
-    function cancelProject(uint64 idProject) {
-        NoteManager storage project = findManager(idProject);
-        checkManagerOwner(project);
-        project.canceled = true;
+    /// @notice Method called to cancel this campaign.
+    /// @param idCampaign Id of the projct that wants to be canceled.
+    function cancelCampaign(uint64 idCampaign) {
+        NoteManager storage campaign = findManager(idCampaign);
+        checkManagerOwner(campaign);
+        campaign.canceled = true;
 
-        CancelProject(idProject);
+        CancelCampaign(idCampaign);
     }
 
 
@@ -709,10 +699,10 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
     // this function is obvious, but it can also be called to undelegate everyone
     // by setting yourself as the idReceiver
-    function transferOwnershipToProject(uint64 idNote, uint amount, uint64 idReceiver) internal  {
+    function transferOwnershipToCampaign(uint64 idNote, uint amount, uint64 idReceiver) internal  {
         Note storage n = findNote(idNote);
 
-        require(getNoteLevel(n) < MAX_INTERPROJECT_LEVEL);
+        require(getNoteLevel(n) < MAX_INTERCAMPAIGN_LEVEL);
         uint64 oldNote = findNote(
             n.owner,
             n.delegationChain,
@@ -781,10 +771,10 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
     }
 
 
-    function proposeAssignProject(uint64 idNote, uint amount, uint64 idReceiver) internal {// Todo rename
+    function proposeAssignCampaign(uint64 idNote, uint amount, uint64 idReceiver) internal {// Todo rename
         Note storage n = findNote(idNote);
 
-        require(getNoteLevel(n) < MAX_SUBPROJECT_LEVEL);
+        require(getNoteLevel(n) < MAX_SUBCAMPAIGN_LEVEL);
 
         uint64 toNote = findNote(
                 n.owner,
@@ -811,10 +801,10 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
     }
 
     // This function does 2 things, #1: it checks to make sure that the pledges are correct
-    // if the a pledged project has already been committed then it changes the owner
-    // to be the proposed project (Note that the UI will have to read the commit time and manually
+    // if the a pledged campaign has already been committed then it changes the owner
+    // to be the proposed campaign (Note that the UI will have to read the commit time and manually
     // do what this function does to the note for the end user at the expiration of the commitTime)
-    // #2: It checks to make sure that if there has been a cancellation in the chain of projects,
+    // #2: It checks to make sure that if there has been a cancellation in the chain of campaigns,
     // then it adjusts the note's owner appropriately.
     // This call can be called from any body at any time on any node. In general it can be called
     // to force the calls of the affected plugins, which also need to be predicted by the UI
@@ -824,8 +814,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         // Check to make sure this note hasnt already been used or is in the process of being used
         if (n.paymentState != PaymentState.NotPaid) return idNote;
 
-        // First send to a project if it's proposed and commited
-        if ((n.proposedProject > 0) && ( getTime() > n.commitTime)) {
+        // First send to a campaign if it's proposed and commited
+        if ((n.proposedCampaign > 0) && ( getTime() > n.commitTime)) {
             uint64 oldNote = findNote(
                 n.owner,
                 n.delegationChain,
@@ -834,7 +824,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
                 n.oldNote,
                 PaymentState.NotPaid);
             uint64 toNote = findNote(
-                n.proposedProject,
+                n.proposedCampaign,
                 new uint64[](0),
                 0,
                 0,
@@ -883,8 +873,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
             allowedAmount = callPlugin(before, n.delegationChain[i], fromNote, toNote, offset + i+1, allowedAmount);
         }
 
-        if (n.proposedProject > 0) {
-            allowedAmount = callPlugin(before, n.proposedProject, fromNote, toNote, offset + 255, allowedAmount);
+        if (n.proposedCampaign > 0) {
+            allowedAmount = callPlugin(before, n.proposedCampaign, fromNote, toNote, offset + 255, allowedAmount);
         }
     }
 
@@ -904,6 +894,6 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
     }
 
     event Transfer(uint64 indexed from, uint64 indexed to, uint amount);
-    event CancelProject(uint64 indexed idProject);
+    event CancelCampaign(uint64 indexed idCampaign);
 
 }
