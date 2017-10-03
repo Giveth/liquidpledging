@@ -77,7 +77,7 @@ contract LiquidPledgingBase {
 
     /// @notice Creates a donor.
     function addDonor(string name, uint64 commitTime, ILiquidPledgingPlugin plugin
-        ) returns (uint64 idDonor) {//Todo return idManager
+        ) returns (uint64 idDonor) {
 
         idDonor = uint64(managers.length);
 
@@ -127,10 +127,10 @@ contract LiquidPledgingBase {
             false,
             plugin));
 
-        DeegateAdded(idDelegate);
+        DelegateAdded(idDelegate);
     }
 
-    event DeegateAdded(uint64 indexed idDelegate);
+    event DelegateAdded(uint64 indexed idDelegate);
 
     ///@notice Changes the address, name or commitTime associated with a specific delegate
     function updateDelegate(

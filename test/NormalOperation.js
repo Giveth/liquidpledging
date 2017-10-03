@@ -42,6 +42,7 @@ describe('LiquidPledging test', () => {
   let liquidPledging;
   let vault;
   let donor1;
+  let donor2;
   let delegate1;
   let adminProject1;
   let adminProject2;
@@ -57,10 +58,11 @@ describe('LiquidPledging test', () => {
       adminProject2 = accounts[4];
       adminProject2a = accounts[5];
       delegate2 = accounts[6];
+      donor2 = accounts[7];
       done();
     });
   });
-  it('Should deploy LiquidPledgin contract', async () => {
+  it('Should deploy LiquidPledging contract', async () => {
     vault = await Vault.new(web3);
     liquidPledging = await LiquidPledging.new(web3, vault.$address, { gas: 5200000 });
     await vault.setLiquidPledging(liquidPledging.$address);
@@ -300,4 +302,16 @@ describe('LiquidPledging test', () => {
 
     assert.equal(collected, 0.95);
   }).timeout(8000);
+  it('Should make a donation and create donor', async () => {
+    await liquidPledging.donate(0, 1, { from: donor2, value: web3.toWei(1) });
+    const nNotes = await liquidPledging.numberOfNotes();
+    assert.equal(nNotes.toNumber(), 14);
+    const nManagers = await liquidPledging.numberOfNoteManagers();
+    assert.equal(nManagers.toNumber(), 7);
+    const res = await liquidPledging.getNoteManager(7);
+    assert.equal(res[0], 0); // Donor
+    assert.equal(res[1], donor2);
+    assert.equal(res[2], '');
+    assert.equal(res[3], 259200); // default to 3 day commitTime
+  }).timeout(6000);
 });

@@ -34,7 +34,7 @@ contract Vault is Owned {
     ///  funds transparently by its connection to other `Payment` structs
     struct Payment {
         PaymentState state; // 
-        bytes32 ref; // a hash that references details from other contracts
+        bytes32 ref; // an input that references details from other contracts
         address dest; // recipient of the ETH
         uint amount; // amount of ETH (in wei) to be sent
     }
@@ -58,6 +58,7 @@ contract Vault is Owned {
     }
 
     function setLiquidPledging(address _newLiquidPledging) onlyOwner {
+        require(address(liquidPledging) == 0x0);
         liquidPledging = LiquidPledging(_newLiquidPledging);
     }
 
@@ -134,5 +135,4 @@ contract Vault is Owned {
     event ConfirmPayment(uint indexed idPayment);
     event CancelPayment(uint indexed idPayment);
     event AuthorizePayment(uint indexed idPayment, bytes32 indexed ref, address indexed dest, uint amount);
-
 }
