@@ -10,37 +10,37 @@ module.exports = (test) => {
 
   const LiquidPledging = generateClass($abi, $byteCode);
 
-  LiquidPledging.prototype.$getNote = function (idNote) {
-    const note = {
+  LiquidPledging.prototype.$getPledge = function (idPledge) {
+    const pledge = {
       delegates: [],
     };
 
-    return this.getNote(idNote)
+    return this.getPledge(idPledge)
       .then((res) => {
-        note.amount = res.amount;
-        note.owner = res.owner;
+        pledge.amount = res.amount;
+        pledge.owner = res.owner;
 
-        if (res.proposedProject) {
-          note.proposedProject = res.proposedProject;
-          note.commmitTime = res.commitTime;
+        if (res.proposedCampaign) {
+          pledge.proposedCampaign = res.proposedCampaign;
+          pledge.commmitTime = res.commitTime;
         }
-        if (res.oldNote) {
-          note.oldNote = res.oldNote;
+        if (res.oldPledge) {
+          pledge.oldPledge = res.oldPledge;
         }
         if (res.paymentState === '0') {
-          note.paymentState = 'NotPaid';
+          pledge.paymentState = 'NotPaid';
         } else if (res.paymentState === '1') {
-          note.paymentState = 'Paying';
+          pledge.paymentState = 'Paying';
         } else if (res.paymentState === '2') {
-          note.paymentState = 'Paid';
+          pledge.paymentState = 'Paid';
         } else {
-          note.paymentState = 'Unknown';
+          pledge.paymentState = 'Unknown';
         }
 
         const promises = [];
         for (let i = 1; i <= res.nDelegates; i += 1) {
           promises.push(
-            this.getNoteDelegate(idNote, i)
+            this.getPledgeDelegate(idPledge, i)
               .then(r => ({
                 id: r.idDelegate,
                 addr: r.addr,
@@ -52,29 +52,29 @@ module.exports = (test) => {
         return Promise.all(promises);
       })
       .then((delegates) => {
-        note.delegates = delegates;
-        return note;
+        pledge.delegates = delegates;
+        return pledge;
       });
   };
 
   LiquidPledging.prototype.$getManager = function (idManager) {
     const manager = {};
-    return this.getNoteManager(idManager)
+    return this.getPledgeManager(idManager)
       .then((res) => {
         if (res.managerType === '0') {
-          manager.type = 'Donor';
+          manager.type = 'Giver';
         } else if (res.managerType === '1') {
           manager.type = 'Delegate';
         } else if (res.managerType === '2') {
-          manager.type = 'Project';
+          manager.type = 'Campaign';
         } else {
           manager.type = 'Unknown';
         }
         manager.addr = res.addr;
         manager.name = res.name;
         manager.commitTime = res.commitTime;
-        if (manager.paymentState === 'Project') {
-          manager.parentProject = res.parentProject;
+        if (manager.paymentState === 'Campaign') {
+          manager.parentCampaign = res.parentCampaign;
           manager.canceled = res.canceled;
         }
         manager.plugin = res.plugin;
@@ -84,16 +84,16 @@ module.exports = (test) => {
   };
 
   LiquidPledging.prototype.getState = function () {
-    const getNotes = () => this.numberOfNotes()
-        .then((nNotes) => {
+    const getPledges = () => this.numberOfPledges()
+        .then((nPledges) => {
           const promises = [];
-          for (let i = 1; i <= nNotes; i += 1) {
-            promises.push(this.$getNote(i));
+          for (let i = 1; i <= nPledges; i += 1) {
+            promises.push(this.$getPledge(i));
           }
           return Promise.all(promises);
         });
 
-    const getManagers = () => this.numberOfNoteManagers()
+    const getManagers = () => this.numberOfPledgeManagers()
       .then((nManagers) => {
         const promises = [];
         for (let i = 1; i <= nManagers; i += 1) {
@@ -103,34 +103,34 @@ module.exports = (test) => {
         return Promise.all(promises);
       });
 
-    return Promise.all([getNotes(), getManagers()])
-        .then(([notes, managers]) => ({
-          notes: [null, ...notes],
+    return Promise.all([getPledges(), getManagers()])
+        .then(([pledges, managers]) => ({
+          pledges: [null, ...pledges],
           managers: [null, ...managers],
         }));
   };
 
-  LiquidPledging.prototype.generateDonorsState = function () {
-    const donorsState = [];
+  LiquidPledging.prototype.generateGiversState = function () {
+    const giversState = [];
 
-    const getDonor = (idNote) => {
-      let note = this.notes[idNote];
-      while (note.oldNode) note = this.notes[idNote];
-      return note.owner;
+    const getGiver = (idPledge) => {
+      let pledge = this.pledges[idPledge];
+      while (pledge.oldNode) pledge = this.pledges[idPledge];
+      return pledge.owner;
     };
 
-      // Add a donor structure to the list
-    const addDonor = (_list, idDonor) => {
+      // Add a giver structure to the list
+    const addGiver = (_list, idGiver) => {
       const list = _list;
-      if (!list[idDonor]) {
-        list[idDonor] = {
-          idDonor,
+      if (!list[idGiver]) {
+        list[idGiver] = {
+          idGiver,
           notAssigned: {
-            notes: [],
+            pledges: [],
             delegates: [],
           },
-          precommitedProjects: [],
-          commitedProjects: [],
+          precommitedCampaigns: [],
+          commitedCampaigns: [],
         };
       }
     };
@@ -142,73 +142,73 @@ module.exports = (test) => {
         list[idDelegate] = {
           idDelegate,
           name: this.managers[idDelegate].name,
-          notes: [],
+          pledges: [],
           delegtes: [],
         };
       }
     };
 
-    const addProject = (_list, idProject) => {
+    const addCampaign = (_list, idCampaign) => {
       const list = _list;
-      if (!list[idProject]) {
-        list[idProject] = {
-          idProject,
-          notes: [],
-          commitedProjects: [],
-          name: this.managers[idProject].name,
-          commitTime: this.managers[idProject].commitTime,
-          owner: this.managers[idProject].owner,
-          parentProject: this.managers[idProject].parentProject,
+      if (!list[idCampaign]) {
+        list[idCampaign] = {
+          idCampaign,
+          pledges: [],
+          commitedCampaigns: [],
+          name: this.managers[idCampaign].name,
+          commitTime: this.managers[idCampaign].commitTime,
+          owner: this.managers[idCampaign].owner,
+          parentCampaign: this.managers[idCampaign].parentCampaign,
         };
       }
     };
 
-    const addDelegateNote = (stDonor, idNote) => {
-      const note = this.notes[idNote];
-      stDonor.notAssigned.notes.push(idNote);
-      let list = stDonor.notAssigned.delegates;
-      for (let i = 0; i < note.delegationChain.length; i += 1) {
-        const idDelegate = note.delegationChain[i];
+    const addDelegatePledge = (stGiver, idPledge) => {
+      const pledge = this.pledges[idPledge];
+      stGiver.notAssigned.pledges.push(idPledge);
+      let list = stGiver.notAssigned.delegates;
+      for (let i = 0; i < pledge.delegationChain.length; i += 1) {
+        const idDelegate = pledge.delegationChain[i];
         addDelegate(list, idDelegate);
         list = list[idDelegate].delegates;
       }
     };
 
-    const addProjectNote = (stDonor, idNote) => {
-      const note = this.notes[idNote];
+    const addCampaignPledge = (stGiver, idPledge) => {
+      const pledge = this.pledges[idPledge];
 
-      const projectList = [];
-      let n = note;
+      const campaignList = [];
+      let n = pledge;
       while (n.oldNode) {
-        projectList.unshift(n.owner);
-        n = this.notes[n.oldNode];
+        campaignList.unshift(n.owner);
+        n = this.pledges[n.oldNode];
       }
 
-      let list = stDonor.commitedProjects;
-      for (let j = 0; j < projectList.length; j += 1) {
-        addProject(list, projectList[j]);
-        list[projectList[j]].notes.push(idNote);
-        list = list[projectList[j]].commitedProjects;
+      let list = stGiver.commitedCampaigns;
+      for (let j = 0; j < campaignList.length; j += 1) {
+        addCampaign(list, campaignList[j]);
+        list[campaignList[j]].pledges.push(idPledge);
+        list = list[campaignList[j]].commitedCampaigns;
       }
     };
 
-    for (let i = 0; i < this.notes; i += 1) {
-      const idNote = this.notes[i];
-      const idDonor = getDonor(idNote);
-      addDonor(donorsState, idDonor);
-      const stDonor = donorsState[idDonor];
-      const note = this.notes[idNote];
-      if ((note.owner === idDonor) && (note.precommitedProject === 0)) {
-        addDelegateNote(stDonor, idNote);
-      } else if ((note.owner === idDonor) && (note.precommitedProject !== 0)) {
-        addProject(stDonor.precommitedProjects, note.precommitedProject);
-        stDonor.precommitedProjects[note.precommitedProject].notes.push(idNote);
+    for (let i = 0; i < this.pledges; i += 1) {
+      const idPledge = this.pledges[i];
+      const idGiver = getGiver(idPledge);
+      addGiver(giversState, idGiver);
+      const stGiver = giversState[idGiver];
+      const pledge = this.pledges[idPledge];
+      if ((pledge.owner === idGiver) && (pledge.precommitedCampaign === 0)) {
+        addDelegatePledge(stGiver, idPledge);
+      } else if ((pledge.owner === idGiver) && (pledge.precommitedCampaign !== 0)) {
+        addCampaign(stGiver.precommitedCampaigns, pledge.precommitedCampaign);
+        stGiver.precommitedCampaigns[pledge.precommitedCampaign].pledges.push(idPledge);
       } else {
-        addProjectNote(stDonor, idNote);
+        addCampaignPledge(stGiver, idPledge);
       }
     }
 
-    this.donorsState = donorsState;
+    this.giversState = giversState;
   };
 
   return LiquidPledging;
