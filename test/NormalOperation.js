@@ -19,9 +19,9 @@ const printState = async(liquidPledging) => {
 
 const printBalances = async(liquidPledging) => {
   const st = await liquidPledging.getState();
-  assert.equal(st.notes.length, 13);
+  assert.equal(st.pledges.length, 13);
   for (let i = 1; i <= 12; i += 1) {
-    console.log(i, ethConnector.web3.fromWei(st.notes[i].amount).toNumber());
+    console.log(i, ethConnector.web3.fromWei(st.pledges[i].amount).toNumber());
   }
 };
 
@@ -69,9 +69,9 @@ describe('LiquidPledging test', () => {
   }).timeout(6000);
   it('Should create a giver', async () => {
     await liquidPledging.addGiver('Giver1', 86400, 0, { from: giver1 });
-    const nManagers = await liquidPledging.numberOfNoteManagers();
+    const nManagers = await liquidPledging.numberOfPledgeManagers();
     assert.equal(nManagers, 1);
-    const res = await liquidPledging.getNoteManager(1);
+    const res = await liquidPledging.getPledgeManager(1);
     assert.equal(res[0], 0); // Giver
     assert.equal(res[1], giver1);
     assert.equal(res[2], 'Giver1');
@@ -79,30 +79,30 @@ describe('LiquidPledging test', () => {
   }).timeout(6000);
   it('Should make a donation', async () => {
     await liquidPledging.donate(1, 1, { from: giver1, value: web3.toWei(1) });
-    const nNotes = await liquidPledging.numberOfNotes();
-    assert.equal(nNotes.toNumber(), 1);
-    await liquidPledging.getNote(1);
+    const nPledges = await liquidPledging.numberOfPledges();
+    assert.equal(nPledges.toNumber(), 1);
+    await liquidPledging.getPledge(1);
   }).timeout(6000);
   it('Should create a delegate', async () => {
     await liquidPledging.addDelegate('Delegate1', 0, 0, { from: delegate1 });
-    const nManagers = await liquidPledging.numberOfNoteManagers();
+    const nManagers = await liquidPledging.numberOfPledgeManagers();
     assert.equal(nManagers, 2);
-    const res = await liquidPledging.getNoteManager(2);
+    const res = await liquidPledging.getPledgeManager(2);
     assert.equal(res[0], 1); // Giver
     assert.equal(res[1], delegate1);
     assert.equal(res[2], 'Delegate1');
   }).timeout(6000);
   it('Giver should delegate on the delegate', async () => {
     await liquidPledging.transfer(1, 1, web3.toWei(0.5), 2, { from: giver1 });
-    const nNotes = await liquidPledging.numberOfNotes();
-    assert.equal(nNotes.toNumber(), 2);
-    const res1 = await liquidPledging.getNote(1);
+    const nPledges = await liquidPledging.numberOfPledges();
+    assert.equal(nPledges.toNumber(), 2);
+    const res1 = await liquidPledging.getPledge(1);
     assert.equal(res1[0].toNumber(), web3.toWei(0.5));
-    const res2 = await liquidPledging.getNote(2);
+    const res2 = await liquidPledging.getPledge(2);
     assert.equal(res2[0].toNumber(), web3.toWei(0.5));
     assert.equal(res2[1].toNumber(), 1); // One delegate
 
-    const d = await liquidPledging.getNoteDelegate(2, 1);
+    const d = await liquidPledging.getPledgeDelegate(2, 1);
     assert.equal(d[0], 2);
     assert.equal(d[1], delegate1);
     assert.equal(d[2], 'Delegate1');
@@ -110,9 +110,9 @@ describe('LiquidPledging test', () => {
   it('Should create a 2 campaigns', async () => {
     await liquidPledging.addCampaign('Campaign1', adminCampaign1, 0, 86400, 0, { from: adminCampaign1 });
 
-    const nManagers = await liquidPledging.numberOfNoteManagers();
+    const nManagers = await liquidPledging.numberOfPledgeManagers();
     assert.equal(nManagers, 3);
-    const res = await liquidPledging.getNoteManager(3);
+    const res = await liquidPledging.getPledgeManager(3);
     assert.equal(res[0], 2); // Campaign type
     assert.equal(res[1], adminCampaign1);
     assert.equal(res[2], 'Campaign1');
@@ -122,9 +122,9 @@ describe('LiquidPledging test', () => {
 
     await liquidPledging.addCampaign('Campaign2', adminCampaign2, 0, 86400, 0, { from: adminCampaign2 });
 
-    const nManagers2 = await liquidPledging.numberOfNoteManagers();
+    const nManagers2 = await liquidPledging.numberOfPledgeManagers();
     assert.equal(nManagers2, 4);
-    const res4 = await liquidPledging.getNoteManager(4);
+    const res4 = await liquidPledging.getPledgeManager(4);
     assert.equal(res4[0], 2); // Campaign type
     assert.equal(res4[1], adminCampaign2);
     assert.equal(res4[2], 'Campaign2');
@@ -135,9 +135,9 @@ describe('LiquidPledging test', () => {
   it('Delegate should assign to campaign2', async () => {
     const n = Math.floor(new Date().getTime() / 1000);
     await liquidPledging.transfer(2, 2, web3.toWei(0.2), 3, { from: delegate1 });
-    const nNotes = await liquidPledging.numberOfNotes();
-    assert.equal(nNotes.toNumber(), 3);
-    const res3 = await liquidPledging.getNote(3);
+    const nPledges = await liquidPledging.numberOfPledges();
+    assert.equal(nPledges.toNumber(), 3);
+    const res3 = await liquidPledging.getPledge(3);
     assert.equal(res3[0].toNumber(), web3.toWei(0.2));
     assert.equal(res3[1].toNumber(), 1); // Owner
     assert.equal(res3[2].toNumber(), 1); // Delegates
@@ -148,11 +148,11 @@ describe('LiquidPledging test', () => {
   }).timeout(6000);
   it('Giver should change his mind and assign half of it to campaign2', async () => {
     await liquidPledging.transfer(1, 3, web3.toWei(0.1), 4, { from: giver1 });
-    const nNotes = await liquidPledging.numberOfNotes();
-    assert.equal(nNotes.toNumber(), 4);
-    const res3 = await liquidPledging.getNote(3);
+    const nPledges = await liquidPledging.numberOfPledges();
+    assert.equal(nPledges.toNumber(), 4);
+    const res3 = await liquidPledging.getPledge(3);
     assert.equal(res3[0].toNumber(), web3.toWei(0.1));
-    const res4 = await liquidPledging.getNote(4);
+    const res4 = await liquidPledging.getPledge(4);
     assert.equal(res4[1].toNumber(), 4); // Owner
     assert.equal(res4[2].toNumber(), 0); // Delegates
     assert.equal(res4[3].toNumber(), 0); // Proposed Campaign
@@ -164,9 +164,9 @@ describe('LiquidPledging test', () => {
     const n = Math.floor(new Date().getTime() / 1000);
     await liquidPledging.setMockedTime(n + 86401);
     await liquidPledging.withdraw(3, web3.toWei(0.05), { from: adminCampaign1 });
-    const nNotes = await liquidPledging.numberOfNotes();
-    assert.equal(nNotes.toNumber(), 6);
-    const res5 = await liquidPledging.getNote(5);
+    const nPledges = await liquidPledging.numberOfPledges();
+    assert.equal(nPledges.toNumber(), 6);
+    const res5 = await liquidPledging.getPledge(5);
     assert.equal(res5[0].toNumber(), web3.toWei(0.05));
     assert.equal(res5[1].toNumber(), 3); // Owner
     assert.equal(res5[2].toNumber(), 0); // Delegates
@@ -174,7 +174,7 @@ describe('LiquidPledging test', () => {
     assert.equal(res5[4], 0);            // commit time
     assert.equal(res5[5].toNumber(), 2); // Old Node
     assert.equal(res5[6].toNumber(), 0); // Not Paid
-    const res6 = await liquidPledging.getNote(6);
+    const res6 = await liquidPledging.getPledge(6);
     assert.equal(res6[0].toNumber(), web3.toWei(0.05));
     assert.equal(res6[1].toNumber(), 3); // Owner
     assert.equal(res6[2].toNumber(), 0); // Delegates
@@ -193,9 +193,9 @@ describe('LiquidPledging test', () => {
 
     assert.equal(collected, 0.05);
 
-    const nNotes = await liquidPledging.numberOfNotes();
-    assert.equal(nNotes.toNumber(), 7);
-    const res7 = await liquidPledging.getNote(7);
+    const nPledges = await liquidPledging.numberOfPledges();
+    assert.equal(nPledges.toNumber(), 7);
+    const res7 = await liquidPledging.getPledge(7);
     assert.equal(res7[0].toNumber(), web3.toWei(0.05));
     assert.equal(res7[1].toNumber(), 3); // Owner
     assert.equal(res7[2].toNumber(), 0); // Delegates
@@ -211,7 +211,7 @@ describe('LiquidPledging test', () => {
   }).timeout(6000);
   it('Should not allow to withdraw from a canceled campaign', async () => {
     const st = await liquidPledging.getState(liquidPledging);
-    assert.equal(web3.fromWei(st.notes[5].amount).toNumber(), 0.05);
+    assert.equal(web3.fromWei(st.pledges[5].amount).toNumber(), 0.05);
     await assertFail(async () => {
       await liquidPledging.withdraw(5, web3.toWei(0.01), { from: adminCampaign1 });
     });
@@ -221,49 +221,49 @@ describe('LiquidPledging test', () => {
       { $extraGas: 100000 },
       { from: delegate1 });
     const st = await liquidPledging.getState(liquidPledging);
-    assert.equal(st.notes.length, 9);
-    assert.equal(web3.fromWei(st.notes[8].amount).toNumber(), 0.03);
-    assert.equal(st.notes[8].owner, 1);
-    assert.equal(st.notes[8].delegates.length, 1);
-    assert.equal(st.notes[8].delegates[0].id, 2);
-    assert.equal(st.notes[8].proposedCampaign, 4);
+    assert.equal(st.pledges.length, 9);
+    assert.equal(web3.fromWei(st.pledges[8].amount).toNumber(), 0.03);
+    assert.equal(st.pledges[8].owner, 1);
+    assert.equal(st.pledges[8].delegates.length, 1);
+    assert.equal(st.pledges[8].delegates[0].id, 2);
+    assert.equal(st.pledges[8].proposedCampaign, 4);
   }).timeout(6000);
   it('Giver should be able to send the remaining to campaign2', async () => {
     await liquidPledging.transfer(1, 5, web3.toWei(0.02), 4, { from: giver1 });
     const st = await liquidPledging.getState(liquidPledging);
-    assert.equal(st.notes.length, 9);
-    assert.equal(web3.fromWei(st.notes[5].amount).toNumber(), 0);
-    assert.equal(web3.fromWei(st.notes[4].amount).toNumber(), 0.12);
+    assert.equal(st.pledges.length, 9);
+    assert.equal(web3.fromWei(st.pledges[5].amount).toNumber(), 0);
+    assert.equal(web3.fromWei(st.pledges[4].amount).toNumber(), 0.12);
   }).timeout(6000);
   it('A subcampaign 2a and a delegate2 is created', async () => {
     await liquidPledging.addCampaign('Campaign2a', adminCampaign2a, 4, 86400, 0, { from: adminCampaign2 });
     await liquidPledging.addDelegate('Delegate2', 0, 0, { from: delegate2 });
-    const nManagers = await liquidPledging.numberOfNoteManagers();
+    const nManagers = await liquidPledging.numberOfPledgeManagers();
     assert.equal(nManagers, 6);
   }).timeout(6000);
   it('Campaign 2 delegate in delegate2', async () => {
     await liquidPledging.transfer(4, 4, web3.toWei(0.02), 6, { from: adminCampaign2 });
     const st = await liquidPledging.getState(liquidPledging);
-    assert.equal(st.notes.length, 10);
-    assert.equal(web3.fromWei(st.notes[9].amount).toNumber(), 0.02);
-    assert.equal(web3.fromWei(st.notes[4].amount).toNumber(), 0.1);
+    assert.equal(st.pledges.length, 10);
+    assert.equal(web3.fromWei(st.pledges[9].amount).toNumber(), 0.02);
+    assert.equal(web3.fromWei(st.pledges[4].amount).toNumber(), 0.1);
   }).timeout(6000);
   it('delegate2 assigns to projec2a', async () => {
     await liquidPledging.transfer(6, 9, web3.toWei(0.01), 5, { from: delegate2 });
     const st = await liquidPledging.getState(liquidPledging);
-    assert.equal(st.notes.length, 11);
-    assert.equal(web3.fromWei(st.notes[9].amount).toNumber(), 0.01);
-    assert.equal(web3.fromWei(st.notes[10].amount).toNumber(), 0.01);
+    assert.equal(st.pledges.length, 11);
+    assert.equal(web3.fromWei(st.pledges[9].amount).toNumber(), 0.01);
+    assert.equal(web3.fromWei(st.pledges[10].amount).toNumber(), 0.01);
   }).timeout(4000);
   it('campaign2a authorize to spend a litle', async () => {
     const n = Math.floor(new Date().getTime() / 1000);
     await liquidPledging.setMockedTime(n + (86401 * 3));
     await liquidPledging.withdraw(10, web3.toWei(0.005), { from: adminCampaign2a });
     const st = await liquidPledging.getState(liquidPledging);
-    assert.equal(st.notes.length, 13);
-    assert.equal(web3.fromWei(st.notes[10].amount).toNumber(), 0);
-    assert.equal(web3.fromWei(st.notes[11].amount).toNumber(), 0.005);
-    assert.equal(web3.fromWei(st.notes[12].amount).toNumber(), 0.005);
+    assert.equal(st.pledges.length, 13);
+    assert.equal(web3.fromWei(st.pledges[10].amount).toNumber(), 0);
+    assert.equal(web3.fromWei(st.pledges[11].amount).toNumber(), 0.005);
+    assert.equal(web3.fromWei(st.pledges[12].amount).toNumber(), 0.005);
   }).timeout(4000);
   it('campaign2 is canceled', async () => {
     await liquidPledging.cancelCampaign(4, { from: adminCampaign2 });
@@ -281,10 +281,10 @@ describe('LiquidPledging test', () => {
   it('Should not be able to cancel payment', async () => {
     await vault.cancelPayment(1);
     const st = await liquidPledging.getState(liquidPledging);
-    assert.equal(st.notes.length, 13);
-    assert.equal(web3.fromWei(st.notes[2].amount).toNumber(), 0.31);
-    assert.equal(web3.fromWei(st.notes[11].amount).toNumber(), 0);
-    assert.equal(web3.fromWei(st.notes[12].amount).toNumber(), 0);
+    assert.equal(st.pledges.length, 13);
+    assert.equal(web3.fromWei(st.pledges[2].amount).toNumber(), 0.31);
+    assert.equal(web3.fromWei(st.pledges[11].amount).toNumber(), 0);
+    assert.equal(web3.fromWei(st.pledges[12].amount).toNumber(), 0);
   }).timeout(6000);
   it('original owner should recover the remaining funds', async () => {
     await liquidPledging.withdraw(1, web3.toWei(0.5), { from: giver1 });
@@ -303,14 +303,14 @@ describe('LiquidPledging test', () => {
     assert.equal(collected, 0.95);
   }).timeout(8000);
   it('Should make a donation and create giver', async () => {
-    const oldNNotes = await liquidPledging.numberOfNotes();
-    const oldNManagers = await liquidPledging.numberOfNoteManagers();
+    const oldNPledges = await liquidPledging.numberOfPledges();
+    const oldNManagers = await liquidPledging.numberOfPledgeManagers();
     await liquidPledging.donate(0, 1, { from: giver2, value: web3.toWei(1) });
-    const nNotes = await liquidPledging.numberOfNotes();
-    assert.equal(nNotes.toNumber(), oldNNotes.toNumber() + 1);
-    const nManagers = await liquidPledging.numberOfNoteManagers();
+    const nPledges = await liquidPledging.numberOfPledges();
+    assert.equal(nPledges.toNumber(), oldNPledges.toNumber() + 1);
+    const nManagers = await liquidPledging.numberOfPledgeManagers();
     assert.equal(nManagers.toNumber(), oldNManagers.toNumber() + 1);
-    const res = await liquidPledging.getNoteManager(nManagers);
+    const res = await liquidPledging.getPledgeManager(nManagers);
     assert.equal(res[0], 0); // Giver
     assert.equal(res[1], giver2);
     assert.equal(res[2], '');

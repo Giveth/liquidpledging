@@ -51,13 +51,13 @@ contract LiquidPledgingBase {
     uint constant MAX_SUBCAMPAIGN_LEVEL = 20;
     uint constant MAX_INTERCAMPAIGN_LEVEL = 20;
 
-    enum NoteManagerType { Giver, Delegate, Campaign }
+    enum PledgeManagerType { Giver, Delegate, Campaign }
     enum PaymentState { NotPaid, Paying, Paid } // TODO name change NotPaid
 
-    /// @dev This struct defines the details of each the NoteManager, these
-    ///  NoteManagers can own notes and act as delegates
-    struct NoteManager { // TODO name change NoteManager
-        NoteManagerType managerType; // Giver, Delegate or Campaign
+    /// @dev This struct defines the details of each the PledgeManager, these
+    ///  PledgeManagers can own pledges and act as delegates
+    struct PledgeManager { // TODO name change PledgeManager
+        PledgeManagerType managerType; // Giver, Delegate or Campaign
         address addr; // account or contract address for admin
         string name;
         uint64 commitTime;  // In seconds, used for Givers' & Delegates' vetos
@@ -66,22 +66,22 @@ contract LiquidPledgingBase {
         ILiquidPledgingPlugin plugin; // if the plugin is 0x0 then nothing happens if its a contract address than that smart contract is called via the milestone contract
     }
 
-    struct Note {
+    struct Pledge {
         uint amount;
-        uint64 owner; //NoteManager
+        uint64 owner; // PledgeManager
         uint64[] delegationChain; // list of index numbers
         uint64 proposedCampaign; // TODO change the name only used for when delegates are precommiting to a campaign
         uint64 commitTime;  // When the proposedCampaign will become the owner
-        uint64 oldNote; // this points to the Note[] index that the Note was derived from
+        uint64 oldPledge; // this points to the Pledge[] index that the Pledge was derived from
         PaymentState paymentState;
     }
 
-    Note[] notes;
-    NoteManager[] managers; //The list of noteManagers 0 means there is no manager
+    Pledge[] pledges;
+    PledgeManager[] managers; //The list of pledgeManagers 0 means there is no manager
     Vault public vault;
 
-    // this mapping allows you to search for a specific note's index number by the hash of that note
-    mapping (bytes32 => uint64) hNote2ddx;//TODO Fix typo
+    // this mapping allows you to search for a specific pledge's index number by the hash of that pledge
+    mapping (bytes32 => uint64) hPledge2idx;//TODO Fix typo
 
 
 /////
@@ -102,7 +102,7 @@ contract LiquidPledgingBase {
     /// @param _vault Where the ETH is stored that the pledges represent
     function LiquidPledgingBase(address _vault) {
         managers.length = 1; // we reserve the 0 manager
-        notes.length = 1; // we reserve the 0 note
+        pledges.length = 1; // we reserve the 0 pledge
         vault = Vault(_vault);
     }
 
@@ -117,8 +117,8 @@ contract LiquidPledgingBase {
 
         idGiver = uint64(managers.length);
 
-        managers.push(NoteManager(
-            NoteManagerType.Giver,
+        managers.push(PledgeManager(
+            PledgeManagerType.Giver,
             msg.sender,
             name,
             commitTime,
@@ -138,9 +138,9 @@ contract LiquidPledgingBase {
         string newName,
         uint64 newCommitTime)
     {
-        NoteManager storage giver = findManager(idGiver);
-        require(giver.managerType == NoteManagerType.Giver);//Must be a Giver
-        require(giver.addr == msg.sender);//current addr had to originate this tx
+        PledgeManager storage giver = findManager(idGiver);
+        require(giver.managerType == PledgeManagerType.Giver); //Must be a Giver
+        require(giver.addr == msg.sender); //current addr had to originate this tx
         giver.addr = newAddr;
         giver.name = newName;
         giver.commitTime = newCommitTime;
@@ -154,8 +154,8 @@ contract LiquidPledgingBase {
 
         idDelegate = uint64(managers.length);
 
-        managers.push(NoteManager(
-            NoteManagerType.Delegate,
+        managers.push(PledgeManager(
+            PledgeManagerType.Delegate,
             msg.sender,
             name,
             commitTime,
@@ -174,8 +174,8 @@ contract LiquidPledgingBase {
         address newAddr,
         string newName,
         uint64 newCommitTime) {
-        NoteManager storage delegate = findManager(idDelegate);
-        require(delegate.managerType == NoteManagerType.Delegate);
+        PledgeManager storage delegate = findManager(idDelegate);
+        require(delegate.managerType == PledgeManagerType.Delegate);
         require(delegate.addr == msg.sender);
         delegate.addr = newAddr;
         delegate.name = newName;
@@ -188,16 +188,16 @@ contract LiquidPledgingBase {
     /// @notice Creates a new Campaign
     function addCampaign(string name, address campaignManager, uint64 parentCampaign, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idCampaign) {
         if (parentCampaign != 0) {
-            NoteManager storage pm = findManager(parentCampaign);
-            require(pm.managerType == NoteManagerType.Campaign);
+            PledgeManager storage pm = findManager(parentCampaign);
+            require(pm.managerType == PledgeManagerType.Campaign);
             require(pm.addr == msg.sender);
             require(getCampaignLevel(pm) < MAX_SUBCAMPAIGN_LEVEL);
         }
 
         idCampaign = uint64(managers.length);
 
-        managers.push(NoteManager(
-            NoteManagerType.Campaign,
+        managers.push(PledgeManager(
+            PledgeManagerType.Campaign,
             campaignManager,
             name,
             commitTime,
@@ -218,8 +218,8 @@ contract LiquidPledgingBase {
         string newName,
         uint64 newCommitTime)
     {
-        NoteManager storage campaign = findManager(idCampaign);
-        require(campaign.managerType == NoteManagerType.Campaign);
+        PledgeManager storage campaign = findManager(idCampaign);
+        require(campaign.managerType == PledgeManagerType.Campaign);
         require(campaign.addr == msg.sender);
         campaign.addr = newAddr;
         campaign.name = newName;
@@ -234,49 +234,49 @@ contract LiquidPledgingBase {
 // Public constant functions
 //////////
 
-    /// @notice Public constant that states how many notes are in the system
-    function numberOfNotes() constant returns (uint) {
-        return notes.length - 1;
+    /// @notice Public constant that states how many pledgess are in the system
+    function numberOfPledges() constant returns (uint) {
+        return pledges.length - 1;
     }
-    /// @notice Public constant that states the details of the specified Note
-    function getNote(uint64 idNote) constant returns(
+    /// @notice Public constant that states the details of the specified Pledge
+    function getPledge(uint64 idPledge) constant returns(
         uint amount,
         uint64 owner,
         uint64 nDelegates,
         uint64 proposedCampaign,
         uint64 commitTime,
-        uint64 oldNote,
+        uint64 oldPledge,
         PaymentState paymentState
     ) {
-        Note storage n = findNote(idNote);
+        Pledge storage n = findPledge(idPledge);
         amount = n.amount;
         owner = n.owner;
         nDelegates = uint64(n.delegationChain.length);
         proposedCampaign = n.proposedCampaign;
         commitTime = n.commitTime;
-        oldNote = n.oldNote;
+        oldPledge = n.oldPledge;
         paymentState = n.paymentState;
     }
     /// @notice Public constant that states the delegates one by one, because
     ///  an array cannot be returned
-    function getNoteDelegate(uint64 idNote, uint idxDelegate) constant returns(
+    function getPledgeDelegate(uint64 idPledge, uint idxDelegate) constant returns(
         uint64 idDelegate,
         address addr,
         string name
     ) {
-        Note storage n = findNote(idNote);
+        Pledge storage n = findPledge(idPledge);
         idDelegate = n.delegationChain[idxDelegate - 1];
-        NoteManager storage delegate = findManager(idDelegate);
+        PledgeManager storage delegate = findManager(idDelegate);
         addr = delegate.addr;
         name = delegate.name;
     }
     /// @notice Public constant that states the number of admins in the system
-    function numberOfNoteManagers() constant returns(uint) {
+    function numberOfPledgeManagers() constant returns(uint) {
         return managers.length - 1;
     }
     /// @notice Public constant that states the details of the specified admin
-    function getNoteManager(uint64 idManager) constant returns (
-        NoteManagerType managerType,
+    function getPledgeManager(uint64 idManager) constant returns (
+        PledgeManagerType managerType,
         address addr,
         string name,
         uint64 commitTime,
@@ -284,7 +284,7 @@ contract LiquidPledgingBase {
         bool canceled,
         address plugin)
     {
-        NoteManager storage m = findManager(idManager);
+        PledgeManager storage m = findManager(idManager);
         managerType = m.managerType;
         addr = m.addr;
         name = m.name;
@@ -298,36 +298,36 @@ contract LiquidPledgingBase {
 // Private methods
 ///////
 
-    /// @notice All notes technically exist... but if the note hasn't been
+    /// @notice All pledges technically exist... but if the pledge hasn't been
     ///  created in this system yet then it wouldn't be in the hash array
-    ///  hNoteddx[]; this creates a Pledge with and amount of 0 if one is not
+    ///  hPledge2idx[]; this creates a Pledge with and amount of 0 if one is not
     ///  created already...
-    function findNote(
+    function findPledge(
         uint64 owner,
         uint64[] delegationChain,
         uint64 proposedCampaign,
         uint64 commitTime,
-        uint64 oldNote,
+        uint64 oldPledge,
         PaymentState paid
         ) internal returns (uint64)
     {
-        bytes32 hNote = sha3(owner, delegationChain, proposedCampaign, commitTime, oldNote, paid);
-        uint64 idx = hNote2ddx[hNote];
+        bytes32 hPledge = sha3(owner, delegationChain, proposedCampaign, commitTime, oldPledge, paid);
+        uint64 idx = hPledge2idx[hPledge];
         if (idx > 0) return idx;
-        idx = uint64(notes.length);
-        hNote2ddx[hNote] = idx;
-        notes.push(Note(0, owner, delegationChain, proposedCampaign, commitTime, oldNote, paid));
+        idx = uint64(pledges.length);
+        hPledge2idx[hPledge] = idx;
+        pledges.push(Pledge(0, owner, delegationChain, proposedCampaign, commitTime, oldPledge, paid));
         return idx;
     }
 
-    function findManager(uint64 idManager) internal returns (NoteManager storage) {
+    function findManager(uint64 idManager) internal returns (PledgeManager storage) {
         require(idManager < managers.length);
         return managers[idManager];
     }
 
-    function findNote(uint64 idNote) internal returns (Note storage) {
-        require(idNote < notes.length);
-        return notes[idNote];
+    function findPledge(uint64 idPledge) internal returns (Pledge storage) {
+        require(idPledge < pledges.length);
+        return pledges[idPledge];
     }
 
     // a constant for the case that a delegate is requested that is not a delegate in the system
@@ -335,25 +335,25 @@ contract LiquidPledgingBase {
 
     // helper function that searches the delegationChain fro a specific delegate and
     // level of delegation returns their idx in the delegation chain which reflect their level of authority
-    function getDelegateIdx(Note n, uint64 idDelegate) internal returns(uint64) {
+    function getDelegateIdx(Pledge n, uint64 idDelegate) internal returns(uint64) {
         for (uint i=0; i<n.delegationChain.length; i++) {
             if (n.delegationChain[i] == idDelegate) return uint64(i);
         }
         return NOTFOUND;
     }
 
-    // helper function that returns the note level solely to check that transfers
+    // helper function that returns the pledge level solely to check that transfers
     // between Campaigns not violate MAX_INTERCAMPAIGN_LEVEL
-    function getNoteLevel(Note n) internal returns(uint) {
-        if (n.oldNote == 0) return 0; //changed
-        Note storage oldN = findNote(n.oldNote);
-        return getNoteLevel(oldN) + 1;
+    function getPledgeLevel(Pledge n) internal returns(uint) {
+        if (n.oldPledge == 0) return 0; //changed
+        Pledge storage oldN = findPledge(n.oldPledge);
+        return getPledgeLevel(oldN) + 1;
     }
 
     // helper function that returns the max commit time of the owner and all the
     // delegates
-    function maxCommitTime(Note n) internal returns(uint commitTime) {
-        NoteManager storage m = findManager(n.owner);
+    function maxCommitTime(Pledge n) internal returns(uint commitTime) {
+        PledgeManager storage m = findManager(n.owner);
         commitTime = m.commitTime;
 
         for (uint i=0; i<n.delegationChain.length; i++) {
@@ -364,38 +364,38 @@ contract LiquidPledgingBase {
 
     // helper function that returns the campaign level solely to check that there
     // are not too many Campaigns that violate MAX_SUBCAMPAIGNS_LEVEL
-    function getCampaignLevel(NoteManager m) internal returns(uint) {
-        assert(m.managerType == NoteManagerType.Campaign);
+    function getCampaignLevel(PledgeManager m) internal returns(uint) {
+        assert(m.managerType == PledgeManagerType.Campaign);
         if (m.parentCampaign == 0) return(1);
-        NoteManager storage parentNM = findManager(m.parentCampaign);
+        PledgeManager storage parentNM = findManager(m.parentCampaign);
         return getCampaignLevel(parentNM);
     }
 
     function isCampaignCanceled(uint64 campaignId) constant returns (bool) {
-        NoteManager storage m = findManager(campaignId);
-        if (m.managerType == NoteManagerType.Giver) return false;
-        assert(m.managerType == NoteManagerType.Campaign);
+        PledgeManager storage m = findManager(campaignId);
+        if (m.managerType == PledgeManagerType.Giver) return false;
+        assert(m.managerType == PledgeManagerType.Campaign);
         if (m.canceled) return true;
         if (m.parentCampaign == 0) return false;
         return isCampaignCanceled(m.parentCampaign);
     }
 
     // @notice A helper function for canceling campaigns
-    // @param idNote the note that may or may not be canceled
-    function getOldestNoteNotCanceled(uint64 idNote) internal constant returns(uint64) { //todo rename
-        if (idNote == 0) return 0;
-        Note storage n = findNote(idNote);
-        NoteManager storage manager = findManager(n.owner);
-        if (manager.managerType == NoteManagerType.Giver) return idNote;
+    // @param idPledge the pledge that may or may not be canceled
+    function getOldestPledgeNotCanceled(uint64 idPledge) internal constant returns(uint64) { //todo rename
+        if (idPledge == 0) return 0;
+        Pledge storage n = findPledge(idPledge);
+        PledgeManager storage manager = findManager(n.owner);
+        if (manager.managerType == PledgeManagerType.Giver) return idPledge;
 
-        assert(manager.managerType == NoteManagerType.Campaign);
+        assert(manager.managerType == PledgeManagerType.Campaign);
 
-        if (!isCampaignCanceled(n.owner)) return idNote;
+        if (!isCampaignCanceled(n.owner)) return idPledge;
 
-        return getOldestNoteNotCanceled(n.oldNote);
+        return getOldestPledgeNotCanceled(n.oldPledge);
     }
 
-    function checkManagerOwner(NoteManager m) internal constant {
+    function checkManagerOwner(PledgeManager m) internal constant {
         require((msg.sender == m.addr) || (msg.sender == address(m.plugin)));
     }
 }

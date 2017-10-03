@@ -16,7 +16,8 @@ contract Owned {
 
     address public owner;
 
-    /// @notice The Constructor assigns the message sender to be `owner`
+    /// @notice The Constructor assigns the account deploying the contract to be
+    ///  the `owner`
     function Owned() {
         owner = msg.sender;
     }
@@ -24,55 +25,74 @@ contract Owned {
     address public newOwner;
 
     /// @notice `owner` can step down and assign some other address to this role
-    /// @param _newOwner The address of the new owner. 0x0 can be used to create
-    ///  an unowned neutral vault, however that cannot be undone
+    ///  but after this function is called the current owner still has ownership
+    ///  powers in this contract; change of ownership is a 2 step process
+    /// @param _newOwner The address of the new owner. A simple contract with
+    ///  the ability to accept ownership but the inability to do anything else
+    ///  can be used to create an unowned contract to achieve decentralization
     function changeOwner(address _newOwner) onlyOwner {
         newOwner = _newOwner;
     }
 
-
+    /// @notice `newOwner` can accept ownership over this contract
     function acceptOwnership() {
-        if (msg.sender == newOwner) {
-            owner = newOwner;
-        }
+        require(msg.sender == newOwner);
+        owner = newOwner;
     }
 }
 
 //File: ./contracts/Vault.sol
 pragma solidity ^0.4.11;
 
+/// @title Vault
+/// @author Jordi Baylina
+/// @notice This contract holds ether securely for liquid pledging systems. For
+///  this iteration the funds will come straight from the Giveth Multisig as a
+///  safety precaution, but once fully tested and optimized this contract will
+///  be a safe place to store funds equipped with optional variable time delays
+///  to allow for an optional escape hatch to be implemented
 
 
+/// @dev This is declares a few functions from `LiquidPledging` so that the
+///  `Vault` contract can interface with the `LiquidPledging` contract
 contract LiquidPledging {
     function confirmPayment(uint64 idNote, uint amount);
     function cancelPayment(uint64 idNote, uint amount);
 }
 
+
+/// @dev `Vault` is a higher level contract built off of the `Owned`
+///  contract that holds funds for the liquid pledging system. 
 contract Vault is Owned {
 
-    LiquidPledging public liquidPledging;
-    bool public autoPay;
+    LiquidPledging public liquidPledging; // liquidPledging contract's address
+    bool public autoPay; // if false, payments will take 2 txs to be completed
 
     enum PaymentState {
-        Pending,
-        Paid,
-        Canceled
+        Pending, // means the payment is awaiting confirmation
+        Paid,    // means the payment has been sent 
+        Canceled // means the payment will never be sent
     }
-
+    /// @dev `Payment` is a public structure that describes the details of
+    ///  each payment the `ref` param makes it easy to track the movements of
+    ///  funds transparently by its connection to other `Payment` structs
     struct Payment {
-        PaymentState state;
-        bytes32 ref;
-        address dest;
-        uint amount;
+        PaymentState state; // 
+        bytes32 ref; // an input that references details from other contracts
+        address dest; // recipient of the ETH
+        uint amount; // amount of ETH (in wei) to be sent
     }
 
+    // @dev An array that contains all the payments for this Vault
     Payment[] public payments;
 
+    // @dev `liquidPledging` is the only address that can call a function with
+    /// this modifier
     modifier onlyLiquidPledging() {
         require(msg.sender == address(liquidPledging));
         _;
     }
-
+    /// @dev USED FOR TESTING???
     function VaultMock() {
 
     }
@@ -82,6 +102,7 @@ contract Vault is Owned {
     }
 
     function setLiquidPledging(address _newLiquidPledging) onlyOwner {
+        require(address(liquidPledging) == 0x0);
         liquidPledging = LiquidPledging(_newLiquidPledging);
     }
 
@@ -115,7 +136,7 @@ contract Vault is Owned {
         require(p.state == PaymentState.Pending);
 
         p.state = PaymentState.Paid;
-        p.dest.transfer(p.amount);
+        p.dest.transfer(p.amount);  // only ETH denominated in wei
 
         liquidPledging.confirmPayment(uint64(p.ref), p.amount);
 
@@ -158,5 +179,4 @@ contract Vault is Owned {
     event ConfirmPayment(uint indexed idPayment);
     event CancelPayment(uint indexed idPayment);
     event AuthorizePayment(uint indexed idPayment, bytes32 indexed ref, address indexed dest, uint amount);
-
 }

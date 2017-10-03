@@ -32,10 +32,9 @@ contract Owned {
         newOwner = _newOwner;
     }
 
-    /// @notice `newOwner` can accept ownership over this contract 
+    /// @notice `newOwner` can accept ownership over this contract
     function acceptOwnership() {
-        require(msg.sender == newOwner) {
-            owner = newOwner;
-        }
+        require(msg.sender == newOwner);
+        owner = newOwner;
     }
 }
