@@ -19,16 +19,16 @@ contract ILiquidPledgingPlugin {
     ///  ...
     ///  511 -> Plugin for the intendedCampaign receiving pledge to another party
     function beforeTransfer(
-        uint64 noteManager,
-        uint64 noteFrom,
-        uint64 noteTo,
+        uint64 pledgeManager,
+        uint64 pledgeFrom,
+        uint64 pledgeTo,
         uint64 context,
         uint amount
         ) returns (uint maxAllowed);
     function afterTransfer(
-        uint64 noteManager,
-        uint64 noteFrom,
-        uint64 noteTo,
+        uint64 pledgeManager,
+        uint64 pledgeFrom,
+        uint64 pledgeTo,
         uint64 context,
         uint amount);
 }
@@ -314,7 +314,7 @@ contract LiquidPledgingBase {
     ///  created in this system yet then it wouldn't be in the hash array
     ///  hPledge2idx[]; this creates a Pledge with and amount of 0 if one is not
     ///  created already...
-    function findPledge(
+    function findOrCreatePledge(
         uint64 owner,
         uint64[] delegationChain,
         uint64 intendedCampaign,
@@ -453,7 +453,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         require(amount > 0);
 
         vault.transfer(amount); // transfers the baseToken to the Vault
-        uint64 idPledge = findPledge(
+        uint64 idPledge = findOrCreatePledge(
             idGiver,
             new uint64[](0), //what is new?
             0,
@@ -571,7 +571,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
         checkAdminOwner(owner);
 
-        uint64 idNewPledge = findPledge(
+        uint64 idNewPledge = findOrCreatePledge(
             n.owner,
             n.delegationChain,
             0,
@@ -596,7 +596,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         // Check the campaign is not canceled in the while.
         require(getOldestPledgeNotCanceled(idPledge) == idPledge);
 
-        uint64 idNewPledge = findPledge(
+        uint64 idNewPledge = findOrCreatePledge(
             n.owner,
             n.delegationChain,
             0,
@@ -617,7 +617,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         require(n.paymentState == PaymentState.Paying); //TODO change to revert
 
         // When a payment is canceled, never is assigned to a campaign.
-        uint64 oldPledge = findPledge(
+        uint64 oldPledge = findOrCreatePledge(
             n.owner,
             n.delegationChain,
             0,
@@ -715,14 +715,14 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         Pledge storage n = findPledge(idPledge);
 
         require(getPledgeLevel(n) < MAX_INTERCAMPAIGN_LEVEL);
-        uint64 oldPledge = findPledge(
+        uint64 oldPledge = findOrCreatePledge(
             n.owner,
             n.delegationChain,
             0,
             0,
             n.oldPledge,
             PaymentState.Pledged);
-        uint64 toPledge = findPledge(
+        uint64 toPledge = findOrCreatePledge(
             idReceiver,
             new uint64[](0),
             0,
@@ -733,7 +733,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
     }
 
     function transferOwnershipToGiver(uint64 idPledge, uint amount, uint64 idReceiver) internal  {
-        uint64 toPledge = findPledge(
+        uint64 toPledge = findOrCreatePledge(
                 idReceiver,
                 new uint64[](0),
                 0,
@@ -755,7 +755,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         // Make the last item in the array the idReceiver
         newDelegationChain[n.delegationChain.length] = idReceiver;
 
-        uint64 toPledge = findPledge(
+        uint64 toPledge = findOrCreatePledge(
                 n.owner,
                 newDelegationChain,
                 0,
@@ -772,7 +772,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         for (uint i=0; i<n.delegationChain.length - q; i++) {
             newDelegationChain[i] = n.delegationChain[i];
         }
-        uint64 toPledge = findPledge(
+        uint64 toPledge = findOrCreatePledge(
                 n.owner,
                 newDelegationChain,
                 0,
@@ -788,7 +788,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
         require(getPledgeLevel(n) < MAX_SUBCAMPAIGN_LEVEL);
 
-        uint64 toPledge = findPledge(
+        uint64 toPledge = findOrCreatePledge(
                 n.owner,
                 n.delegationChain,
                 idReceiver,
@@ -828,14 +828,14 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
         // First send to a campaign if it's proposed and commited
         if ((n.intendedCampaign > 0) && ( getTime() > n.commitTime)) {
-            uint64 oldPledge = findPledge(
+            uint64 oldPledge = findOrCreatePledge(
                 n.owner,
                 n.delegationChain,
                 0,
                 0,
                 n.oldPledge,
                 PaymentState.Pledged);
-            uint64 toPledge = findPledge(
+            uint64 toPledge = findOrCreatePledge(
                 n.intendedCampaign,
                 new uint64[](0),
                 0,

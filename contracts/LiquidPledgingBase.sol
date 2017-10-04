@@ -278,7 +278,7 @@ contract LiquidPledgingBase {
     ///  created in this system yet then it wouldn't be in the hash array
     ///  hPledge2idx[]; this creates a Pledge with and amount of 0 if one is not
     ///  created already...
-    function findPledge(
+    function findOrCreatePledge(
         uint64 owner,
         uint64[] delegationChain,
         uint64 intendedCampaign,

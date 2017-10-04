@@ -19,16 +19,16 @@ contract ILiquidPledgingPlugin {
     ///  ...
     ///  511 -> Plugin for the intendedCampaign receiving pledge to another party
     function beforeTransfer(
-        uint64 noteManager,
-        uint64 noteFrom,
-        uint64 noteTo,
+        uint64 pledgeManager,
+        uint64 pledgeFrom,
+        uint64 pledgeTo,
         uint64 context,
         uint amount
         ) returns (uint maxAllowed);
     function afterTransfer(
-        uint64 noteManager,
-        uint64 noteFrom,
-        uint64 noteTo,
+        uint64 pledgeManager,
+        uint64 pledgeFrom,
+        uint64 pledgeTo,
         uint64 context,
         uint amount);
 }
@@ -314,7 +314,7 @@ contract LiquidPledgingBase {
     ///  created in this system yet then it wouldn't be in the hash array
     ///  hPledge2idx[]; this creates a Pledge with and amount of 0 if one is not
     ///  created already...
-    function findPledge(
+    function findOrCreatePledge(
         uint64 owner,
         uint64[] delegationChain,
         uint64 intendedCampaign,

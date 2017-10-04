@@ -17,16 +17,16 @@ contract ILiquidPledgingPlugin {
     ///  ...
     ///  511 -> Plugin for the intendedCampaign receiving pledge to another party
     function beforeTransfer(
-        uint64 noteManager,
-        uint64 noteFrom,
-        uint64 noteTo,
+        uint64 pledgeManager,
+        uint64 pledgeFrom,
+        uint64 pledgeTo,
         uint64 context,
         uint amount
         ) returns (uint maxAllowed);
     function afterTransfer(
-        uint64 noteManager,
-        uint64 noteFrom,
-        uint64 noteTo,
+        uint64 pledgeManager,
+        uint64 pledgeFrom,
+        uint64 pledgeTo,
         uint64 context,
         uint amount);
 }
