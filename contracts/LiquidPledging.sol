@@ -24,7 +24,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
 function donate(uint64 idGiver, uint64 idReceiver) payable {
         if (idGiver == 0) {
-            idGiver = addGiver('', 259200, ILiquidPledgingPlugin(0x0)); // default to 3 day commitTime
+            idGiver = addGiver('', '', 259200, ILiquidPledgingPlugin(0x0)); // default to 3 day commitTime
         }
 
         PledgeAdmin storage sender = findAdmin(idGiver);

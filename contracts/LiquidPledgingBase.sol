@@ -24,6 +24,7 @@ contract LiquidPledgingBase {
         PledgeAdminType adminType; // Giver, Delegate or Campaign
         address addr; // account or contract address for admin
         string name;
+        string url;
         uint64 commitTime;  // In seconds, used for Givers' & Delegates' vetos
         uint64 parentCampaign;  // Only for campaigns
         bool canceled;      //Always false except for canceled campaigns
@@ -76,7 +77,7 @@ contract LiquidPledgingBase {
 //////
 
     /// @notice Creates a giver.
-    function addGiver(string name, uint64 commitTime, ILiquidPledgingPlugin plugin
+    function addGiver(string name, string url, uint64 commitTime, ILiquidPledgingPlugin plugin
         ) returns (uint64 idGiver) {
 
         idGiver = uint64(admins.length);
@@ -85,6 +86,7 @@ contract LiquidPledgingBase {
             PledgeAdminType.Giver,
             msg.sender,
             name,
+            url,
             commitTime,
             0,
             false,
@@ -100,6 +102,7 @@ contract LiquidPledgingBase {
         uint64 idGiver,
         address newAddr,
         string newName,
+        string newUrl,
         uint64 newCommitTime)
     {
         PledgeAdmin storage giver = findAdmin(idGiver);
@@ -107,6 +110,7 @@ contract LiquidPledgingBase {
         require(giver.addr == msg.sender); //current addr had to originate this tx
         giver.addr = newAddr;
         giver.name = newName;
+        giver.url = newUrl;
         giver.commitTime = newCommitTime;
         GiverUpdated(idGiver);
     }
@@ -114,7 +118,7 @@ contract LiquidPledgingBase {
     event GiverUpdated(uint64 indexed idGiver);
 
     /// @notice Creates a new Delegate
-    function addDelegate(string name, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idDelegate) { //TODO return index number
+    function addDelegate(string name, string url, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idDelegate) { //TODO return index number
 
         idDelegate = uint64(admins.length);
 
@@ -122,6 +126,7 @@ contract LiquidPledgingBase {
             PledgeAdminType.Delegate,
             msg.sender,
             name,
+            url,
             commitTime,
             0,
             false,
@@ -137,12 +142,14 @@ contract LiquidPledgingBase {
         uint64 idDelegate,
         address newAddr,
         string newName,
+        string newUrl,
         uint64 newCommitTime) {
         PledgeAdmin storage delegate = findAdmin(idDelegate);
         require(delegate.adminType == PledgeAdminType.Delegate);
         require(delegate.addr == msg.sender);
         delegate.addr = newAddr;
         delegate.name = newName;
+        delegate.url = newUrl;
         delegate.commitTime = newCommitTime;
         DelegateUpdated(idDelegate);
     }
@@ -150,7 +157,7 @@ contract LiquidPledgingBase {
     event DelegateUpdated(uint64 indexed idDelegate);
 
     /// @notice Creates a new Campaign
-    function addCampaign(string name, address campaignAdmin, uint64 parentCampaign, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idCampaign) {
+    function addCampaign(string name, string url, address campaignAdmin, uint64 parentCampaign, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idCampaign) {
         if (parentCampaign != 0) {
             PledgeAdmin storage pm = findAdmin(parentCampaign);
             require(pm.adminType == PledgeAdminType.Campaign);
@@ -164,6 +171,7 @@ contract LiquidPledgingBase {
             PledgeAdminType.Campaign,
             campaignAdmin,
             name,
+            url,
             commitTime,
             parentCampaign,
             false,
@@ -180,6 +188,7 @@ contract LiquidPledgingBase {
         uint64 idCampaign,
         address newAddr,
         string newName,
+        string newUrl,
         uint64 newCommitTime)
     {
         PledgeAdmin storage campaign = findAdmin(idCampaign);
@@ -187,6 +196,7 @@ contract LiquidPledgingBase {
         require(campaign.addr == msg.sender);
         campaign.addr = newAddr;
         campaign.name = newName;
+        campaign.url = newUrl;
         campaign.commitTime = newCommitTime;
         CampaignUpdated(idCampaign);
     }
@@ -243,6 +253,7 @@ contract LiquidPledgingBase {
         PledgeAdminType adminType,
         address addr,
         string name,
+        string url,
         uint64 commitTime,
         uint64 parentCampaign,
         bool canceled,
@@ -252,6 +263,7 @@ contract LiquidPledgingBase {
         adminType = m.adminType;
         addr = m.addr;
         name = m.name;
+        url = m.url;
         commitTime = m.commitTime;
         parentCampaign = m.parentCampaign;
         canceled = m.canceled;

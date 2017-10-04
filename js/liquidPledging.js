@@ -45,6 +45,7 @@ module.exports = (test) => {
                 id: r.idDelegate,
                 addr: r.addr,
                 name: r.name,
+                url: r.url
               })),
           );
         }
@@ -72,6 +73,7 @@ module.exports = (test) => {
         }
         admin.addr = res.addr;
         admin.name = res.name;
+        admin.url = res.url;
         admin.commitTime = res.commitTime;
         if (admin.paymentState === 'Campaign') {
           admin.parentCampaign = res.parentCampaign;
@@ -142,6 +144,7 @@ module.exports = (test) => {
         list[idDelegate] = {
           idDelegate,
           name: this.admins[idDelegate].name,
+          url: this.admins[idDelegate].url,
           pledges: [],
           delegtes: [],
         };
@@ -156,6 +159,7 @@ module.exports = (test) => {
           pledges: [],
           commitedCampaigns: [],
           name: this.admins[idCampaign].name,
+          url: this.admins[idCampaign].url,
           commitTime: this.admins[idCampaign].commitTime,
           owner: this.admins[idCampaign].owner,
           parentCampaign: this.admins[idCampaign].parentCampaign,
