@@ -57,29 +57,29 @@ module.exports = (test) => {
       });
   };
 
-  LiquidPledging.prototype.$getManager = function (idManager) {
-    const manager = {};
-    return this.getPledgeManager(idManager)
+  LiquidPledging.prototype.$getAdmin = function (idAdmin) {
+    const admin = {};
+    return this.getPledgeAdmin(idAdmin)
       .then((res) => {
-        if (res.managerType === '0') {
-          manager.type = 'Giver';
-        } else if (res.managerType === '1') {
-          manager.type = 'Delegate';
-        } else if (res.managerType === '2') {
-          manager.type = 'Campaign';
+        if (res.adminType === '0') {
+          admin.type = 'Giver';
+        } else if (res.adminType === '1') {
+          admin.type = 'Delegate';
+        } else if (res.adminType === '2') {
+          admin.type = 'Campaign';
         } else {
-          manager.type = 'Unknown';
+          admin.type = 'Unknown';
         }
-        manager.addr = res.addr;
-        manager.name = res.name;
-        manager.commitTime = res.commitTime;
-        if (manager.paymentState === 'Campaign') {
-          manager.parentCampaign = res.parentCampaign;
-          manager.canceled = res.canceled;
+        admin.addr = res.addr;
+        admin.name = res.name;
+        admin.commitTime = res.commitTime;
+        if (admin.paymentState === 'Campaign') {
+          admin.parentCampaign = res.parentCampaign;
+          admin.canceled = res.canceled;
         }
-        manager.plugin = res.plugin;
-        manager.canceled = res.canceled;
-        return manager;
+        admin.plugin = res.plugin;
+        admin.canceled = res.canceled;
+        return admin;
       });
   };
 
@@ -93,20 +93,20 @@ module.exports = (test) => {
           return Promise.all(promises);
         });
 
-    const getManagers = () => this.numberOfPledgeManagers()
-      .then((nManagers) => {
+    const getAdmins = () => this.numberOfPledgeAdmins()
+      .then((nAdmins) => {
         const promises = [];
-        for (let i = 1; i <= nManagers; i += 1) {
-          promises.push(this.$getManager(i));
+        for (let i = 1; i <= nAdmins; i += 1) {
+          promises.push(this.$getAdmin(i));
         }
 
         return Promise.all(promises);
       });
 
-    return Promise.all([getPledges(), getManagers()])
-        .then(([pledges, managers]) => ({
+    return Promise.all([getPledges(), getAdmins()])
+        .then(([pledges, admins]) => ({
           pledges: [null, ...pledges],
-          managers: [null, ...managers],
+          admins: [null, ...admins],
         }));
   };
 
@@ -141,7 +141,7 @@ module.exports = (test) => {
       if (!list[idDelegate]) {
         list[idDelegate] = {
           idDelegate,
-          name: this.managers[idDelegate].name,
+          name: this.admins[idDelegate].name,
           pledges: [],
           delegtes: [],
         };
@@ -155,10 +155,10 @@ module.exports = (test) => {
           idCampaign,
           pledges: [],
           commitedCampaigns: [],
-          name: this.managers[idCampaign].name,
-          commitTime: this.managers[idCampaign].commitTime,
-          owner: this.managers[idCampaign].owner,
-          parentCampaign: this.managers[idCampaign].parentCampaign,
+          name: this.admins[idCampaign].name,
+          commitTime: this.admins[idCampaign].commitTime,
+          owner: this.admins[idCampaign].owner,
+          parentCampaign: this.admins[idCampaign].parentCampaign,
         };
       }
     };

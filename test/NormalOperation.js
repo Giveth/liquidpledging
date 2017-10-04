@@ -56,7 +56,7 @@ describe('LiquidPledging test', () => {
       gasLimit: 5200000,
       total_accounts: 10,
     });
-    
+
     testrpc.listen(8546, '127.0.0.1');
 
     web3 = new Web3('ws://localhost:8546');
@@ -76,9 +76,9 @@ describe('LiquidPledging test', () => {
   }).timeout(6000);
   it('Should create a giver', async () => {
     await liquidPledging.addGiver('Giver1', 86400, 0, { from: giver1 });
-    const nManagers = await liquidPledging.numberOfPledgeManagers();
-    assert.equal(nManagers, 1);
-    const res = await liquidPledging.getPledgeManager(1);
+    const nAdmins = await liquidPledging.numberOfPledgeAdmins();
+    assert.equal(nAdmins, 1);
+    const res = await liquidPledging.getPledgeAdmin(1);
     assert.equal(res[0], 0); // Giver
     assert.equal(res[1], giver1);
     assert.equal(res[2], 'Giver1');
@@ -92,9 +92,9 @@ describe('LiquidPledging test', () => {
   }).timeout(6000);
   it('Should create a delegate', async () => {
     await liquidPledging.addDelegate('Delegate1', 0, 0, { from: delegate1 });
-    const nManagers = await liquidPledging.numberOfPledgeManagers();
-    assert.equal(nManagers, 2);
-    const res = await liquidPledging.getPledgeManager(2);
+    const nAdmins = await liquidPledging.numberOfPledgeAdmins();
+    assert.equal(nAdmins, 2);
+    const res = await liquidPledging.getPledgeAdmin(2);
     assert.equal(res[0], 1); // Giver
     assert.equal(res[1], delegate1);
     assert.equal(res[2], 'Delegate1');
@@ -117,9 +117,9 @@ describe('LiquidPledging test', () => {
   it('Should create a 2 campaigns', async () => {
     await liquidPledging.addCampaign('Campaign1', adminCampaign1, 0, 86400, 0, { from: adminCampaign1 });
 
-    const nManagers = await liquidPledging.numberOfPledgeManagers();
-    assert.equal(nManagers, 3);
-    const res = await liquidPledging.getPledgeManager(3);
+    const nAdmins = await liquidPledging.numberOfPledgeAdmins();
+    assert.equal(nAdmins, 3);
+    const res = await liquidPledging.getPledgeAdmin(3);
     assert.equal(res[0], 2); // Campaign type
     assert.equal(res[1], adminCampaign1);
     assert.equal(res[2], 'Campaign1');
@@ -129,9 +129,9 @@ describe('LiquidPledging test', () => {
 
     await liquidPledging.addCampaign('Campaign2', adminCampaign2, 0, 86400, 0, { from: adminCampaign2 });
 
-    const nManagers2 = await liquidPledging.numberOfPledgeManagers();
-    assert.equal(nManagers2, 4);
-    const res4 = await liquidPledging.getPledgeManager(4);
+    const nAdmins2 = await liquidPledging.numberOfPledgeAdmins();
+    assert.equal(nAdmins2, 4);
+    const res4 = await liquidPledging.getPledgeAdmin(4);
     assert.equal(res4[0], 2); // Campaign type
     assert.equal(res4[1], adminCampaign2);
     assert.equal(res4[2], 'Campaign2');
@@ -214,7 +214,7 @@ describe('LiquidPledging test', () => {
   it('Admin of the campaign1 should be able to cancel campaign1', async () => {
     await liquidPledging.cancelCampaign(3, { from: adminCampaign1 });
     const st = await liquidPledging.getState(liquidPledging);
-    assert.equal(st.managers[3].canceled, true);
+    assert.equal(st.admins[3].canceled, true);
   }).timeout(6000);
   it('Should not allow to withdraw from a canceled campaign', async () => {
     const st = await liquidPledging.getState(liquidPledging);
@@ -246,8 +246,8 @@ describe('LiquidPledging test', () => {
   it('A subcampaign 2a and a delegate2 is created', async () => {
     await liquidPledging.addCampaign('Campaign2a', adminCampaign2a, 4, 86400, 0, { from: adminCampaign2 });
     await liquidPledging.addDelegate('Delegate2', 0, 0, { from: delegate2 });
-    const nManagers = await liquidPledging.numberOfPledgeManagers();
-    assert.equal(nManagers, 6);
+    const nAdmins = await liquidPledging.numberOfPledgeAdmins();
+    assert.equal(nAdmins, 6);
   }).timeout(6000);
   it('Campaign 2 delegate in delegate2', async () => {
     await liquidPledging.transfer(4, 4, utils.toWei(0.02), 6, { from: adminCampaign2 });
@@ -313,13 +313,13 @@ describe('LiquidPledging test', () => {
   }).timeout(10000);
   it('Should make a donation and create giver', async () => {
     const oldNPledges = await liquidPledging.numberOfPledges();
-    const oldNManagers = await liquidPledging.numberOfPledgeManagers();
+    const oldNAdmins = await liquidPledging.numberOfPledgeAdmins();
     await liquidPledging.donate(0, 1, { from: giver2, value: utils.toWei(1) });
     const nPledges = await liquidPledging.numberOfPledges();
     assert.equal(utils.toDecimal(nPledges), utils.toDecimal(oldNPledges) + 1);
-    const nManagers = await liquidPledging.numberOfPledgeManagers();
-    assert.equal(utils.toDecimal(nManagers), utils.toDecimal(oldNManagers) + 1);
-    const res = await liquidPledging.getPledgeManager(nManagers);
+    const nAdmins = await liquidPledging.numberOfPledgeAdmins();
+    assert.equal(utils.toDecimal(nAdmins), utils.toDecimal(oldNAdmins) + 1);
+    const res = await liquidPledging.getPledgeAdmin(nAdmins);
     assert.equal(res[0], 0); // Giver
     assert.equal(res[1], giver2);
     assert.equal(res[2], '');

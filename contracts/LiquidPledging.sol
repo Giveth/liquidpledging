@@ -27,11 +27,11 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
             idGiver = addGiver('', 259200, ILiquidPledgingPlugin(0x0)); // default to 3 day commitTime
         }
 
-        PledgeManager storage sender = findManager(idGiver);
+        PledgeAdmin storage sender = findAdmin(idGiver);
 
-        checkManagerOwner(sender);
+        checkAdminOwner(sender);
 
-        require(sender.managerType == PledgeManagerType.Giver);
+        require(sender.adminType == PledgeAdminType.Giver);
 
         uint amount = msg.value;
 
@@ -57,8 +57,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
 
     /// @notice Moves value between pledges
-    /// @param idSender ID of the giver, delegate or campaign manager that is transferring
-    ///  the funds from Pledge to Pledge. This manager must have permissions to move the value
+    /// @param idSender ID of the giver, delegate or campaign admin that is transferring
+    ///  the funds from Pledge to Pledge. This admin must have permissions to move the value
     /// @param idPledge Id of the pledge that's moving the value
     /// @param amount Quantity of value that's being moved
     /// @param idReceiver Destination of the value, can be a giver sending to a giver or
@@ -68,19 +68,19 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         idPledge = normalizePledge(idPledge);
 
         Pledge storage n = findPledge(idPledge);
-        PledgeManager storage receiver = findManager(idReceiver);
-        PledgeManager storage sender = findManager(idSender);
+        PledgeAdmin storage receiver = findAdmin(idReceiver);
+        PledgeAdmin storage sender = findAdmin(idSender);
 
-        checkManagerOwner(sender);
+        checkAdminOwner(sender);
         require(n.paymentState == PaymentState.NotPaid);
 
         // If the sender is the owner
         if (n.owner == idSender) {
-            if (receiver.managerType == PledgeManagerType.Giver) {
+            if (receiver.adminType == PledgeAdminType.Giver) {
                 transferOwnershipToGiver(idPledge, amount, idReceiver);
-            } else if (receiver.managerType == PledgeManagerType.Campaign) {
+            } else if (receiver.adminType == PledgeAdminType.Campaign) {
                 transferOwnershipToCampaign(idPledge, amount, idReceiver);
-            } else if (receiver.managerType == PledgeManagerType.Delegate) {
+            } else if (receiver.adminType == PledgeAdminType.Delegate) {
                 appendDelegate(idPledge, amount, idReceiver);
             } else {
                 assert(false);
@@ -93,7 +93,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         if (senderDIdx != NOTFOUND) {
 
             // If the receiver is another giver
-            if (receiver.managerType == PledgeManagerType.Giver) {
+            if (receiver.adminType == PledgeAdminType.Giver) {
                 // Only accept to change to the original giver to remove all delegates
                 assert(n.owner == idReceiver);
                 undelegate(idPledge, amount, n.delegationChain.length);
@@ -101,7 +101,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
             }
 
             // If the receiver is another delegate
-            if (receiver.managerType == PledgeManagerType.Delegate) {
+            if (receiver.adminType == PledgeAdminType.Delegate) {
                 uint receiverDIdx = getDelegateIdx(n, idReceiver);
 
                 // If the receiver is not in the delegate list
@@ -129,7 +129,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
             // If the delegate wants to support a campaign, they undelegate all
             // the delegates after them in the chain and choose a campaign
-            if (receiver.managerType == PledgeManagerType.Campaign) {
+            if (receiver.adminType == PledgeAdminType.Campaign) {
                 undelegate(idPledge, amount, n.delegationChain.length - senderDIdx - 1);
                 proposeAssignCampaign(idPledge, amount, idReceiver);
                 return;
@@ -140,7 +140,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
 
     /// @notice This method is used to withdraw value from the system. This can be used
-    ///  by the givers to avoid committing the donation or by campaign manager to use
+    ///  by the givers to avoid committing the donation or by campaign admin to use
     ///  the Ether.
     /// @param idPledge Id of the pledge that wants to be withdrawn.
     /// @param amount Quantity of Ether that wants to be withdrawn.
@@ -152,9 +152,9 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
         require(n.paymentState == PaymentState.NotPaid);
 
-        PledgeManager storage owner = findManager(n.owner);
+        PledgeAdmin storage owner = findAdmin(n.owner);
 
-        checkManagerOwner(owner);
+        checkAdminOwner(owner);
 
         uint64 idNewPledge = findPledge(
             n.owner,
@@ -219,8 +219,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
     /// @notice Method called to cancel this campaign.
     /// @param idCampaign Id of the projct that wants to be canceled.
     function cancelCampaign(uint64 idCampaign) {
-        PledgeManager storage campaign = findManager(idCampaign);
-        checkManagerOwner(campaign);
+        PledgeAdmin storage campaign = findAdmin(idCampaign);
+        checkAdminOwner(campaign);
         campaign.canceled = true;
 
         CancelCampaign(idCampaign);
@@ -232,8 +232,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
         Pledge storage n = findPledge(idPledge);
 
-        PledgeManager storage m = findManager(n.owner);
-        checkManagerOwner(m);
+        PledgeAdmin storage m = findAdmin(n.owner);
+        checkAdminOwner(m);
 
         doTransfer(idPledge, n.oldPledge, amount);
     }
@@ -444,17 +444,17 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 // Plugins
 /////////////
 
-    function callPlugin(bool before, uint64 managerId, uint64 fromPledge, uint64 toPledge, uint64 context, uint amount) internal returns (uint allowedAmount) {
+    function callPlugin(bool before, uint64 adminId, uint64 fromPledge, uint64 toPledge, uint64 context, uint amount) internal returns (uint allowedAmount) {
         uint newAmount;
         allowedAmount = amount;
-        PledgeManager storage manager = findManager(managerId);
-        if ((address(manager.plugin) != 0) && (allowedAmount > 0)) {
+        PledgeAdmin storage admin = findAdmin(adminId);
+        if ((address(admin.plugin) != 0) && (allowedAmount > 0)) {
             if (before) {
-                newAmount = manager.plugin.beforeTransfer(managerId, fromPledge, toPledge, context, amount);
+                newAmount = admin.plugin.beforeTransfer(adminId, fromPledge, toPledge, context, amount);
                 require(newAmount <= allowedAmount);
                 allowedAmount = newAmount;
             } else {
-                manager.plugin.afterTransfer(managerId, fromPledge, toPledge, context, amount);
+                admin.plugin.afterTransfer(adminId, fromPledge, toPledge, context, amount);
             }
         }
     }

@@ -51,13 +51,13 @@ contract LiquidPledgingBase {
     uint constant MAX_SUBCAMPAIGN_LEVEL = 20;
     uint constant MAX_INTERCAMPAIGN_LEVEL = 20;
 
-    enum PledgeManagerType { Giver, Delegate, Campaign }
+    enum PledgeAdminType { Giver, Delegate, Campaign }
     enum PaymentState { NotPaid, Paying, Paid } // TODO name change NotPaid
 
-    /// @dev This struct defines the details of each the PledgeManager, these
-    ///  PledgeManagers can own pledges and act as delegates
-    struct PledgeManager { // TODO name change PledgeManager
-        PledgeManagerType managerType; // Giver, Delegate or Campaign
+    /// @dev This struct defines the details of each the PledgeAdmin, these
+    ///  PledgeAdmins can own pledges and act as delegates
+    struct PledgeAdmin { // TODO name change PledgeAdmin
+        PledgeAdminType adminType; // Giver, Delegate or Campaign
         address addr; // account or contract address for admin
         string name;
         uint64 commitTime;  // In seconds, used for Givers' & Delegates' vetos
@@ -68,7 +68,7 @@ contract LiquidPledgingBase {
 
     struct Pledge {
         uint amount;
-        uint64 owner; // PledgeManager
+        uint64 owner; // PledgeAdmin
         uint64[] delegationChain; // list of index numbers
         uint64 proposedCampaign; // TODO change the name only used for when delegates are precommiting to a campaign
         uint64 commitTime;  // When the proposedCampaign will become the owner
@@ -77,7 +77,7 @@ contract LiquidPledgingBase {
     }
 
     Pledge[] pledges;
-    PledgeManager[] managers; //The list of pledgeManagers 0 means there is no manager
+    PledgeAdmin[] admins; //The list of pledgeAdmins 0 means there is no admin
     Vault public vault;
 
     // this mapping allows you to search for a specific pledge's index number by the hash of that pledge
@@ -101,24 +101,24 @@ contract LiquidPledgingBase {
     /// @notice The Constructor creates the `LiquidPledgingBase` on the blockchain
     /// @param _vault Where the ETH is stored that the pledges represent
     function LiquidPledgingBase(address _vault) {
-        managers.length = 1; // we reserve the 0 manager
+        admins.length = 1; // we reserve the 0 admin
         pledges.length = 1; // we reserve the 0 pledge
         vault = Vault(_vault);
     }
 
 
 ///////
-// Managers functions
+// Adminss functions
 //////
 
     /// @notice Creates a giver.
     function addGiver(string name, uint64 commitTime, ILiquidPledgingPlugin plugin
         ) returns (uint64 idGiver) {
 
-        idGiver = uint64(managers.length);
+        idGiver = uint64(admins.length);
 
-        managers.push(PledgeManager(
-            PledgeManagerType.Giver,
+        admins.push(PledgeAdmin(
+            PledgeAdminType.Giver,
             msg.sender,
             name,
             commitTime,
@@ -138,8 +138,8 @@ contract LiquidPledgingBase {
         string newName,
         uint64 newCommitTime)
     {
-        PledgeManager storage giver = findManager(idGiver);
-        require(giver.managerType == PledgeManagerType.Giver); //Must be a Giver
+        PledgeAdmin storage giver = findAdmin(idGiver);
+        require(giver.adminType == PledgeAdminType.Giver); //Must be a Giver
         require(giver.addr == msg.sender); //current addr had to originate this tx
         giver.addr = newAddr;
         giver.name = newName;
@@ -152,10 +152,10 @@ contract LiquidPledgingBase {
     /// @notice Creates a new Delegate
     function addDelegate(string name, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idDelegate) { //TODO return index number
 
-        idDelegate = uint64(managers.length);
+        idDelegate = uint64(admins.length);
 
-        managers.push(PledgeManager(
-            PledgeManagerType.Delegate,
+        admins.push(PledgeAdmin(
+            PledgeAdminType.Delegate,
             msg.sender,
             name,
             commitTime,
@@ -174,8 +174,8 @@ contract LiquidPledgingBase {
         address newAddr,
         string newName,
         uint64 newCommitTime) {
-        PledgeManager storage delegate = findManager(idDelegate);
-        require(delegate.managerType == PledgeManagerType.Delegate);
+        PledgeAdmin storage delegate = findAdmin(idDelegate);
+        require(delegate.adminType == PledgeAdminType.Delegate);
         require(delegate.addr == msg.sender);
         delegate.addr = newAddr;
         delegate.name = newName;
@@ -186,19 +186,19 @@ contract LiquidPledgingBase {
     event DelegateUpdated(uint64 indexed idDelegate);
 
     /// @notice Creates a new Campaign
-    function addCampaign(string name, address campaignManager, uint64 parentCampaign, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idCampaign) {
+    function addCampaign(string name, address campaignAdmin, uint64 parentCampaign, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idCampaign) {
         if (parentCampaign != 0) {
-            PledgeManager storage pm = findManager(parentCampaign);
-            require(pm.managerType == PledgeManagerType.Campaign);
+            PledgeAdmin storage pm = findAdmin(parentCampaign);
+            require(pm.adminType == PledgeAdminType.Campaign);
             require(pm.addr == msg.sender);
             require(getCampaignLevel(pm) < MAX_SUBCAMPAIGN_LEVEL);
         }
 
-        idCampaign = uint64(managers.length);
+        idCampaign = uint64(admins.length);
 
-        managers.push(PledgeManager(
-            PledgeManagerType.Campaign,
-            campaignManager,
+        admins.push(PledgeAdmin(
+            PledgeAdminType.Campaign,
+            campaignAdmin,
             name,
             commitTime,
             parentCampaign,
@@ -218,8 +218,8 @@ contract LiquidPledgingBase {
         string newName,
         uint64 newCommitTime)
     {
-        PledgeManager storage campaign = findManager(idCampaign);
-        require(campaign.managerType == PledgeManagerType.Campaign);
+        PledgeAdmin storage campaign = findAdmin(idCampaign);
+        require(campaign.adminType == PledgeAdminType.Campaign);
         require(campaign.addr == msg.sender);
         campaign.addr = newAddr;
         campaign.name = newName;
@@ -227,7 +227,7 @@ contract LiquidPledgingBase {
         CampaignUpdated(idCampaign);
     }
 
-    event CampaignUpdated(uint64 indexed idManager);
+    event CampaignUpdated(uint64 indexed idAdmin);
 
 
 //////////
@@ -266,17 +266,17 @@ contract LiquidPledgingBase {
     ) {
         Pledge storage n = findPledge(idPledge);
         idDelegate = n.delegationChain[idxDelegate - 1];
-        PledgeManager storage delegate = findManager(idDelegate);
+        PledgeAdmin storage delegate = findAdmin(idDelegate);
         addr = delegate.addr;
         name = delegate.name;
     }
     /// @notice Public constant that states the number of admins in the system
-    function numberOfPledgeManagers() constant returns(uint) {
-        return managers.length - 1;
+    function numberOfPledgeAdmins() constant returns(uint) {
+        return admins.length - 1;
     }
     /// @notice Public constant that states the details of the specified admin
-    function getPledgeManager(uint64 idManager) constant returns (
-        PledgeManagerType managerType,
+    function getPledgeAdmin(uint64 idAdmin) constant returns (
+        PledgeAdminType adminType,
         address addr,
         string name,
         uint64 commitTime,
@@ -284,8 +284,8 @@ contract LiquidPledgingBase {
         bool canceled,
         address plugin)
     {
-        PledgeManager storage m = findManager(idManager);
-        managerType = m.managerType;
+        PledgeAdmin storage m = findAdmin(idAdmin);
+        adminType = m.adminType;
         addr = m.addr;
         name = m.name;
         commitTime = m.commitTime;
@@ -320,9 +320,9 @@ contract LiquidPledgingBase {
         return idx;
     }
 
-    function findManager(uint64 idManager) internal returns (PledgeManager storage) {
-        require(idManager < managers.length);
-        return managers[idManager];
+    function findAdmin(uint64 idAdmin) internal returns (PledgeAdmin storage) {
+        require(idAdmin < admins.length);
+        return admins[idAdmin];
     }
 
     function findPledge(uint64 idPledge) internal returns (Pledge storage) {
@@ -353,28 +353,28 @@ contract LiquidPledgingBase {
     // helper function that returns the max commit time of the owner and all the
     // delegates
     function maxCommitTime(Pledge n) internal returns(uint commitTime) {
-        PledgeManager storage m = findManager(n.owner);
+        PledgeAdmin storage m = findAdmin(n.owner);
         commitTime = m.commitTime;
 
         for (uint i=0; i<n.delegationChain.length; i++) {
-            m = findManager(n.delegationChain[i]);
+            m = findAdmin(n.delegationChain[i]);
             if (m.commitTime > commitTime) commitTime = m.commitTime;
         }
     }
 
     // helper function that returns the campaign level solely to check that there
     // are not too many Campaigns that violate MAX_SUBCAMPAIGNS_LEVEL
-    function getCampaignLevel(PledgeManager m) internal returns(uint) {
-        assert(m.managerType == PledgeManagerType.Campaign);
+    function getCampaignLevel(PledgeAdmin m) internal returns(uint) {
+        assert(m.adminType == PledgeAdminType.Campaign);
         if (m.parentCampaign == 0) return(1);
-        PledgeManager storage parentNM = findManager(m.parentCampaign);
+        PledgeAdmin storage parentNM = findAdmin(m.parentCampaign);
         return getCampaignLevel(parentNM);
     }
 
     function isCampaignCanceled(uint64 campaignId) constant returns (bool) {
-        PledgeManager storage m = findManager(campaignId);
-        if (m.managerType == PledgeManagerType.Giver) return false;
-        assert(m.managerType == PledgeManagerType.Campaign);
+        PledgeAdmin storage m = findAdmin(campaignId);
+        if (m.adminType == PledgeAdminType.Giver) return false;
+        assert(m.adminType == PledgeAdminType.Campaign);
         if (m.canceled) return true;
         if (m.parentCampaign == 0) return false;
         return isCampaignCanceled(m.parentCampaign);
@@ -385,17 +385,17 @@ contract LiquidPledgingBase {
     function getOldestPledgeNotCanceled(uint64 idPledge) internal constant returns(uint64) { //todo rename
         if (idPledge == 0) return 0;
         Pledge storage n = findPledge(idPledge);
-        PledgeManager storage manager = findManager(n.owner);
-        if (manager.managerType == PledgeManagerType.Giver) return idPledge;
+        PledgeAdmin storage admin = findAdmin(n.owner);
+        if (admin.adminType == PledgeAdminType.Giver) return idPledge;
 
-        assert(manager.managerType == PledgeManagerType.Campaign);
+        assert(admin.adminType == PledgeAdminType.Campaign);
 
         if (!isCampaignCanceled(n.owner)) return idPledge;
 
         return getOldestPledgeNotCanceled(n.oldPledge);
     }
 
-    function checkManagerOwner(PledgeManager m) internal constant {
+    function checkAdminOwner(PledgeAdmin m) internal constant {
         require((msg.sender == m.addr) || (msg.sender == address(m.plugin)));
     }
 }
@@ -430,11 +430,11 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
             idGiver = addGiver('', 259200, ILiquidPledgingPlugin(0x0)); // default to 3 day commitTime
         }
 
-        PledgeManager storage sender = findManager(idGiver);
+        PledgeAdmin storage sender = findAdmin(idGiver);
 
-        checkManagerOwner(sender);
+        checkAdminOwner(sender);
 
-        require(sender.managerType == PledgeManagerType.Giver);
+        require(sender.adminType == PledgeAdminType.Giver);
 
         uint amount = msg.value;
 
@@ -460,8 +460,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
 
     /// @notice Moves value between pledges
-    /// @param idSender ID of the giver, delegate or campaign manager that is transferring
-    ///  the funds from Pledge to Pledge. This manager must have permissions to move the value
+    /// @param idSender ID of the giver, delegate or campaign admin that is transferring
+    ///  the funds from Pledge to Pledge. This admin must have permissions to move the value
     /// @param idPledge Id of the pledge that's moving the value
     /// @param amount Quantity of value that's being moved
     /// @param idReceiver Destination of the value, can be a giver sending to a giver or
@@ -471,19 +471,19 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         idPledge = normalizePledge(idPledge);
 
         Pledge storage n = findPledge(idPledge);
-        PledgeManager storage receiver = findManager(idReceiver);
-        PledgeManager storage sender = findManager(idSender);
+        PledgeAdmin storage receiver = findAdmin(idReceiver);
+        PledgeAdmin storage sender = findAdmin(idSender);
 
-        checkManagerOwner(sender);
+        checkAdminOwner(sender);
         require(n.paymentState == PaymentState.NotPaid);
 
         // If the sender is the owner
         if (n.owner == idSender) {
-            if (receiver.managerType == PledgeManagerType.Giver) {
+            if (receiver.adminType == PledgeAdminType.Giver) {
                 transferOwnershipToGiver(idPledge, amount, idReceiver);
-            } else if (receiver.managerType == PledgeManagerType.Campaign) {
+            } else if (receiver.adminType == PledgeAdminType.Campaign) {
                 transferOwnershipToCampaign(idPledge, amount, idReceiver);
-            } else if (receiver.managerType == PledgeManagerType.Delegate) {
+            } else if (receiver.adminType == PledgeAdminType.Delegate) {
                 appendDelegate(idPledge, amount, idReceiver);
             } else {
                 assert(false);
@@ -496,7 +496,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         if (senderDIdx != NOTFOUND) {
 
             // If the receiver is another giver
-            if (receiver.managerType == PledgeManagerType.Giver) {
+            if (receiver.adminType == PledgeAdminType.Giver) {
                 // Only accept to change to the original giver to remove all delegates
                 assert(n.owner == idReceiver);
                 undelegate(idPledge, amount, n.delegationChain.length);
@@ -504,7 +504,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
             }
 
             // If the receiver is another delegate
-            if (receiver.managerType == PledgeManagerType.Delegate) {
+            if (receiver.adminType == PledgeAdminType.Delegate) {
                 uint receiverDIdx = getDelegateIdx(n, idReceiver);
 
                 // If the receiver is not in the delegate list
@@ -532,7 +532,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
             // If the delegate wants to support a campaign, they undelegate all
             // the delegates after them in the chain and choose a campaign
-            if (receiver.managerType == PledgeManagerType.Campaign) {
+            if (receiver.adminType == PledgeAdminType.Campaign) {
                 undelegate(idPledge, amount, n.delegationChain.length - senderDIdx - 1);
                 proposeAssignCampaign(idPledge, amount, idReceiver);
                 return;
@@ -543,7 +543,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
 
     /// @notice This method is used to withdraw value from the system. This can be used
-    ///  by the givers to avoid committing the donation or by campaign manager to use
+    ///  by the givers to avoid committing the donation or by campaign admin to use
     ///  the Ether.
     /// @param idPledge Id of the pledge that wants to be withdrawn.
     /// @param amount Quantity of Ether that wants to be withdrawn.
@@ -555,9 +555,9 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
         require(n.paymentState == PaymentState.NotPaid);
 
-        PledgeManager storage owner = findManager(n.owner);
+        PledgeAdmin storage owner = findAdmin(n.owner);
 
-        checkManagerOwner(owner);
+        checkAdminOwner(owner);
 
         uint64 idNewPledge = findPledge(
             n.owner,
@@ -622,8 +622,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
     /// @notice Method called to cancel this campaign.
     /// @param idCampaign Id of the projct that wants to be canceled.
     function cancelCampaign(uint64 idCampaign) {
-        PledgeManager storage campaign = findManager(idCampaign);
-        checkManagerOwner(campaign);
+        PledgeAdmin storage campaign = findAdmin(idCampaign);
+        checkAdminOwner(campaign);
         campaign.canceled = true;
 
         CancelCampaign(idCampaign);
@@ -635,8 +635,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
         Pledge storage n = findPledge(idPledge);
 
-        PledgeManager storage m = findManager(n.owner);
-        checkManagerOwner(m);
+        PledgeAdmin storage m = findAdmin(n.owner);
+        checkAdminOwner(m);
 
         doTransfer(idPledge, n.oldPledge, amount);
     }
@@ -847,17 +847,17 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 // Plugins
 /////////////
 
-    function callPlugin(bool before, uint64 managerId, uint64 fromPledge, uint64 toPledge, uint64 context, uint amount) internal returns (uint allowedAmount) {
+    function callPlugin(bool before, uint64 adminId, uint64 fromPledge, uint64 toPledge, uint64 context, uint amount) internal returns (uint allowedAmount) {
         uint newAmount;
         allowedAmount = amount;
-        PledgeManager storage manager = findManager(managerId);
-        if ((address(manager.plugin) != 0) && (allowedAmount > 0)) {
+        PledgeAdmin storage admin = findAdmin(adminId);
+        if ((address(admin.plugin) != 0) && (allowedAmount > 0)) {
             if (before) {
-                newAmount = manager.plugin.beforeTransfer(managerId, fromPledge, toPledge, context, amount);
+                newAmount = admin.plugin.beforeTransfer(adminId, fromPledge, toPledge, context, amount);
                 require(newAmount <= allowedAmount);
                 allowedAmount = newAmount;
             } else {
-                manager.plugin.afterTransfer(managerId, fromPledge, toPledge, context, amount);
+                admin.plugin.afterTransfer(adminId, fromPledge, toPledge, context, amount);
             }
         }
     }
