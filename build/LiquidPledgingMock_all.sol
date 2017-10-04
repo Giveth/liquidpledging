@@ -715,6 +715,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         Pledge storage n = findPledge(idPledge);
 
         require(getPledgeLevel(n) < MAX_INTERCAMPAIGN_LEVEL);
+        require(!isCampaignCanceled(idReceiver));
+
         uint64 oldPledge = findOrCreatePledge(
             n.owner,
             n.delegationChain,
@@ -787,6 +789,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         Pledge storage n = findPledge(idPledge);
 
         require(getPledgeLevel(n) < MAX_SUBCAMPAIGN_LEVEL);
+        require(!isCampaignCanceled(idReceiver));
 
         uint64 toPledge = findOrCreatePledge(
                 n.owner,
