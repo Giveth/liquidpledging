@@ -16,7 +16,7 @@ contract LiquidPledgingBase {
     uint constant MAX_INTERCAMPAIGN_LEVEL = 20;
 
     enum PledgeAdminType { Giver, Delegate, Campaign }
-    enum PaymentState { NotPaid, Paying, Paid } // TODO name change NotPaid
+    enum PaymentState { Pledged, Paying, Paid } // TODO name change Pledged
 
     /// @dev This struct defines the details of each the PledgeAdmin, these
     ///  PledgeAdmins can own pledges and act as delegates

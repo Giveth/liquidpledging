@@ -52,7 +52,7 @@ contract LiquidPledgingBase {
     uint constant MAX_INTERCAMPAIGN_LEVEL = 20;
 
     enum PledgeAdminType { Giver, Delegate, Campaign }
-    enum PaymentState { NotPaid, Paying, Paid } // TODO name change NotPaid
+    enum PaymentState { Pledged, Paying, Paid } // TODO name change Pledged
 
     /// @dev This struct defines the details of each the PledgeAdmin, these
     ///  PledgeAdmins can own pledges and act as delegates
@@ -447,7 +447,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
             0,
             0,
             0,
-            PaymentState.NotPaid);
+            PaymentState.Pledged);
 
 
         Pledge storage nTo = findPledge(idPledge);
@@ -475,7 +475,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         PledgeAdmin storage sender = findAdmin(idSender);
 
         checkAdminOwner(sender);
-        require(n.paymentState == PaymentState.NotPaid);
+        require(n.paymentState == PaymentState.Pledged);
 
         // If the sender is the owner
         if (n.owner == idSender) {
@@ -553,7 +553,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
         Pledge storage n = findPledge(idPledge);
 
-        require(n.paymentState == PaymentState.NotPaid);
+        require(n.paymentState == PaymentState.Pledged);
 
         PledgeAdmin storage owner = findAdmin(n.owner);
 
@@ -611,7 +611,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
             0,
             0,
             n.oldPledge,
-            PaymentState.NotPaid
+            PaymentState.Pledged
         );
 
         oldPledge = normalizePledge(oldPledge);
@@ -709,14 +709,14 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
             0,
             0,
             n.oldPledge,
-            PaymentState.NotPaid);
+            PaymentState.Pledged);
         uint64 toPledge = findPledge(
             idReceiver,
             new uint64[](0),
             0,
             0,
             oldPledge,
-            PaymentState.NotPaid);
+            PaymentState.Pledged);
         doTransfer(idPledge, toPledge, amount);
     }
 
@@ -727,7 +727,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
                 0,
                 0,
                 0,
-                PaymentState.NotPaid);
+                PaymentState.Pledged);
         doTransfer(idPledge, toPledge, amount);
     }
 
@@ -749,7 +749,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
                 0,
                 0,
                 n.oldPledge,
-                PaymentState.NotPaid);
+                PaymentState.Pledged);
         doTransfer(idPledge, toPledge, amount);
     }
 
@@ -766,7 +766,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
                 0,
                 0,
                 n.oldPledge,
-                PaymentState.NotPaid);
+                PaymentState.Pledged);
         doTransfer(idPledge, toPledge, amount);
     }
 
@@ -782,7 +782,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
                 idReceiver,
                 uint64(getTime() + maxCommitTime(n)),
                 n.oldPledge,
-                PaymentState.NotPaid);
+                PaymentState.Pledged);
         doTransfer(idPledge, toPledge, amount);
     }
 
@@ -812,7 +812,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         Pledge storage n = findPledge(idPledge);
 
         // Check to make sure this pledge hasnt already been used or is in the process of being used
-        if (n.paymentState != PaymentState.NotPaid) return idPledge;
+        if (n.paymentState != PaymentState.Pledged) return idPledge;
 
         // First send to a campaign if it's proposed and commited
         if ((n.proposedCampaign > 0) && ( getTime() > n.commitTime)) {
@@ -822,14 +822,14 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
                 0,
                 0,
                 n.oldPledge,
-                PaymentState.NotPaid);
+                PaymentState.Pledged);
             uint64 toPledge = findPledge(
                 n.proposedCampaign,
                 new uint64[](0),
                 0,
                 0,
                 oldPledge,
-                PaymentState.NotPaid);
+                PaymentState.Pledged);
             doTransfer(idPledge, toPledge, n.amount);
             idPledge = toPledge;
             n = findPledge(idPledge);

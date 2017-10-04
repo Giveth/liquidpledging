@@ -28,7 +28,7 @@ module.exports = (test) => {
           pledge.oldPledge = res.oldPledge;
         }
         if (res.paymentState === '0') {
-          pledge.paymentState = 'NotPaid';
+          pledge.paymentState = 'Pledged';
         } else if (res.paymentState === '1') {
           pledge.paymentState = 'Paying';
         } else if (res.paymentState === '2') {
