@@ -159,10 +159,10 @@ contract LiquidPledgingBase {
     /// @notice Creates a new Campaign
     function addCampaign(string name, string url, address campaignAdmin, uint64 parentCampaign, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idCampaign) {
         if (parentCampaign != 0) {
-            PledgeAdmin storage pm = findAdmin(parentCampaign);
-            require(pm.adminType == PledgeAdminType.Campaign);
-            require(pm.addr == msg.sender);
-            require(getCampaignLevel(pm) < MAX_SUBCAMPAIGN_LEVEL);
+            PledgeAdmin storage pa = findAdmin(parentCampaign);
+            require(pa.adminType == PledgeAdminType.Campaign);
+            require(pa.addr == msg.sender);
+            require(getCampaignLevel(pa) < MAX_SUBCAMPAIGN_LEVEL);
         }
 
         idCampaign = uint64(admins.length);

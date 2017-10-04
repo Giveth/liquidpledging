@@ -18,22 +18,22 @@ contract LiquidPledging {
 
 
 /// @dev `Vault` is a higher level contract built off of the `Owned`
-///  contract that holds funds for the liquid pledging system. 
+///  contract that holds funds for the liquid pledging system.
 contract Vault is Owned {
 
     LiquidPledging public liquidPledging; // liquidPledging contract's address
     bool public autoPay; // if false, payments will take 2 txs to be completed
 
-    enum PaymentState {
+    enum PaymentStatus {
         Pending, // means the payment is awaiting confirmation
-        Paid,    // means the payment has been sent 
+        Paid,    // means the payment has been sent
         Canceled // means the payment will never be sent
     }
     /// @dev `Payment` is a public structure that describes the details of
     ///  each payment the `ref` param makes it easy to track the movements of
     ///  funds transparently by its connection to other `Payment` structs
     struct Payment {
-        PaymentState state; // 
+        PaymentStatus state; //
         bytes32 ref; // an input that references details from other contracts
         address dest; // recipient of the ETH
         uint amount; // amount of ETH (in wei) to be sent
@@ -70,7 +70,7 @@ contract Vault is Owned {
     function authorizePayment(bytes32 _ref, address _dest, uint _amount) onlyLiquidPledging returns (uint) {
         uint idPayment = payments.length;
         payments.length ++;
-        payments[idPayment].state = PaymentState.Pending;
+        payments[idPayment].state = PaymentStatus.Pending;
         payments[idPayment].ref = _ref;
         payments[idPayment].dest = _dest;
         payments[idPayment].amount = _amount;
@@ -89,9 +89,9 @@ contract Vault is Owned {
     function doConfirmPayment(uint _idPayment) internal {
         require(_idPayment < payments.length);
         Payment storage p = payments[_idPayment];
-        require(p.state == PaymentState.Pending);
+        require(p.state == PaymentStatus.Pending);
 
-        p.state = PaymentState.Paid;
+        p.state = PaymentStatus.Paid;
         p.dest.transfer(p.amount);  // only ETH denominated in wei
 
         liquidPledging.confirmPayment(uint64(p.ref), p.amount);
@@ -106,9 +106,9 @@ contract Vault is Owned {
     function doCancelPayment(uint _idPayment) internal {
         require(_idPayment < payments.length);
         Payment storage p = payments[_idPayment];
-        require(p.state == PaymentState.Pending);
+        require(p.state == PaymentStatus.Pending);
 
-        p.state = PaymentState.Canceled;
+        p.state = PaymentStatus.Canceled;
 
         liquidPledging.cancelPayment(uint64(p.ref), p.amount);
 
