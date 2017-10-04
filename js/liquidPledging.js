@@ -20,8 +20,8 @@ module.exports = (test) => {
         pledge.amount = res.amount;
         pledge.owner = res.owner;
 
-        if (res.intendedCampaign) {
-          pledge.intendedCampaign = res.intendedCampaign;
+        if (res.intendedProject) {
+          pledge.intendedProject = res.intendedProject;
           pledge.commmitTime = res.commitTime;
         }
         if (res.oldPledge) {
@@ -67,7 +67,7 @@ module.exports = (test) => {
         } else if (res.adminType === '1') {
           admin.type = 'Delegate';
         } else if (res.adminType === '2') {
-          admin.type = 'Campaign';
+          admin.type = 'Project';
         } else {
           admin.type = 'Unknown';
         }
@@ -75,8 +75,8 @@ module.exports = (test) => {
         admin.name = res.name;
         admin.url = res.url;
         admin.commitTime = res.commitTime;
-        if (admin.paymentState === 'Campaign') {
-          admin.parentCampaign = res.parentCampaign;
+        if (admin.paymentState === 'Project') {
+          admin.parentProject = res.parentProject;
           admin.canceled = res.canceled;
         }
         admin.plugin = res.plugin;
@@ -131,8 +131,8 @@ module.exports = (test) => {
             pledges: [],
             delegates: [],
           },
-          precommitedCampaigns: [],
-          commitedCampaigns: [],
+          precommitedProjects: [],
+          commitedProjects: [],
         };
       }
     };
@@ -151,18 +151,18 @@ module.exports = (test) => {
       }
     };
 
-    const addCampaign = (_list, idCampaign) => {
+    const addProject = (_list, idProject) => {
       const list = _list;
-      if (!list[idCampaign]) {
-        list[idCampaign] = {
-          idCampaign,
+      if (!list[idProject]) {
+        list[idProject] = {
+          idProject,
           pledges: [],
-          commitedCampaigns: [],
-          name: this.admins[idCampaign].name,
-          url: this.admins[idCampaign].url,
-          commitTime: this.admins[idCampaign].commitTime,
-          owner: this.admins[idCampaign].owner,
-          parentCampaign: this.admins[idCampaign].parentCampaign,
+          commitedProjects: [],
+          name: this.admins[idProject].name,
+          url: this.admins[idProject].url,
+          commitTime: this.admins[idProject].commitTime,
+          owner: this.admins[idProject].owner,
+          parentProject: this.admins[idProject].parentProject,
         };
       }
     };
@@ -178,21 +178,21 @@ module.exports = (test) => {
       }
     };
 
-    const addCampaignPledge = (stGiver, idPledge) => {
+    const addProjectPledge = (stGiver, idPledge) => {
       const pledge = this.pledges[idPledge];
 
-      const campaignList = [];
+      const crojectList = [];
       let n = pledge;
       while (n.oldNode) {
-        campaignList.unshift(n.owner);
+        crojectList.unshift(n.owner);
         n = this.pledges[n.oldNode];
       }
 
-      let list = stGiver.commitedCampaigns;
-      for (let j = 0; j < campaignList.length; j += 1) {
-        addCampaign(list, campaignList[j]);
-        list[campaignList[j]].pledges.push(idPledge);
-        list = list[campaignList[j]].commitedCampaigns;
+      let list = stGiver.commitedProjects;
+      for (let j = 0; j < crojectList.length; j += 1) {
+        addProject(list, crojectList[j]);
+        list[crojectList[j]].pledges.push(idPledge);
+        list = list[crojectList[j]].commitedProjects;
       }
     };
 
@@ -202,13 +202,13 @@ module.exports = (test) => {
       addGiver(giversState, idGiver);
       const stGiver = giversState[idGiver];
       const pledge = this.pledges[idPledge];
-      if ((pledge.owner === idGiver) && (pledge.precommitedCampaign === 0)) {
+      if ((pledge.owner === idGiver) && (pledge.precommitedProject === 0)) {
         addDelegatePledge(stGiver, idPledge);
-      } else if ((pledge.owner === idGiver) && (pledge.precommitedCampaign !== 0)) {
-        addCampaign(stGiver.precommitedCampaigns, pledge.precommitedCampaign);
-        stGiver.precommitedCampaigns[pledge.precommitedCampaign].pledges.push(idPledge);
+      } else if ((pledge.owner === idGiver) && (pledge.precommitedProject !== 0)) {
+        addProject(stGiver.precommitedProjects, pledge.precommitedProject);
+        stGiver.precommitedProjects[pledge.precommitedProject].pledges.push(idPledge);
       } else {
-        addCampaignPledge(stGiver, idPledge);
+        addProjectPledge(stGiver, idPledge);
       }
     }
 
