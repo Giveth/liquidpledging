@@ -412,7 +412,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         if (n.paymentState != PaymentState.Pledged) return idPledge;
 
         // First send to a campaign if it's proposed and commited
-        if ((n.proposedCampaign > 0) && ( getTime() > n.commitTime)) {
+        if ((n.intendedCampaign > 0) && ( getTime() > n.commitTime)) {
             uint64 oldPledge = findPledge(
                 n.owner,
                 n.delegationChain,
@@ -421,7 +421,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
                 n.oldPledge,
                 PaymentState.Pledged);
             uint64 toPledge = findPledge(
-                n.proposedCampaign,
+                n.intendedCampaign,
                 new uint64[](0),
                 0,
                 0,
@@ -470,8 +470,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
             allowedAmount = callPlugin(before, n.delegationChain[i], fromPledge, toPledge, offset + i+1, allowedAmount);
         }
 
-        if (n.proposedCampaign > 0) {
-            allowedAmount = callPlugin(before, n.proposedCampaign, fromPledge, toPledge, offset + 255, allowedAmount);
+        if (n.intendedCampaign > 0) {
+            allowedAmount = callPlugin(before, n.intendedCampaign, fromPledge, toPledge, offset + 255, allowedAmount);
         }
     }
 

@@ -11,13 +11,13 @@ contract ILiquidPledgingPlugin {
     ///  1 -> Plugin for the first delegate transferring pledge to another party
     ///  2 -> Plugin for the second delegate transferring pledge to another party
     ///  ...
-    ///  255 -> Plugin for the proposedCampaign transferring pledge to another party
+    ///  255 -> Plugin for the intendedCampaign transferring pledge to another party
     ///
     ///  256 -> Plugin for the owner receiving pledge to another party
     ///  257 -> Plugin for the first delegate receiving pledge to another party
     ///  258 -> Plugin for the second delegate receiving pledge to another party
     ///  ...
-    ///  511 -> Plugin for the proposedCampaign receiving pledge to another party
+    ///  511 -> Plugin for the intendedCampaign receiving pledge to another party
     function beforeTransfer(
         uint64 noteManager,
         uint64 noteFrom,
@@ -70,8 +70,8 @@ contract LiquidPledgingBase {
         uint amount;
         uint64 owner; // PledgeAdmin
         uint64[] delegationChain; // list of index numbers
-        uint64 proposedCampaign; // TODO change the name only used for when delegates are precommiting to a campaign
-        uint64 commitTime;  // When the proposedCampaign will become the owner
+        uint64 intendedCampaign; // TODO change the name only used for when delegates are precommiting to a campaign
+        uint64 commitTime;  // When the intendedCampaign will become the owner
         uint64 oldPledge; // this points to the Pledge[] index that the Pledge was derived from
         PaymentState paymentState;
     }
@@ -243,7 +243,7 @@ contract LiquidPledgingBase {
         uint amount,
         uint64 owner,
         uint64 nDelegates,
-        uint64 proposedCampaign,
+        uint64 intendedCampaign,
         uint64 commitTime,
         uint64 oldPledge,
         PaymentState paymentState
@@ -252,7 +252,7 @@ contract LiquidPledgingBase {
         amount = n.amount;
         owner = n.owner;
         nDelegates = uint64(n.delegationChain.length);
-        proposedCampaign = n.proposedCampaign;
+        intendedCampaign = n.intendedCampaign;
         commitTime = n.commitTime;
         oldPledge = n.oldPledge;
         paymentState = n.paymentState;
@@ -305,18 +305,18 @@ contract LiquidPledgingBase {
     function findPledge(
         uint64 owner,
         uint64[] delegationChain,
-        uint64 proposedCampaign,
+        uint64 intendedCampaign,
         uint64 commitTime,
         uint64 oldPledge,
         PaymentState paid
         ) internal returns (uint64)
     {
-        bytes32 hPledge = sha3(owner, delegationChain, proposedCampaign, commitTime, oldPledge, paid);
+        bytes32 hPledge = sha3(owner, delegationChain, intendedCampaign, commitTime, oldPledge, paid);
         uint64 idx = hPledge2idx[hPledge];
         if (idx > 0) return idx;
         idx = uint64(pledges.length);
         hPledge2idx[hPledge] = idx;
-        pledges.push(Pledge(0, owner, delegationChain, proposedCampaign, commitTime, oldPledge, paid));
+        pledges.push(Pledge(0, owner, delegationChain, intendedCampaign, commitTime, oldPledge, paid));
         return idx;
     }
 
@@ -815,7 +815,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         if (n.paymentState != PaymentState.Pledged) return idPledge;
 
         // First send to a campaign if it's proposed and commited
-        if ((n.proposedCampaign > 0) && ( getTime() > n.commitTime)) {
+        if ((n.intendedCampaign > 0) && ( getTime() > n.commitTime)) {
             uint64 oldPledge = findPledge(
                 n.owner,
                 n.delegationChain,
@@ -824,7 +824,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
                 n.oldPledge,
                 PaymentState.Pledged);
             uint64 toPledge = findPledge(
-                n.proposedCampaign,
+                n.intendedCampaign,
                 new uint64[](0),
                 0,
                 0,
@@ -873,8 +873,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
             allowedAmount = callPlugin(before, n.delegationChain[i], fromPledge, toPledge, offset + i+1, allowedAmount);
         }
 
-        if (n.proposedCampaign > 0) {
-            allowedAmount = callPlugin(before, n.proposedCampaign, fromPledge, toPledge, offset + 255, allowedAmount);
+        if (n.intendedCampaign > 0) {
+            allowedAmount = callPlugin(before, n.intendedCampaign, fromPledge, toPledge, offset + 255, allowedAmount);
         }
     }
 

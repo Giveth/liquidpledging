@@ -20,8 +20,8 @@ module.exports = (test) => {
         pledge.amount = res.amount;
         pledge.owner = res.owner;
 
-        if (res.proposedCampaign) {
-          pledge.proposedCampaign = res.proposedCampaign;
+        if (res.intendedCampaign) {
+          pledge.intendedCampaign = res.intendedCampaign;
           pledge.commmitTime = res.commitTime;
         }
         if (res.oldPledge) {

@@ -34,8 +34,8 @@ contract LiquidPledgingBase {
         uint amount;
         uint64 owner; // PledgeAdmin
         uint64[] delegationChain; // list of index numbers
-        uint64 proposedCampaign; // TODO change the name only used for when delegates are precommiting to a campaign
-        uint64 commitTime;  // When the proposedCampaign will become the owner
+        uint64 intendedCampaign; // TODO change the name only used for when delegates are precommiting to a campaign
+        uint64 commitTime;  // When the intendedCampaign will become the owner
         uint64 oldPledge; // this points to the Pledge[] index that the Pledge was derived from
         PaymentState paymentState;
     }
@@ -207,7 +207,7 @@ contract LiquidPledgingBase {
         uint amount,
         uint64 owner,
         uint64 nDelegates,
-        uint64 proposedCampaign,
+        uint64 intendedCampaign,
         uint64 commitTime,
         uint64 oldPledge,
         PaymentState paymentState
@@ -216,7 +216,7 @@ contract LiquidPledgingBase {
         amount = n.amount;
         owner = n.owner;
         nDelegates = uint64(n.delegationChain.length);
-        proposedCampaign = n.proposedCampaign;
+        intendedCampaign = n.intendedCampaign;
         commitTime = n.commitTime;
         oldPledge = n.oldPledge;
         paymentState = n.paymentState;
@@ -269,18 +269,18 @@ contract LiquidPledgingBase {
     function findPledge(
         uint64 owner,
         uint64[] delegationChain,
-        uint64 proposedCampaign,
+        uint64 intendedCampaign,
         uint64 commitTime,
         uint64 oldPledge,
         PaymentState paid
         ) internal returns (uint64)
     {
-        bytes32 hPledge = sha3(owner, delegationChain, proposedCampaign, commitTime, oldPledge, paid);
+        bytes32 hPledge = sha3(owner, delegationChain, intendedCampaign, commitTime, oldPledge, paid);
         uint64 idx = hPledge2idx[hPledge];
         if (idx > 0) return idx;
         idx = uint64(pledges.length);
         hPledge2idx[hPledge] = idx;
-        pledges.push(Pledge(0, owner, delegationChain, proposedCampaign, commitTime, oldPledge, paid));
+        pledges.push(Pledge(0, owner, delegationChain, intendedCampaign, commitTime, oldPledge, paid));
         return idx;
     }
 

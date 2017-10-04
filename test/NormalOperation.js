@@ -234,7 +234,7 @@ describe('LiquidPledging test', () => {
     assert.equal(st.pledges[8].owner, 1);
     assert.equal(st.pledges[8].delegates.length, 1);
     assert.equal(st.pledges[8].delegates[0].id, 2);
-    assert.equal(st.pledges[8].proposedCampaign, 4);
+    assert.equal(st.pledges[8].intendedCampaign, 4);
   }).timeout(6000);
   it('Giver should be able to send the remaining to campaign2', async () => {
     await liquidPledging.transfer(1, 5, utils.toWei(0.02), 4, { from: giver1, $extraGas: 100000 });

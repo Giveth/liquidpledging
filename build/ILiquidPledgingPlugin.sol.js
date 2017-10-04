@@ -3,4 +3,4 @@
 exports.ILiquidPledgingPluginAbi = [{"constant":false,"inputs":[{"name":"noteManager","type":"uint64"},{"name":"noteFrom","type":"uint64"},{"name":"noteTo","type":"uint64"},{"name":"context","type":"uint64"},{"name":"amount","type":"uint256"}],"name":"afterTransfer","outputs":[],"payable":false,"type":"function"},{"constant":false,"inputs":[{"name":"noteManager","type":"uint64"},{"name":"noteFrom","type":"uint64"},{"name":"noteTo","type":"uint64"},{"name":"context","type":"uint64"},{"name":"amount","type":"uint256"}],"name":"beforeTransfer","outputs":[{"name":"maxAllowed","type":"uint256"}],"payable":false,"type":"function"}]
 exports.ILiquidPledgingPluginByteCode = "0x"
 exports._solcVersion = "0.4.15+commit.bbb8e64f.Emscripten.clang"
-exports._sha256 = "0xf6e4ddd089417930fe5b9ed3413eee1cb55b4dc73b45e2cef2af9447cfbf5bbc"
+exports._sha256 = "0xef8854fe0982df3dec97b6aec02e2d850ad86c960ca5b3545346b7ca4c5e8c48"
