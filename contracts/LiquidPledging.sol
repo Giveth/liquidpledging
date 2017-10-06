@@ -20,7 +20,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  transfer is done to the idReceiver
     /// @param idGiver Identifier of the giver thats donating.
     /// @param idReceiver To whom it's transfered. Can be the same giver, another
-    ///  giver, a delegate or a campaign
+    ///  giver, a delegate or a project
 
 function donate(uint64 idGiver, uint64 idReceiver) payable {
         if (idGiver == 0) {
@@ -57,12 +57,12 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
 
     /// @notice Moves value between pledges
-    /// @param idSender ID of the giver, delegate or campaign admin that is transferring
+    /// @param idSender ID of the giver, delegate or project admin that is transferring
     ///  the funds from Pledge to Pledge. This admin must have permissions to move the value
     /// @param idPledge Id of the pledge that's moving the value
     /// @param amount Quantity of value that's being moved
     /// @param idReceiver Destination of the value, can be a giver sending to a giver or
-    ///  a delegate, a delegate to another delegate or a campaign to precommit it to that campaign
+    ///  a delegate, a delegate to another delegate or a project to precommit it to that project
     function transfer(uint64 idSender, uint64 idPledge, uint amount, uint64 idReceiver) {
 
         idPledge = normalizePledge(idPledge);
@@ -78,8 +78,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         if (n.owner == idSender) {
             if (receiver.adminType == PledgeAdminType.Giver) {
                 transferOwnershipToGiver(idPledge, amount, idReceiver);
-            } else if (receiver.adminType == PledgeAdminType.Campaign) {
-                transferOwnershipToCampaign(idPledge, amount, idReceiver);
+            } else if (receiver.adminType == PledgeAdminType.Project) {
+                transferOwnershipToProject(idPledge, amount, idReceiver);
             } else if (receiver.adminType == PledgeAdminType.Delegate) {
                 appendDelegate(idPledge, amount, idReceiver);
             } else {
@@ -127,11 +127,11 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
                 return;
             }
 
-            // If the delegate wants to support a campaign, they undelegate all
-            // the delegates after them in the chain and choose a campaign
-            if (receiver.adminType == PledgeAdminType.Campaign) {
+            // If the delegate wants to support a project, they undelegate all
+            // the delegates after them in the chain and choose a project
+            if (receiver.adminType == PledgeAdminType.Project) {
                 undelegate(idPledge, amount, n.delegationChain.length - senderDIdx - 1);
-                proposeAssignCampaign(idPledge, amount, idReceiver);
+                proposeAssignProject(idPledge, amount, idReceiver);
                 return;
             }
         }
@@ -140,7 +140,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
 
     /// @notice This method is used to withdraw value from the system. This can be used
-    ///  by the givers to avoid committing the donation or by campaign admin to use
+    ///  by the givers to avoid committing the donation or by project admin to use
     ///  the Ether.
     /// @param idPledge Id of the pledge that wants to be withdrawn.
     /// @param amount Quantity of Ether that wants to be withdrawn.
@@ -178,7 +178,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
         require(n.paymentState == PaymentState.Paying);
 
-        // Check the campaign is not canceled in the while.
+        // Check the project is not canceled in the while.
         require(getOldestPledgeNotCanceled(idPledge) == idPledge);
 
         uint64 idNewPledge = findOrCreatePledge(
@@ -201,7 +201,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
         require(n.paymentState == PaymentState.Paying); //TODO change to revert
 
-        // When a payment is canceled, never is assigned to a campaign.
+        // When a payment is canceled, never is assigned to a project.
         uint64 oldPledge = findOrCreatePledge(
             n.owner,
             n.delegationChain,
@@ -216,14 +216,14 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         doTransfer(idPledge, oldPledge, amount);
     }
 
-    /// @notice Method called to cancel this campaign.
-    /// @param idCampaign Id of the projct that wants to be canceled.
-    function cancelCampaign(uint64 idCampaign) {
-        PledgeAdmin storage campaign = findAdmin(idCampaign);
-        checkAdminOwner(campaign);
-        campaign.canceled = true;
+    /// @notice Method called to cancel this project.
+    /// @param idProject Id of the projct that wants to be canceled.
+    function cancelProject(uint64 idProject) {
+        PledgeAdmin storage project = findAdmin(idProject);
+        checkAdminOwner(project);
+        project.canceled = true;
 
-        CancelCampaign(idCampaign);
+        CancelProject(idProject);
     }
 
 
@@ -296,11 +296,11 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
     // this function is obvious, but it can also be called to undelegate everyone
     // by setting yourself as the idReceiver
-    function transferOwnershipToCampaign(uint64 idPledge, uint amount, uint64 idReceiver) internal  {
+    function transferOwnershipToProject(uint64 idPledge, uint amount, uint64 idReceiver) internal  {
         Pledge storage n = findPledge(idPledge);
 
-        require(getPledgeLevel(n) < MAX_INTERCAMPAIGN_LEVEL);
-        require(!isCampaignCanceled(idReceiver));
+        require(getPledgeLevel(n) < MAX_INTERPROJECT_LEVEL);
+        require(!isProjectCanceled(idReceiver));
 
         uint64 oldPledge = findOrCreatePledge(
             n.owner,
@@ -370,11 +370,11 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
     }
 
 
-    function proposeAssignCampaign(uint64 idPledge, uint amount, uint64 idReceiver) internal {// Todo rename
+    function proposeAssignProject(uint64 idPledge, uint amount, uint64 idReceiver) internal {// Todo rename
         Pledge storage n = findPledge(idPledge);
 
-        require(getPledgeLevel(n) < MAX_SUBCAMPAIGN_LEVEL);
-        require(!isCampaignCanceled(idReceiver));
+        require(getPledgeLevel(n) < MAX_SUBPROJECT_LEVEL);
+        require(!isProjectCanceled(idReceiver));
 
         uint64 toPledge = findOrCreatePledge(
                 n.owner,
@@ -401,10 +401,10 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
     }
 
     // This function does 2 things, #1: it checks to make sure that the pledges are correct
-    // if the a pledged campaign has already been committed then it changes the owner
-    // to be the proposed campaign (Pledge that the UI will have to read the commit time and manually
+    // if the a pledged project has already been committed then it changes the owner
+    // to be the proposed project (Pledge that the UI will have to read the commit time and manually
     // do what this function does to the pledge for the end user at the expiration of the commitTime)
-    // #2: It checks to make sure that if there has been a cancellation in the chain of campaigns,
+    // #2: It checks to make sure that if there has been a cancellation in the chain of projects,
     // then it adjusts the pledge's owner appropriately.
     // This call can be called from any body at any time on any pledge. In general it can be called
     // to force the calls of the affected plugins, which also need to be predicted by the UI
@@ -414,8 +414,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         // Check to make sure this pledge hasnt already been used or is in the process of being used
         if (n.paymentState != PaymentState.Pledged) return idPledge;
 
-        // First send to a campaign if it's proposed and commited
-        if ((n.intendedCampaign > 0) && ( getTime() > n.commitTime)) {
+        // First send to a project if it's proposed and commited
+        if ((n.intendedProject > 0) && ( getTime() > n.commitTime)) {
             uint64 oldPledge = findOrCreatePledge(
                 n.owner,
                 n.delegationChain,
@@ -424,7 +424,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
                 n.oldPledge,
                 PaymentState.Pledged);
             uint64 toPledge = findOrCreatePledge(
-                n.intendedCampaign,
+                n.intendedProject,
                 new uint64[](0),
                 0,
                 0,
@@ -473,8 +473,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
             allowedAmount = callPlugin(before, n.delegationChain[i], fromPledge, toPledge, offset + i+1, allowedAmount);
         }
 
-        if (n.intendedCampaign > 0) {
-            allowedAmount = callPlugin(before, n.intendedCampaign, fromPledge, toPledge, offset + 255, allowedAmount);
+        if (n.intendedProject > 0) {
+            allowedAmount = callPlugin(before, n.intendedProject, fromPledge, toPledge, offset + 255, allowedAmount);
         }
     }
 
@@ -494,6 +494,6 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
     }
 
     event Transfer(uint64 indexed from, uint64 indexed to, uint amount);
-    event CancelCampaign(uint64 indexed idCampaign);
+    event CancelProject(uint64 indexed idProject);
 
 }

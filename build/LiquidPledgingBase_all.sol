@@ -11,13 +11,13 @@ contract ILiquidPledgingPlugin {
     ///  1 -> Plugin for the first delegate transferring pledge to another party
     ///  2 -> Plugin for the second delegate transferring pledge to another party
     ///  ...
-    ///  255 -> Plugin for the intendedCampaign transferring pledge to another party
+    ///  255 -> Plugin for the intendedProject transferring pledge to another party
     ///
     ///  256 -> Plugin for the owner receiving pledge to another party
     ///  257 -> Plugin for the first delegate receiving pledge to another party
     ///  258 -> Plugin for the second delegate receiving pledge to another party
     ///  ...
-    ///  511 -> Plugin for the intendedCampaign receiving pledge to another party
+    ///  511 -> Plugin for the intendedProject receiving pledge to another party
     function beforeTransfer(
         uint64 pledgeManager,
         uint64 pledgeFrom,
@@ -48,22 +48,22 @@ contract Vault {
 contract LiquidPledgingBase {
     // Limits inserted to prevent large loops that could prevent canceling
     uint constant MAX_DELEGATES = 20;
-    uint constant MAX_SUBCAMPAIGN_LEVEL = 20;
-    uint constant MAX_INTERCAMPAIGN_LEVEL = 20;
+    uint constant MAX_SUBPROJECT_LEVEL = 20;
+    uint constant MAX_INTERPROJECT_LEVEL = 20;
 
-    enum PledgeAdminType { Giver, Delegate, Campaign }
+    enum PledgeAdminType { Giver, Delegate, Project }
     enum PaymentState { Pledged, Paying, Paid } // TODO name change Pledged
 
     /// @dev This struct defines the details of each the PledgeAdmin, these
     ///  PledgeAdmins can own pledges and act as delegates
     struct PledgeAdmin { // TODO name change PledgeAdmin
-        PledgeAdminType adminType; // Giver, Delegate or Campaign
+        PledgeAdminType adminType; // Giver, Delegate or Project
         address addr; // account or contract address for admin
         string name;
         string url;
         uint64 commitTime;  // In seconds, used for Givers' & Delegates' vetos
-        uint64 parentCampaign;  // Only for campaigns
-        bool canceled;      //Always false except for canceled campaigns
+        uint64 parentProject;  // Only for projects
+        bool canceled;      //Always false except for canceled projects
         ILiquidPledgingPlugin plugin; // if the plugin is 0x0 then nothing happens if its a contract address than that smart contract is called via the milestone contract
     }
 
@@ -71,8 +71,8 @@ contract LiquidPledgingBase {
         uint amount;
         uint64 owner; // PledgeAdmin
         uint64[] delegationChain; // list of index numbers
-        uint64 intendedCampaign; // TODO change the name only used for when delegates are precommiting to a campaign
-        uint64 commitTime;  // When the intendedCampaign will become the owner
+        uint64 intendedProject; // TODO change the name only used for when delegates are precommiting to a project
+        uint64 commitTime;  // When the intendedProject will become the owner
         uint64 oldPledge; // this points to the Pledge[] index that the Pledge was derived from
         PaymentState paymentState;
     }
@@ -192,52 +192,52 @@ contract LiquidPledgingBase {
 
     event DelegateUpdated(uint64 indexed idDelegate);
 
-    /// @notice Creates a new Campaign
-    function addCampaign(string name, string url, address campaignAdmin, uint64 parentCampaign, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idCampaign) {
-        if (parentCampaign != 0) {
-            PledgeAdmin storage pa = findAdmin(parentCampaign);
-            require(pa.adminType == PledgeAdminType.Campaign);
+    /// @notice Creates a new Project
+    function addProject(string name, string url, address projectAdmin, uint64 parentProject, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idProject) {
+        if (parentProject != 0) {
+            PledgeAdmin storage pa = findAdmin(parentProject);
+            require(pa.adminType == PledgeAdminType.Project);
             require(pa.addr == msg.sender);
-            require(getCampaignLevel(pa) < MAX_SUBCAMPAIGN_LEVEL);
+            require(getProjectLevel(pa) < MAX_SUBPROJECT_LEVEL);
         }
 
-        idCampaign = uint64(admins.length);
+        idProject = uint64(admins.length);
 
         admins.push(PledgeAdmin(
-            PledgeAdminType.Campaign,
-            campaignAdmin,
+            PledgeAdminType.Project,
+            projectAdmin,
             name,
             url,
             commitTime,
-            parentCampaign,
+            parentProject,
             false,
             plugin));
 
 
-        CampaignAdded(idCampaign);
+        ProjectAdded(idProject);
     }
 
-    event CampaignAdded(uint64 indexed idCampaign);
+    event ProjectAdded(uint64 indexed idProject);
 
-    ///@notice Changes the address, name or commitTime associated with a specific Campaign
-    function updateCampaign(
-        uint64 idCampaign,
+    ///@notice Changes the address, name or commitTime associated with a specific Project
+    function updateProject(
+        uint64 idProject,
         address newAddr,
         string newName,
         string newUrl,
         uint64 newCommitTime)
     {
-        PledgeAdmin storage campaign = findAdmin(idCampaign);
-        require(campaign.adminType == PledgeAdminType.Campaign);
-        require(campaign.addr == msg.sender);
-        campaign.addr = newAddr;
-        campaign.name = newName;
-        campaign.url = newUrl;
-        campaign.commitTime = newCommitTime;
-        CampaignUpdated(idCampaign);
+        PledgeAdmin storage project = findAdmin(idProject);
+        require(project.adminType == PledgeAdminType.Project);
+        require(project.addr == msg.sender);
+        project.addr = newAddr;
+        project.name = newName;
+        project.url = newUrl;
+        project.commitTime = newCommitTime;
+        ProjectUpdated(idProject);
     }
 
-    event CampaignUpdated(uint64 indexed idAdmin);
+    event ProjectUpdated(uint64 indexed idAdmin);
 
 
 //////////
@@ -253,7 +253,7 @@ contract LiquidPledgingBase {
         uint amount,
         uint64 owner,
         uint64 nDelegates,
-        uint64 intendedCampaign,
+        uint64 intendedProject,
         uint64 commitTime,
         uint64 oldPledge,
         PaymentState paymentState
@@ -262,7 +262,7 @@ contract LiquidPledgingBase {
         amount = n.amount;
         owner = n.owner;
         nDelegates = uint64(n.delegationChain.length);
-        intendedCampaign = n.intendedCampaign;
+        intendedProject = n.intendedProject;
         commitTime = n.commitTime;
         oldPledge = n.oldPledge;
         paymentState = n.paymentState;
@@ -291,7 +291,7 @@ contract LiquidPledgingBase {
         string name,
         string url,
         uint64 commitTime,
-        uint64 parentCampaign,
+        uint64 parentProject,
         bool canceled,
         address plugin)
     {
@@ -301,7 +301,7 @@ contract LiquidPledgingBase {
         name = m.name;
         url = m.url;
         commitTime = m.commitTime;
-        parentCampaign = m.parentCampaign;
+        parentProject = m.parentProject;
         canceled = m.canceled;
         plugin = address(m.plugin);
     }
@@ -317,18 +317,18 @@ contract LiquidPledgingBase {
     function findOrCreatePledge(
         uint64 owner,
         uint64[] delegationChain,
-        uint64 intendedCampaign,
+        uint64 intendedProject,
         uint64 commitTime,
         uint64 oldPledge,
         PaymentState paid
         ) internal returns (uint64)
     {
-        bytes32 hPledge = sha3(owner, delegationChain, intendedCampaign, commitTime, oldPledge, paid);
+        bytes32 hPledge = sha3(owner, delegationChain, intendedProject, commitTime, oldPledge, paid);
         uint64 idx = hPledge2idx[hPledge];
         if (idx > 0) return idx;
         idx = uint64(pledges.length);
         hPledge2idx[hPledge] = idx;
-        pledges.push(Pledge(0, owner, delegationChain, intendedCampaign, commitTime, oldPledge, paid));
+        pledges.push(Pledge(0, owner, delegationChain, intendedProject, commitTime, oldPledge, paid));
         return idx;
     }
 
@@ -355,7 +355,7 @@ contract LiquidPledgingBase {
     }
 
     // helper function that returns the pledge level solely to check that transfers
-    // between Campaigns not violate MAX_INTERCAMPAIGN_LEVEL
+    // between Projects not violate MAX_INTERPROJECT_LEVEL
     function getPledgeLevel(Pledge n) internal returns(uint) {
         if (n.oldPledge == 0) return 0; //changed
         Pledge storage oldN = findPledge(n.oldPledge);
@@ -374,25 +374,25 @@ contract LiquidPledgingBase {
         }
     }
 
-    // helper function that returns the campaign level solely to check that there
-    // are not too many Campaigns that violate MAX_SUBCAMPAIGNS_LEVEL
-    function getCampaignLevel(PledgeAdmin m) internal returns(uint) {
-        assert(m.adminType == PledgeAdminType.Campaign);
-        if (m.parentCampaign == 0) return(1);
-        PledgeAdmin storage parentNM = findAdmin(m.parentCampaign);
-        return getCampaignLevel(parentNM);
+    // helper function that returns the project level solely to check that there
+    // are not too many Projects that violate MAX_SUBCAMPAIGNS_LEVEL
+    function getProjectLevel(PledgeAdmin m) internal returns(uint) {
+        assert(m.adminType == PledgeAdminType.Project);
+        if (m.parentProject == 0) return(1);
+        PledgeAdmin storage parentNM = findAdmin(m.parentProject);
+        return getProjectLevel(parentNM);
     }
 
-    function isCampaignCanceled(uint64 campaignId) constant returns (bool) {
-        PledgeAdmin storage m = findAdmin(campaignId);
+    function isProjectCanceled(uint64 projectId) constant returns (bool) {
+        PledgeAdmin storage m = findAdmin(projectId);
         if (m.adminType == PledgeAdminType.Giver) return false;
-        assert(m.adminType == PledgeAdminType.Campaign);
+        assert(m.adminType == PledgeAdminType.Project);
         if (m.canceled) return true;
-        if (m.parentCampaign == 0) return false;
-        return isCampaignCanceled(m.parentCampaign);
+        if (m.parentProject == 0) return false;
+        return isProjectCanceled(m.parentProject);
     }
 
-    // @notice A helper function for canceling campaigns
+    // @notice A helper function for canceling projects
     // @param idPledge the pledge that may or may not be canceled
     function getOldestPledgeNotCanceled(uint64 idPledge) internal constant returns(uint64) { //todo rename
         if (idPledge == 0) return 0;
@@ -400,9 +400,9 @@ contract LiquidPledgingBase {
         PledgeAdmin storage admin = findAdmin(n.owner);
         if (admin.adminType == PledgeAdminType.Giver) return idPledge;
 
-        assert(admin.adminType == PledgeAdminType.Campaign);
+        assert(admin.adminType == PledgeAdminType.Project);
 
-        if (!isCampaignCanceled(n.owner)) return idPledge;
+        if (!isProjectCanceled(n.owner)) return idPledge;
 
         return getOldestPledgeNotCanceled(n.oldPledge);
     }
