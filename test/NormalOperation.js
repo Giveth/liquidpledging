@@ -39,6 +39,7 @@ const readTest = async (liquidPledging) => {
 };
 
 describe('LiquidPledging test', () => {
+  let testrpc;
   let web3;
   let accounts;
   let liquidPledging;
@@ -52,7 +53,7 @@ describe('LiquidPledging test', () => {
   let adminProject3;
   let delegate2;
   before(async () => {
-    const testrpc = TestRPC.server({
+    testrpc = TestRPC.server({
       ws: true,
       gasLimit: 5800000,
       total_accounts: 10,
@@ -70,6 +71,11 @@ describe('LiquidPledging test', () => {
     delegate2 = accounts[6];
     giver2 = accounts[7];
     adminProject3 = accounts[8];
+  });
+
+  after((done) => {
+    testrpc.close();
+    done();
   });
   it('Should deploy LiquidPledging contract', async () => {
     vault = await Vault.new(web3);

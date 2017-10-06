@@ -81,6 +81,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
             } else if (receiver.adminType == PledgeAdminType.Project) {
                 transferOwnershipToProject(idPledge, amount, idReceiver);
             } else if (receiver.adminType == PledgeAdminType.Delegate) {
+                idPledge = undelegate(idPledge, amount, n.delegationChain.length);
                 appendDelegate(idPledge, amount, idReceiver);
             } else {
                 assert(false);
@@ -106,14 +107,14 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
                 // If the receiver is not in the delegate list
                 if (receiverDIdx == NOTFOUND) {
-                    undelegate(idPledge, amount, n.delegationChain.length - senderDIdx - 1);
+                    idPledge = undelegate(idPledge, amount, n.delegationChain.length - senderDIdx - 1);
                     appendDelegate(idPledge, amount, idReceiver);
 
                 // If the receiver is already part of the delegate chain and is
                 // after the sender, then all of the other delegates after the sender are
                 // removed and the receiver is appended at the end of the delegation chain
                 } else if (receiverDIdx > senderDIdx) {
-                    undelegate(idPledge, amount, n.delegationChain.length - senderDIdx - 1);
+                    idPledge = undelegate(idPledge, amount, n.delegationChain.length - senderDIdx - 1);
                     appendDelegate(idPledge, amount, idReceiver);
 
                 // If the receiver is already part of the delegate chain and is
@@ -130,7 +131,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
             // If the delegate wants to support a project, they undelegate all
             // the delegates after them in the chain and choose a project
             if (receiver.adminType == PledgeAdminType.Project) {
-                undelegate(idPledge, amount, n.delegationChain.length - senderDIdx - 1);
+                idPledge = undelegate(idPledge, amount, n.delegationChain.length - senderDIdx - 1);
                 proposeAssignProject(idPledge, amount, idReceiver);
                 return;
             }
@@ -353,7 +354,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
     }
 
     /// @param q Number of undelegations
-    function undelegate(uint64 idPledge, uint amount, uint q) internal {
+    function undelegate(uint64 idPledge, uint amount, uint q) internal returns (uint64){
         Pledge storage n = findPledge(idPledge);
         uint64[] memory newDelegationChain = new uint64[](n.delegationChain.length - q);
         for (uint i=0; i<n.delegationChain.length - q; i++) {
@@ -367,6 +368,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
                 n.oldPledge,
                 PaymentState.Pledged);
         doTransfer(idPledge, toPledge, amount);
+
+        return toPledge;
     }
 
 
