@@ -49,6 +49,7 @@ describe('LiquidPledging test', () => {
   let adminProject1;
   let adminProject2;
   let adminProject2a;
+  let adminProject3;
   let delegate2;
   before(async () => {
     const testrpc = TestRPC.server({
@@ -68,6 +69,7 @@ describe('LiquidPledging test', () => {
     adminProject2a = accounts[5];
     delegate2 = accounts[6];
     giver2 = accounts[7];
+    adminProject3 = accounts[8];
   });
   it('Should deploy LiquidPledging contract', async () => {
     vault = await Vault.new(web3);
@@ -330,5 +332,11 @@ describe('LiquidPledging test', () => {
     assert.equal(res[2], '');
     assert.equal(res[3], '');
     assert.equal(res[4], 259200); // default to 3 day commitTime
+  }).timeout(6000);
+  it('Should allow childProject with different parentProject owner', async () => {
+    const nAdminsBefore = await liquidPledging.numberOfPledgeAdmins();
+    await liquidPledging.addProject('Project3', 'URLProject3', adminProject3, 4, 86400, 0, { from: adminProject3 });
+    const nAdmins = await liquidPledging.numberOfPledgeAdmins();
+    assert.equal(nAdmins, utils.toDecimal(nAdminsBefore) + 1);
   }).timeout(6000);
 });

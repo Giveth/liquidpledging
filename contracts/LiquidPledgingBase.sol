@@ -161,7 +161,6 @@ contract LiquidPledgingBase {
         if (parentProject != 0) {
             PledgeAdmin storage pa = findAdmin(parentProject);
             require(pa.adminType == PledgeAdminType.Project);
-            require(pa.addr == msg.sender);
             require(getProjectLevel(pa) < MAX_SUBPROJECT_LEVEL);
         }
 
