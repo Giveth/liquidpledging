@@ -8,7 +8,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npm run sol-compile; mocha --harmony",
+    "test": "npm run build; mocha --harmony",
     "sol-compile": "solcpiler -i './contracts/**/*.sol'",
     "js-compile": "babel -d lib/ js/",
     "build": "npm run sol-compile; npm run js-compile",
