@@ -11,7 +11,7 @@
     "test": "npm run sol-compile; mocha --harmony",
     "sol-compile": "solcpiler -i './contracts/**/*.sol'",
     "js-compile": "babel -d lib/ js/",
-    "compile": "npm run sol-compile; npm run js-compile",
+    "build": "npm run sol-compile; npm run js-compile",
     "prepublish": "npm run js-compile"
   },
   "repository": {
