@@ -37,7 +37,6 @@ The liquidpledging contract is published as an npm package for developer conveni
  npm install liquidpledging --save
 ```
 
-
 ## Run demo
 Follow the instructions on the [liquidpleding-demo](https://github.com/ojones/liquidpledging-demo) repo.
  
