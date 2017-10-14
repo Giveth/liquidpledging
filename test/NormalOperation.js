@@ -8,34 +8,15 @@ const assertFail = require('./helpers/assertFail');
 
 const { utils } = Web3;
 
-const LiquidPledging = liquidpledging.LiquidPledging(true);
+const LiquidPledging = liquidpledging.LiquidPledgingMock;
 const Vault = liquidpledging.Vault;
+const LiquidPledgingState = liquidpledging.LiquidPledgingState;
 const assert = chai.assert;
 
 
-const printState = async (liquidPledging) => {
-  console.log(liquidPledging.b);
-  const st = await liquidPledging.getState();
+const printState = async (liquidPledgingState) => {
+  const st = await liquidPledgingState.getState();
   console.log(JSON.stringify(st, null, 2));
-};
-
-const printBalances = async (liquidPledging) => {
-  const st = await liquidPledging.getState();
-  assert.equal(st.pledges.length, 13);
-  for (let i = 1; i <= 12; i += 1) {
-    console.log(i, Web3.utils.fromWei(st.pledges[i].amount));
-  }
-};
-
-const readTest = async (liquidPledging) => {
-  const t1 = await liquidPledging.test1();
-  const t2 = await liquidPledging.test2();
-  const t3 = await liquidPledging.test3();
-  const t4 = await liquidPledging.test4();
-  console.log('t1: ', t1.toNumber());
-  console.log('t2: ', t2.toNumber());
-  console.log('t3: ', t3.toNumber());
-  console.log('t4: ', t4.toNumber());
 };
 
 describe('LiquidPledging test', () => {
@@ -43,6 +24,7 @@ describe('LiquidPledging test', () => {
   let web3;
   let accounts;
   let liquidPledging;
+  let liquidPledgingState;
   let vault;
   let giver1;
   let giver2;
@@ -81,6 +63,7 @@ describe('LiquidPledging test', () => {
     vault = await Vault.new(web3);
     liquidPledging = await LiquidPledging.new(web3, vault.$address, { gas: 5800000 });
     await vault.setLiquidPledging(liquidPledging.$address);
+    liquidPledgingState = new LiquidPledgingState(liquidPledging);
   }).timeout(6000);
   it('Should create a giver', async () => {
     await liquidPledging.addGiver('Giver1', 'URLGiver1', 86400, 0, { from: giver1 });
@@ -226,11 +209,11 @@ describe('LiquidPledging test', () => {
   }).timeout(6000);
   it('Admin of the project1 should be able to cancel project1', async () => {
     await liquidPledging.cancelProject(3, { from: adminProject1 });
-    const st = await liquidPledging.getState(liquidPledging);
+    const st = await liquidPledgingState.getState(liquidPledging);
     assert.equal(st.admins[3].canceled, true);
   }).timeout(6000);
   it('Should not allow to withdraw from a canceled project', async () => {
-    const st = await liquidPledging.getState(liquidPledging);
+    const st = await liquidPledgingState.getState(liquidPledging);
     assert.equal(utils.fromWei(st.pledges[5].amount), 0.05);
     await assertFail(async () => {
       await liquidPledging.withdraw(5, utils.toWei(0.01), { from: adminProject1 });
@@ -241,7 +224,7 @@ describe('LiquidPledging test', () => {
       $extraGas: 100000,
       from: delegate1,
     });
-    const st = await liquidPledging.getState(liquidPledging);
+    const st = await liquidPledgingState.getState(liquidPledging);
     assert.equal(st.pledges.length, 9);
     assert.equal(utils.fromWei(st.pledges[8].amount), 0.03);
     assert.equal(st.pledges[8].owner, 1);
@@ -251,7 +234,7 @@ describe('LiquidPledging test', () => {
   }).timeout(6000);
   it('Giver should be able to send the remaining to project2', async () => {
     await liquidPledging.transfer(1, 5, utils.toWei(0.02), 4, { from: giver1, $extraGas: 100000 });
-    const st = await liquidPledging.getState(liquidPledging);
+    const st = await liquidPledgingState.getState(liquidPledging);
     assert.equal(st.pledges.length, 9);
     assert.equal(utils.fromWei(st.pledges[5].amount), 0);
     assert.equal(utils.fromWei(st.pledges[4].amount), 0.12);
@@ -264,14 +247,14 @@ describe('LiquidPledging test', () => {
   }).timeout(6000);
   it('Project 2 delegate in delegate2', async () => {
     await liquidPledging.transfer(4, 4, utils.toWei(0.02), 6, { from: adminProject2 });
-    const st = await liquidPledging.getState(liquidPledging);
+    const st = await liquidPledgingState.getState(liquidPledging);
     assert.equal(st.pledges.length, 10);
     assert.equal(utils.fromWei(st.pledges[9].amount), 0.02);
     assert.equal(utils.fromWei(st.pledges[4].amount), 0.1);
   }).timeout(6000);
   it('delegate2 assigns to projec2a', async () => {
     await liquidPledging.transfer(6, 9, utils.toWei(0.01), 5, { from: delegate2 });
-    const st = await liquidPledging.getState(liquidPledging);
+    const st = await liquidPledgingState.getState(liquidPledging);
     assert.equal(st.pledges.length, 11);
     assert.equal(utils.fromWei(st.pledges[9].amount), 0.01);
     assert.equal(utils.fromWei(st.pledges[10].amount), 0.01);
@@ -280,7 +263,7 @@ describe('LiquidPledging test', () => {
     const n = Math.floor(new Date().getTime() / 1000);
     await liquidPledging.setMockedTime(n + (86401 * 3));
     await liquidPledging.withdraw(10, utils.toWei(0.005), { from: adminProject2a });
-    const st = await liquidPledging.getState(liquidPledging);
+    const st = await liquidPledgingState.getState(liquidPledging);
     assert.equal(st.pledges.length, 13);
     assert.equal(utils.fromWei(st.pledges[10].amount), 0);
     assert.equal(utils.fromWei(st.pledges[11].amount), 0.005);
@@ -302,7 +285,7 @@ describe('LiquidPledging test', () => {
   it('Should be able to cancel payment', async () => {
     // bug somewhere which will throw invalid op_code if we don't provide gas or extraGas
     await vault.cancelPayment(1, { $extraGas: 100000 });
-    const st = await liquidPledging.getState();
+    const st = await liquidPledgingState.getState();
     assert.equal(st.pledges.length, 13);
     assert.equal(utils.fromWei(st.pledges[2].amount), 0.31);
     assert.equal(utils.fromWei(st.pledges[11].amount), 0);

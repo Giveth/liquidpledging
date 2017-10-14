@@ -4,36 +4,29 @@ const TestRPC = require('ethereumjs-testrpc');
 const Web3 = require('web3');
 const chai = require('chai');
 const liquidpledging = require('../index.js');
-const assertFail = require('./helpers/assertFail');
 
-const { utils } = Web3;
-
-const LiquidPledging = liquidpledging.LiquidPledging(true);
+const LiquidPledging = liquidpledging.LiquidPledgingMock;
+const LiquidPledgingState = liquidpledging.LiquidPledgingState;
 const Vault = liquidpledging.Vault;
 const assert = chai.assert;
 
-const printState = async (liquidPledging) => {
-  const st = await liquidPledging.getState();
+const printState = async (liquidPledgingState) => {
+  const st = await liquidPledgingState.getState();
   console.log(JSON.stringify(st, null, 2));
 };
 
-describe('LiquidPledging test', function() {
-  this.timeout(0);
+describe('LiquidPledging test', () => {
   let testrpc;
   let web3;
   let accounts;
   let liquidPledging;
+  let liquidPledgingState;
   let vault;
   let giver1;
-  let giver2;
   let delegate1;
   let adminProject1;
-  let adminProject2;
-  let adminProject2a;
-  let delegate2;
 
   before(async () => {
-
     testrpc = TestRPC.server({
       ws: true,
       gasLimit: 5800000,
@@ -44,13 +37,9 @@ describe('LiquidPledging test', function() {
 
     web3 = new Web3('ws://localhost:8546');
     accounts = await web3.eth.getAccounts();
-    giver1 = accounts[ 1 ];
-    delegate1 = accounts[ 2 ];
-    adminProject1 = accounts[ 3 ];
-    adminProject2 = accounts[ 4 ];
-    adminProject2a = accounts[ 5 ];
-    delegate2 = accounts[ 6 ];
-    giver2 = accounts[ 7 ];
+    giver1 = accounts[1];
+    delegate1 = accounts[2];
+    adminProject1 = accounts[3];
   });
 
   after((done) => {
@@ -62,6 +51,7 @@ describe('LiquidPledging test', function() {
     vault = await Vault.new(web3);
     liquidPledging = await LiquidPledging.new(web3, vault.$address, { gas: 5800000 });
     await vault.setLiquidPledging(liquidPledging.$address);
+    liquidPledgingState = new LiquidPledgingState(liquidPledging);
   });
 
   it('Should create a delegate', async () => {
@@ -90,7 +80,7 @@ describe('LiquidPledging test', function() {
     assert.equal(res[4], 259200); // default to 3 day commitTime
   });
 
-  it('Should not append delegate on veto delegation', async function() {
+  it('Should not append delegate on veto delegation', async () => {
     await liquidPledging.addProject('Project 1', 'url', adminProject1, 0, 0, 0);
     // propose the delegation
     await liquidPledging.transfer(1, 2, '1000', 3, { from: delegate1, gas: 400000 });
@@ -99,17 +89,15 @@ describe('LiquidPledging test', function() {
     const origPledge = await liquidPledging.getPledge(2);
     assert.equal(origPledge.amount, '0');
 
-//    await printState(liquidPledging);
+//    await printState(liquidPledgingState);
     // veto the delegation
     await liquidPledging.transfer(2, 3, '1000', 1, { from: giver1, gas: 400000 });
 
     const currentPledge = await liquidPledging.getPledge(2);
 
-//    await printState(liquidPledging);
+//    await printState(liquidPledgingState);
 
     assert.equal(currentPledge.amount, '1000');
     assert.equal(currentPledge.nDelegates, 1);
   });
-
-
-})
+});
