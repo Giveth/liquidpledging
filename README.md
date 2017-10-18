@@ -1,4 +1,4 @@
-# Liquid Pledging
+![Liquid Pledging](readme-header.png)
 
 > Ethereum contract to delegate donations to projects.
 
