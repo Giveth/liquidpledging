@@ -1,8 +1,26 @@
 pragma solidity ^0.4.11;
+/*
+    Copyright 2016, Jordi Baylina
+    Contributor: Adrià Massanet <adria@codecontext.io>
 
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+// Contract Imports
 import "./LiquidPledgingBase.sol";
 
-
+/// @dev `LiquidPleding` is a 
 contract LiquidPledging is LiquidPledgingBase {
 
 
@@ -227,7 +245,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         CancelProject(idProject);
     }
 
-
+    /// @notice Method called to cancel specfic pledge.
+    /// @param idPledge Id of the pledge that should be canceled.
     function cancelPledge(uint64 idPledge, uint amount) {
         idPledge = normalizePledge(idPledge);
 
@@ -246,7 +265,17 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
     // This set of functions makes moving a lot of pledges around much more
     // efficient (saves gas) than calling these functions in series
+    
+    
+    // Bit mask used for dividing pledge amounts in Multi pledge methods
     uint constant D64 = 0x10000000000000000;
+
+    /// @notice `mTransfer` allows for multiple pledges to be transfered efficiently
+    /// @param idSender ID of the giver, delegate or project admin that is transferring
+    ///  the funds from Pledge to Pledge. This admin must have permissions to move the value
+    /// @param amount An array of pledge amounts and IDs which are extrapalated using the D64 bitmask
+    /// @param idReceiver Destination of the value, can be a giver sending to a giver or
+    ///  a delegate, a delegate to another delegate or a project to precommit it to that project
     function mTransfer(uint64 idSender, uint[] pledgesAmounts, uint64 idReceiver) {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
             uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
@@ -256,6 +285,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         }
     }
 
+    /// @notice `mWithdraw` allows for multiple pledges to be withdrawn efficiently
+    /// @param amount An array of pledge amounts and IDs which are extrapalated using the D64 bitmask
     function mWithdraw(uint[] pledgesAmounts) {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
             uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
@@ -265,6 +296,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         }
     }
 
+    /// @notice `mConfirmPayment` allows for multiple pledges to be confirmed efficiently
+    /// @param amount An array of pledge amounts and IDs which are extrapalated using the D64 bitmask
     function mConfirmPayment(uint[] pledgesAmounts) {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
             uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
@@ -274,6 +307,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         }
     }
 
+    /// @notice `mCancelPayment` allows for multiple pledges to be cancelled efficiently
+    /// @param amount An array of pledge amounts and IDs which are extrapalated using the D64 bitmask
     function mCancelPayment(uint[] pledgesAmounts) {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
             uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
@@ -283,6 +318,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         }
     }
 
+    /// @notice `mNormalizePledge` allows for multiple pledges to be normalized efficiently
+    /// @param amount An array of pledge IDs which are extrapalated using the D64 bitmask
     function mNormalizePledge(uint[] pledges) returns(uint64) {
         for (uint i = 0; i < pledges.length; i++ ) {
             uint64 idPledge = uint64( pledges[i] & (D64-1) );
