@@ -12,7 +12,7 @@ import "./Owned.sol";
 /// @dev This is declares a few functions from `LiquidPledging` so that the
 ///  `Vault` contract can interface with the `LiquidPledging` contract
 contract LiquidPledging {
-    function confirmPayment(uint64 idNote, uint amount);
+    function confirmPayment(uint64 idNote, uint amount) returns (bool);
     function cancelPayment(uint64 idNote, uint amount);
 }
 
@@ -91,10 +91,13 @@ contract Vault is Owned {
         Payment storage p = payments[_idPayment];
         require(p.state == PaymentStatus.Pending);
 
+        if (!liquidPledging.confirmPayment(uint64(p.ref), p.amount)) {
+            doCancelPayment(_idPayment);
+            return;
+        }
+
         p.state = PaymentStatus.Paid;
         p.dest.transfer(p.amount);  // only ETH denominated in wei
-
-        liquidPledging.confirmPayment(uint64(p.ref), p.amount);
 
         ConfirmPayment(_idPayment);
     }
