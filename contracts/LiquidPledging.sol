@@ -237,7 +237,8 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         PledgeAdmin storage m = findAdmin(n.owner);
         checkAdminOwner(m);
 
-        doTransfer(idPledge, n.oldPledge, amount);
+        uint64 oldPledge = getOldestPledgeNotCanceled(n.oldPledge);
+        doTransfer(idPledge, oldPledge, amount);
     }
 
 
