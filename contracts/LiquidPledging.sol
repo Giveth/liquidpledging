@@ -174,13 +174,15 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
     /// @notice Method called by the vault to confirm a payment.
     /// @param idPledge Id of the pledge that wants to be withdrawn.
     /// @param amount Quantity of Ether that wants to be withdrawn.
-    function confirmPayment(uint64 idPledge, uint amount) onlyVault {
+    function confirmPayment(uint64 idPledge, uint amount) onlyVault returns (bool) {
         Pledge storage n = findPledge(idPledge);
 
         require(n.paymentState == PaymentState.Paying);
 
         // Check the project is not canceled in the while.
-        require(getOldestPledgeNotCanceled(idPledge) == idPledge);
+        if (isProjectCanceled(n.owner)) {
+            return false;
+        }
 
         uint64 idNewPledge = findOrCreatePledge(
             n.owner,
@@ -192,6 +194,7 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         );
 
         doTransfer(idPledge, idNewPledge, amount);
+        return true;
     }
 
     /// @notice Method called by the vault to cancel a payment.
