@@ -422,18 +422,26 @@ contract LiquidPledging is LiquidPledgingBase {
         doTransfer(idPledge, toPledge, amount);
     }   
 
+
+    /// @notice `transferOwnershipToGiver` allows for the transfer of
+    ///  value back to the Giver, value is placed in a pledged state
+    ///  without being attached to a project, delegation chain, or timeline.
+    /// @param idPledge Id of the pledge to be transfered.
+    /// @param amount Quantity of value that's being transfered
+    /// @param idReceiver The new owner of the pledge
     function transferOwnershipToGiver(
         uint64 idPledge,
         uint amount,
         uint64 idReceiver
     ) internal  {
         uint64 toPledge = findOrCreatePledge(
-                idReceiver,
-                new uint64[](0),
-                0,
-                0,
-                0,
-                PaymentState.Pledged);
+            idReceiver,
+            new uint64[](0),
+            0,
+            0,
+            0,
+            PaymentState.Pledged
+        );
         doTransfer(idPledge, toPledge, amount);
     }
 
