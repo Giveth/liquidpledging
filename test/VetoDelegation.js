@@ -15,7 +15,9 @@ const printState = async (liquidPledgingState) => {
   console.log(JSON.stringify(st, null, 2));
 };
 
-describe('LiquidPledging test', () => {
+describe('LiquidPledging test', function () {
+  this.timeout(0);
+
   let testrpc;
   let web3;
   let accounts;
@@ -64,7 +66,7 @@ describe('LiquidPledging test', () => {
     assert.equal(res[2], 'Delegate1');
     assert.equal(res[3], 'URLDelegate1');
     assert.equal(res[4], 0);
-  }).timeout(6000);
+  });
 
   it('Should make a donation and create giver', async () => {
     await liquidPledging.donate(0, 1, { from: giver1, value: '1000', gas: 2000000 });
