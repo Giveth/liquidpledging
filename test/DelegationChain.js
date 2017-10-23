@@ -148,4 +148,21 @@ describe('LiquidPledging test', function () {
     assert.equal(st.pledges[2].delegates.length, 1);
     assert.equal(st.pledges[2].delegates[0].id, 2);
   });
+
+  it('delegation chain should remain the same when owner veto\'s delegation', async () => {
+    // delegate1 add delegate2 to chain
+    await liquidPledging.transfer(2, 2, 1000, 3, {from: delegate1, $extraGas: 100000});
+    // delegate2 delegate to project1
+    await liquidPledging.transfer(3, 3, 1000, 5, {from: delegate2, $extraGas: 100000});
+    // owner veto delegation to project1
+    await liquidPledging.transfer(1, 8, 1000, 3, {from: giver1, $extraGas: 100000});
+
+    printState(liquidPledgingState);
+    const st = await liquidPledgingState.getState();
+    assert.equal(st.pledges[8].amount, 0);
+    assert.equal(st.pledges[3].amount, 1000);
+    assert.equal(st.pledges[3].delegates.length, 2);
+    assert.equal(st.pledges[3].delegates[0].id, 2);
+    assert.equal(st.pledges[3].delegates[0].id, 3);
+  })
 });
