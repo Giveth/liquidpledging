@@ -433,7 +433,7 @@ contract LiquidPledging is LiquidPledgingBase {
         uint64 idPledge,
         uint amount,
         uint64 idReceiver
-    ) internal  {
+    ) internal {
         uint64 toPledge = findOrCreatePledge(
             idReceiver,
             new uint64[](0),
@@ -445,16 +445,21 @@ contract LiquidPledging is LiquidPledgingBase {
         doTransfer(idPledge, toPledge, amount);
     }
 
+    /// @notice `appendDelegate` allows for a delegate to be added onto the
+    ///  end of the delegate chain for a given Pledge.
+    /// @param idPledge Id of the pledge thats delegate chain will be modified.
+    /// @param amount Quantity of value that's being chained.
+    /// @param idReceiver The delegate to be added at the end of the chain
     function appendDelegate(
         uint64 idPledge,
         uint amount,
         uint64 idReceiver
-    ) internal  {
-        Pledge storage n= findPledge(idPledge);
+    ) internal {
+        Pledge storage n = findPledge(idPledge);
 
         require(n.delegationChain.length < MAX_DELEGATES);
         uint64[] memory newDelegationChain = new uint64[](n.delegationChain.length + 1);
-        for (uint i=0; i<n.delegationChain.length; i++) {
+        for (uint i = 0; i<n.delegationChain.length; i++) {
             newDelegationChain[i] = n.delegationChain[i];
         }
 
@@ -462,16 +467,21 @@ contract LiquidPledging is LiquidPledgingBase {
         newDelegationChain[n.delegationChain.length] = idReceiver;
 
         uint64 toPledge = findOrCreatePledge(
-                n.owner,
-                newDelegationChain,
-                0,
-                0,
-                n.oldPledge,
-                PaymentState.Pledged);
+            n.owner,
+            newDelegationChain,
+            0,
+            0,
+            n.oldPledge,
+            PaymentState.Pledged
+        );
         doTransfer(idPledge, toPledge, amount);
     }
 
-    /// @param q Number of undelegations
+    /// @notice `appendDelegate` allows for a delegate to be added onto the
+    ///  end of the delegate chain for a given Pledge.
+    /// @param idPledge Id of the pledge thats delegate chain will be modified.
+    /// @param amount Quantity of value that's shifted from delegates.
+    /// @param q Number (or depth) to remove as delegates
     function undelegate(
         uint64 idPledge,
         uint amount,
@@ -483,42 +493,57 @@ contract LiquidPledging is LiquidPledgingBase {
             newDelegationChain[i] = n.delegationChain[i];
         }
         uint64 toPledge = findOrCreatePledge(
-                n.owner,
-                newDelegationChain,
-                0,
-                0,
-                n.oldPledge,
-                PaymentState.Pledged);
+            n.owner,
+            newDelegationChain,
+            0,
+            0,
+            n.oldPledge,
+            PaymentState.Pledged
+        );
         doTransfer(idPledge, toPledge, amount);
 
         return toPledge;
     }
 
-
+    /// @notice `proposeAssignProject` proposes the assignment of a pledge
+    ///  to a specific project.
+    /// @dev This function should potentially be named more specifically.
+    /// @param idPledge Id of the pledge that will be assigned.
+    /// @param amount Quantity of value this pledge leader would be assigned.
+    /// @param idReceiver The project this pledge will potentialy 
+    ///  be assigned to.
     function proposeAssignProject(
         uint64 idPledge,
         uint amount,
         uint64 idReceiver
-    ) internal {// Todo rename
+    ) internal {
         Pledge storage n = findPledge(idPledge);
 
         require(getPledgeLevel(n) < MAX_SUBPROJECT_LEVEL);
         require(!isProjectCanceled(idReceiver));
 
         uint64 toPledge = findOrCreatePledge(
-                n.owner,
-                n.delegationChain,
-                idReceiver,
-                uint64(getTime() + maxCommitTime(n)),
-                n.oldPledge,
-                PaymentState.Pledged);
+            n.owner,
+            n.delegationChain,
+            idReceiver,
+            uint64(getTime() + maxCommitTime(n)),
+            n.oldPledge,
+            PaymentState.Pledged
+        );
         doTransfer(idPledge, toPledge, amount);
     }
 
+    /// @notice `doTransfer` is designed to allow for pledge amounts to be 
+    ///  shifted around internally.
+    /// @param from This is the Id from which value will be transfered.
+    /// @param to This is the Id that value will be transfered to.
+    /// @param _amount The amount of value that will be transfered.
     function doTransfer(uint64 from, uint64 to, uint _amount) internal {
         uint amount = callPlugins(true, from, to, _amount);
-        if (from == to) return;
-        if (amount == 0) return;
+        if (from == to) 
+            return;
+        if (amount == 0) 
+            return;
         Pledge storage nFrom = findPledge(from);
         Pledge storage nTo = findPledge(to);
         require(nFrom.amount >= amount);
@@ -529,19 +554,29 @@ contract LiquidPledging is LiquidPledgingBase {
         callPlugins(false, from, to, amount);
     }
 
-    // This function does 2 things, #1: it checks to make sure that the pledges are correct
-    // if the a pledged project has already been committed then it changes the owner
-    // to be the proposed project (Pledge that the UI will have to read the commit time and manually
-    // do what this function does to the pledge for the end user at the expiration of the commitTime)
-    // #2: It checks to make sure that if there has been a cancellation in the chain of projects,
-    // then it adjusts the pledge's owner appropriately.
-    // This call can be called from any body at any time on any pledge. In general it can be called
-    // to force the calls of the affected plugins, which also need to be predicted by the UI
+    /// @notice `normalizePledge` does 2 things:
+    ///   #1: Check to make sure that the pledges are correct. Then if 
+    ///       a pledged project has already been committed, it changes
+    ///       the owner to be the proposed project (The UI 
+    ///       will have to read the commit time and manually do what
+    ///       this function does to the pledge for the end user
+    ///       at the expiration of the commitTime)
+    ///
+    ///   #2: Checks to make sure that if there has been a cancellation in the
+    ///       chain of projects, the pledge's owner has been changed
+    ///       appropriately.
+    ///
+    /// This function can be called by anybody at anytime on any pledge.
+    /// In general it can be called to force the calls of the affected 
+    /// plugins, which also need to be predicted by the UI
+    /// @param idPledge This is the id of the pledge that will be normalized
     function normalizePledge(uint64 idPledge) returns(uint64) {
+
         Pledge storage n = findPledge(idPledge);
 
         // Check to make sure this pledge hasnt already been used or is in the process of being used
-        if (n.paymentState != PaymentState.Pledged) return idPledge;
+        if (n.paymentState != PaymentState.Pledged)
+            return idPledge;
 
         // First send to a project if it's proposed and commited
         if ((n.intendedProject > 0) && ( getTime() > n.commitTime)) {
