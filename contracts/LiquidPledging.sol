@@ -32,6 +32,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  LiquidPledgingBase contract
     /// @dev This constructor  also calls the constructor 
     ///  for `LiquidPledgingBase`
+    /// @param _vault The vault where ETH backing this pledge is stored
     function LiquidPledging(address _vault) LiquidPledgingBase(_vault) {
     }
 
@@ -282,7 +283,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
     /// @notice Method called to cancel specfic pledge.
     /// @param idPledge Id of the pledge that should be canceled.
-    /// @param amount Quantity of Ether that wants to be rolled back.    
+    /// @param amount Quantity of Ether that wants to be rolled back.
     function cancelPledge(uint64 idPledge, uint amount) {
         idPledge = normalizePledge(idPledge);
 
@@ -384,8 +385,12 @@ contract LiquidPledging is LiquidPledgingBase {
 // Private methods
 ///////
 
-    // this function is obvious, but it can also be called to undelegate
-    // everyone by setting yourself as the idReceiver
+    /// @notice `transferOwnershipToProject` allows for the transfer of
+    ///  ownership to the project, but it can also be called to undelegate
+    ///  everyone by setting one's own id for the idReceiver
+    /// @param idPledge Id of the pledge to be transfered.
+    /// @param amount Quantity of value that's being transfered
+    /// @param idReceiver The new owner of the project (or self to undelegate)
     function transferOwnershipToProject(
         uint64 idPledge,
         uint amount,
@@ -393,6 +398,8 @@ contract LiquidPledging is LiquidPledgingBase {
     ) internal {
         Pledge storage n = findPledge(idPledge);
 
+        // Ensure that the pledge is not already at max pledge depth
+        // and the project has not been cancelled
         require(getPledgeLevel(n) < MAX_INTERPROJECT_LEVEL);
         require(!isProjectCanceled(idReceiver));
 
@@ -402,14 +409,16 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             n.oldPledge,
-            PaymentState.Pledged);
+            PaymentState.Pledged
+        );
         uint64 toPledge = findOrCreatePledge(
-            idReceiver,
-            new uint64[](0),
+            idReceiver,                     // Set the new owner
+            new uint64[](0),                // clear the delegation chain
             0,
             0,
             oldPledge,
-            PaymentState.Pledged);
+            PaymentState.Pledged
+        );
         doTransfer(idPledge, toPledge, amount);
     }   
 

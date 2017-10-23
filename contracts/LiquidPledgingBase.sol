@@ -64,7 +64,7 @@ contract LiquidPledgingBase {
 //////
 
     /// @notice The Constructor creates the `LiquidPledgingBase` on the blockchain
-    /// @param _vault Where the ETH is stored that the pledges represent
+    /// @param _vault The vault where ETH backing this pledge is stored
     function LiquidPledgingBase(address _vault) {
         admins.length = 1; // we reserve the 0 admin
         pledges.length = 1; // we reserve the 0 pledge
