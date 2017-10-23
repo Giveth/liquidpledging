@@ -76,11 +76,11 @@ describe('LiquidPledging test', function () {
   });
 
   it('Should allow previous delegate to transfer pledge', async () => {
-    await liquidPledging.donate(1, 2, {from: giver1, value: 1000});
+    await liquidPledging.donate(1, 2, {from: giver1, value: 1000, $extraGas: 50000});
     // add delegate2 to chain
-    await liquidPledging.transfer(2, 2, 1000, 3, {from: delegate1});
+    await liquidPledging.transfer(2, 2, 1000, 3, {from: delegate1, $extraGas: 100000});
     // delegate 1 transfer pledge back to self, thus undelegating delegate2
-    await liquidPledging.transfer(2, 3, 1000, 2, {from: delegate1, gas: 100000});
+    await liquidPledging.transfer(2, 3, 1000, 2, {from: delegate1, $extraGas: 100000});
 
     const st = await liquidPledgingState.getState();
     assert.equal(st.pledges[2].amount, 1000);
@@ -147,5 +147,21 @@ describe('LiquidPledging test', function () {
     assert.equal(st.pledges[2].amount, 1000);
     assert.equal(st.pledges[2].delegates.length, 1);
     assert.equal(st.pledges[2].delegates[0].id, 2);
+  });
+
+  it('Should not append delegate on veto delegation', async () => {
+    // propose the delegation
+    await liquidPledging.transfer(2, 2, 1000, 5, { from: delegate1, $extraGas: 100000 });
+
+    const origPledge = await liquidPledging.getPledge(2);
+    assert.equal(origPledge.amount, '0');
+
+    // veto the delegation
+    await liquidPledging.transfer(1, 5, 1000, 2, { from: giver1, $extraGas: 100000 });
+
+    const currentPledge = await liquidPledging.getPledge(2);
+
+    assert.equal(currentPledge.amount, '1000');
+    assert.equal(currentPledge.nDelegates, 1);
   });
 });
