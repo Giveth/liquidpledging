@@ -1,4 +1,21 @@
 pragma solidity ^0.4.11;
+/*
+    Copyright 2017, Jordi Baylina
+    Contributor: Adrià Massanet <adria@codecontext.io>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 import "./ILiquidPledgingPlugin.sol";
 
@@ -9,7 +26,11 @@ contract Vault {
     function () payable;
 }
 
+/// @dev `LiquidPledgingBase` is the base level contract used to carry out
+///  liquid pledging. This function mostly handles the data structures
+///  and basic CRUD methods for liquid pledging.
 contract LiquidPledgingBase {
+
     // Limits inserted to prevent large loops that could prevent canceling
     uint constant MAX_DELEGATES = 20;
     uint constant MAX_SUBPROJECT_LEVEL = 20;
@@ -28,7 +49,9 @@ contract LiquidPledgingBase {
         uint64 commitTime;  // In seconds, used for Givers' & Delegates' vetos
         uint64 parentProject;  // Only for projects
         bool canceled;      //Always false except for canceled projects
-        ILiquidPledgingPlugin plugin; // if the plugin is 0x0 then nothing happens if its a contract address than that smart contract is called via the milestone contract
+        // if the plugin is 0x0 then nothing happens if its a contract address
+        // than that smart contract is called via the milestone contract
+        ILiquidPledgingPlugin plugin; 
     }
 
     struct Pledge {
@@ -53,6 +76,7 @@ contract LiquidPledgingBase {
 // Modifiers
 /////
 
+    /// @notice basic method to restrict a function to only the current vault
     modifier onlyVault() {
         require(msg.sender == address(vault));
         _;

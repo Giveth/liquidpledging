@@ -3,7 +3,6 @@ pragma solidity ^0.4.11;
 import "./LiquidPledging.sol";
 
 // @dev LiquidPledgingMock mocks current block number
-
 contract LiquidPledgingMock is LiquidPledging {
 
     uint public mock_time;

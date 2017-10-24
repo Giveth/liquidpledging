@@ -1,4 +1,5 @@
 pragma solidity ^0.4.11;
+
 /*
     Copyright 2017, Jordi Baylina
     Contributor: Adrià Massanet <adria@codecontext.io>
@@ -20,7 +21,10 @@ pragma solidity ^0.4.11;
 // Contract Imports
 import "./LiquidPledgingBase.sol";
 
-/// @dev `LiquidPleding` is a 
+/// @dev `LiquidPleding` allows for liquid pledging through the use of
+///  internal id structures and delegate chaining. All basic operations for
+///  handling liquid pledging are supplied as well as plugin features
+///  to allow for expanded functionality.
 contract LiquidPledging is LiquidPledgingBase {
 
 
@@ -625,7 +629,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param toPledge This is the Id that value is being transfered to.
     /// @param context The situation that is triggering the plugin. See plugin
     ///  for a full description of contexts.
-    /// @param _amount The amount of value that is being transfered.
+    /// @param amount The amount of value that is being transfered.
     function callPlugin(
         bool before,
         uint64 adminId,
@@ -664,11 +668,10 @@ contract LiquidPledging is LiquidPledgingBase {
         }
     }
 
-    /// @notice `callPluginsPledge` is used to apply various plugin calls
-    ///  to the delegate chain or the intended project dependent on whether
-    ///  the function is called with the same pledge Id that the call is from.
-    ///  If `fromPledge` and `idPledge` share the same ID the plugin is called
-    ///  on the intended project instead of the delegate chain.
+    /// @notice `callPluginsPledge` is used to apply plugin calls to
+    ///  the delegate chain and the intended project if there is one.
+    ///  It does so in either a transferring or receiving context based
+    ///  on the `idPledge` and  `fromPledge` parameters.
     /// @param before This toggle determines whether the plugin call is occuring
     ///  before or after a transfer.
     /// @param idPledge This is the Id of the pledge on which this plugin
@@ -683,10 +686,13 @@ contract LiquidPledging is LiquidPledgingBase {
         uint64 toPledge,
         uint amount
     ) internal returns (uint allowedAmount) {
+        // Determine if callPlugin is being applied in a receiving
+        // or transferring context
         uint64 offset = idPledge == fromPledge ? 0 : 256;
         allowedAmount = amount;
         Pledge storage n = findPledge(idPledge);
 
+        // Always call the plugin on the owner
         allowedAmount = callPlugin(
             before,
             n.owner,
@@ -696,6 +702,7 @@ contract LiquidPledging is LiquidPledgingBase {
             allowedAmount
         );
 
+        // Apply call plugin to all delegates
         for (uint64 i=0; i<n.delegationChain.length; i++) {
             allowedAmount = callPlugin(
                 before,
@@ -707,6 +714,9 @@ contract LiquidPledging is LiquidPledgingBase {
             );
         }
 
+        // If there is an intended project also call the plugin in
+        // either a transferring or receiving context based on offset
+        // on the intended project
         if (n.intendedProject > 0) {
             allowedAmount = callPlugin(
                 before,
@@ -719,6 +729,15 @@ contract LiquidPledging is LiquidPledgingBase {
         }
     }
 
+
+    /// @notice `callPlugins` calls `callPluginsPledge` once for the transfer
+    ///  context and once for the receiving context. The aggregated 
+    ///  allowed amount is then returned.
+    /// @param before This toggle determines whether the plugin call is occuring
+    ///  before or after a transfer.
+    /// @param fromPledge This is the Id from which value is being transfered.
+    /// @param toPledge This is the Id that value is being transfered to.
+    /// @param amount The amount of value that is being transfered.    
     function callPlugins(
         bool before,
         uint64 fromPledge,
@@ -727,6 +746,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ) internal returns (uint allowedAmount) {
         allowedAmount = amount;
 
+        // Call the pledges plugins in the transfer context
         allowedAmount = callPluginsPledge(
             before,
             fromPledge,
@@ -734,6 +754,8 @@ contract LiquidPledging is LiquidPledgingBase {
             toPledge,
             allowedAmount
         );
+
+        // Call the pledges plugins in the receive context
         allowedAmount = callPluginsPledge(
             before,
             toPledge,
@@ -747,10 +769,12 @@ contract LiquidPledging is LiquidPledgingBase {
 // Test functions
 /////////////
 
+    /// @notice Basic helper function to return the current time
     function getTime() internal returns (uint) {
         return now;
     }
 
+    // Event Delcerations
     event Transfer(uint64 indexed from, uint64 indexed to, uint amount);
     event CancelProject(uint64 indexed idProject);
 
