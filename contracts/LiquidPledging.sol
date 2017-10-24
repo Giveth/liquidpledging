@@ -265,24 +265,6 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         }
     }
 
-    function mConfirmPayment(uint[] pledgesAmounts) {
-        for (uint i = 0; i < pledgesAmounts.length; i++ ) {
-            uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
-            uint amount = pledgesAmounts[i] / D64;
-
-            confirmPayment(idPledge, amount);
-        }
-    }
-
-    function mCancelPayment(uint[] pledgesAmounts) {
-        for (uint i = 0; i < pledgesAmounts.length; i++ ) {
-            uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
-            uint amount = pledgesAmounts[i] / D64;
-
-            cancelPayment(idPledge, amount);
-        }
-    }
-
     function mNormalizePledge(uint[] pledges) returns(uint64) {
         for (uint i = 0; i < pledges.length; i++ ) {
             uint64 idPledge = uint64( pledges[i] & (D64-1) );
