@@ -283,11 +283,9 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         }
     }
 
-    function mNormalizePledge(uint[] pledges) returns(uint64) {
+    function mNormalizePledge(uint64[] pledges) {
         for (uint i = 0; i < pledges.length; i++ ) {
-            uint64 idPledge = uint64( pledges[i] & (D64-1) );
-
-            normalizePledge(idPledge);
+            normalizePledge( pledges[i] );
         }
     }
 
