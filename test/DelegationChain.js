@@ -64,8 +64,8 @@ describe('LiquidPledging test', function () {
   });
 
   it('Should add pledgeAdmins', async () => {
-    await liquidPledging.addGiver('Giver1', 'URLGiver1', 0, 0, { from: giver1 }); // pledgeAdmin 1
-    await liquidPledging.addDelegate('Delegate1', 'URLDelegate1', 0, 0, { from: delegate1 }); // pledgeAdmin 2
+    await liquidPledging.addGiver('Giver1', 'URLGiver1', 86400, 0, { from: giver1 }); // pledgeAdmin 1
+    await liquidPledging.addDelegate('Delegate1', 'URLDelegate1', 259200, 0, { from: delegate1 }); // pledgeAdmin 2
     await liquidPledging.addDelegate('Delegate2', 'URLDelegate2', 0, 0, { from: delegate2 }); // pledgeAdmin 3
     await liquidPledging.addDelegate('Delegate3', 'URLDelegate3', 0, 0, { from: delegate3 }); // pledgeAdmin 4
     await liquidPledging.addProject('Project1', 'URLProject1', adminProject1, 0, 0, 0, { from: adminProject1 }); // pledgeAdmin 5
@@ -164,4 +164,19 @@ describe('LiquidPledging test', function () {
     assert.equal(currentPledge.amount, '1000');
     assert.equal(currentPledge.nDelegates, 1);
   });
+
+  it('Pledge should have longest commitTime in delegation chain', async () => {
+    // delegate1 add delegate2 to chain
+    await liquidPledging.transfer(2, 2, 1000, 3, {from: delegate1, $extraGas: 100000});
+
+    // propose project delegation
+    const now = Math.floor(new Date().getTime() / 1000);
+    await liquidPledging.transfer(3, 3, 1000, 5, { from: delegate2, $extraGas: 100000 });
+
+    const pledge = await liquidPledging.getPledge(8);
+    // due to how block timestamp differences, we can't check an exact time
+    // the commitTimes for the pledgeAdmins are as follows giver - 86400, delegate1 - 259200, delegate2 - 0
+    // therefore checking within 1000 ms means that the longest commitTime was choosen
+    assert.approximately(web3.utils.toDecimal(pledge.commitTime), now + 259200, 1000); // 259200 is longest commitTime in delegationChain
+  })
 });
