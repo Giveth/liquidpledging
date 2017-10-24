@@ -16,7 +16,7 @@ const printState = async (liquidPledgingState) => {
   console.log(JSON.stringify(st, null, 2));
 };
 
-describe('LiquidPledging test', function () {
+describe('DelegationChain test', function () {
   this.timeout(0);
   
   let testrpc;
