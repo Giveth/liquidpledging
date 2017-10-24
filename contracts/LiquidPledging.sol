@@ -555,7 +555,7 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
     /// @notice `normalizePledge` does 2 things:
-    ///   #1: Check to make sure that the pledges are correct. Then if 
+    ///   #1: Checks to make sure that the pledges are correct. Then if 
     ///       a pledged project has already been committed, it changes
     ///       the owner to be the proposed project (The UI 
     ///       will have to read the commit time and manually do what
@@ -574,7 +574,8 @@ contract LiquidPledging is LiquidPledgingBase {
 
         Pledge storage n = findPledge(idPledge);
 
-        // Check to make sure this pledge hasnt already been used or is in the process of being used
+        // Check to make sure this pledge hasnt already been used 
+        // or is in the process of being used
         if (n.paymentState != PaymentState.Pledged)
             return idPledge;
 
@@ -611,6 +612,20 @@ contract LiquidPledging is LiquidPledgingBase {
 // Plugins
 /////////////
 
+    /// @notice `callPlugin` is used to trigger the general functions in the
+    ///  plugin for any actions needed before and after a transfer happens.
+    ///  Specifically what this does in relation to the plugin is something
+    ///  that largely depends on the functions of that plugin. This function
+    ///  is generally called in pairs, once before, and once after a transfer.
+    /// @param before This toggle determines whether the plugin call is occuring
+    ///  before or after a transfer.
+    /// @param adminId This should be the Id of the *trusted* individual
+    ///  who has control over this plugin.
+    /// @param fromPledge This is the Id from which value is being transfered.
+    /// @param toPledge This is the Id that value is being transfered to.
+    /// @param context The situation that is triggering the plugin. See plugin
+    ///  for a full description of contexts.
+    /// @param _amount The amount of value that is being transfered.
     function callPlugin(
         bool before,
         uint64 adminId,
@@ -619,10 +634,14 @@ contract LiquidPledging is LiquidPledgingBase {
         uint64 context,
         uint amount
     ) internal returns (uint allowedAmount) {
+
         uint newAmount;
         allowedAmount = amount;
         PledgeAdmin storage admin = findAdmin(adminId);
+        // Checks admin has a plugin assigned and a non-zero amount is requested
         if ((address(admin.plugin) != 0) && (allowedAmount > 0)) {
+            // There are two seperate functions called in the plugin.
+            // One is called before the transfer and one after
             if (before) {
                 newAmount = admin.plugin.beforeTransfer(
                     adminId,
@@ -645,6 +664,18 @@ contract LiquidPledging is LiquidPledgingBase {
         }
     }
 
+    /// @notice `callPluginsPledge` is used to apply various plugin calls
+    ///  to the delegate chain or the intended project dependent on whether
+    ///  the function is called with the same pledge Id that the call is from.
+    ///  If `fromPledge` and `idPledge` share the same ID the plugin is called
+    ///  on the intended project instead of the delegate chain.
+    /// @param before This toggle determines whether the plugin call is occuring
+    ///  before or after a transfer.
+    /// @param idPledge This is the Id of the pledge on which this plugin
+    ///  is being called.
+    /// @param fromPledge This is the Id from which value is being transfered.
+    /// @param toPledge This is the Id that value is being transfered to.
+    /// @param _amount The amount of value that is being transfered.
     function callPluginsPledge(
         bool before,
         uint64 idPledge,
