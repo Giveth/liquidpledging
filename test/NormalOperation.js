@@ -295,12 +295,20 @@ describe('LiquidPledging test', function () {
     assert.equal(utils.fromWei(st.pledges[12].amount), 0);
   });
   it('original owner should recover the remaining funds', async () => {
-    await liquidPledging.withdraw(1, utils.toWei(0.5), { from: giver1 });
-    await liquidPledging.withdraw(2, utils.toWei(0.31), { from: giver1 });
-    await liquidPledging.withdraw(4, utils.toWei(0.1), { $extraGas: 100000, from: giver1 });
+    const pledges = [
+      { amount: utils.toWei(0.5), id: 1 },
+      { amount: utils.toWei(0.31), id: 2 },
+      { amount: utils.toWei(0.1), id: 4 },
+      { amount: utils.toWei(0.03), id: 8 },
+      { amount: utils.toWei(0.01), id: 9 },
+    ];
 
-    await liquidPledging.withdraw(8, utils.toWei(0.03), { $extraGas: 100000, from: giver1 });
-    await liquidPledging.withdraw(9, utils.toWei(0.01), { $extraGas: 100000, from: giver1 });
+    // .substring is to remove the 0x prefix on the toHex result
+    const encodedPledges = pledges.map(p => {
+      return '0x' + utils.padLeft(utils.toHex(p.amount).substring(2), 48) + utils.padLeft(utils.toHex(p.id).substring(2), 16);
+    });
+
+    await liquidPledging.mWithdraw(encodedPledges, { from: giver1, $extraGas: 500000 });
 
     const initialBalance = await web3.eth.getBalance(giver1);
     await vault.multiConfirm([2, 3, 4, 5, 6]);
