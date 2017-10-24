@@ -169,14 +169,14 @@ describe('DelegationChain test', function () {
     // delegate1 add delegate2 to chain
     await liquidPledging.transfer(2, 2, 1000, 3, {from: delegate1, $extraGas: 100000});
 
-    // propose project delegation
+    // set the time
     const now = Math.floor(new Date().getTime() / 1000);
+    await liquidPledging.setMockedTime(now);
+
+    // propose project delegation
     await liquidPledging.transfer(3, 3, 1000, 5, { from: delegate2, $extraGas: 100000 });
 
     const pledge = await liquidPledging.getPledge(8);
-    // due to how block timestamp differences, we can't check an exact time
-    // the commitTimes for the pledgeAdmins are as follows giver - 86400, delegate1 - 259200, delegate2 - 0
-    // therefore checking within 1000 ms means that the longest commitTime was choosen
-    assert.approximately(web3.utils.toDecimal(pledge.commitTime), now + 259200, 1000); // 259200 is longest commitTime in delegationChain
+    assert.equal(pledge.commitTime, now + 259200); // 259200 is longest commitTime in delegationChain
   })
 });
