@@ -9,11 +9,11 @@ pragma solidity ^0.4.11;
 ///  to allow for an optional escape hatch to be implemented
 import "./Owned.sol";
 
-/// @dev This is declares a few functions from `LiquidPledging` so that the
+/// @dev This declares a few functions from `LiquidPledging` so that the
 ///  `Vault` contract can interface with the `LiquidPledging` contract
 contract LiquidPledging {
-    function confirmPayment(uint64 idNote, uint amount);
-    function cancelPayment(uint64 idNote, uint amount);
+    function confirmPayment(uint64 idNote, uint amount) public;
+    function cancelPayment(uint64 idNote, uint amount) public;
 }
 
 
@@ -39,35 +39,35 @@ contract Vault is Owned {
         uint amount; // amount of ETH (in wei) to be sent
     }
 
-    // @dev An array that contains all the payments for this Vault
+    /// @dev An array that contains all the payments for this Vault
     Payment[] public payments;
 
-    // @dev `liquidPledging` is the only address that can call a function with
-    /// this modifier
+    /// @dev `liquidPledging` is the only address that can call a function with
+    ///  this modifier
     modifier onlyLiquidPledging() {
         require(msg.sender == address(liquidPledging));
         _;
     }
     /// @dev USED FOR TESTING???
-    function VaultMock() {
+    function VaultMock() public pure {
 
     }
 
-    function () payable {
+    function () public payable {
 
     }
 
-    function setLiquidPledging(address _newLiquidPledging) onlyOwner {
+    function setLiquidPledging(address _newLiquidPledging) public onlyOwner {
         require(address(liquidPledging) == 0x0);
         liquidPledging = LiquidPledging(_newLiquidPledging);
     }
 
-    function setAutopay(bool _automatic) onlyOwner {
+    function setAutopay(bool _automatic) public onlyOwner {
         autoPay = _automatic;
     }
 
 
-    function authorizePayment(bytes32 _ref, address _dest, uint _amount) onlyLiquidPledging returns (uint) {
+    function authorizePayment(bytes32 _ref, address _dest, uint _amount) public onlyLiquidPledging returns (uint) {
         uint idPayment = payments.length;
         payments.length ++;
         payments[idPayment].state = PaymentStatus.Pending;
@@ -75,14 +75,20 @@ contract Vault is Owned {
         payments[idPayment].dest = _dest;
         payments[idPayment].amount = _amount;
 
-        AuthorizePayment(idPayment, _ref, _dest,  _amount);
+        AuthorizePayment(
+            idPayment, 
+            _ref, 
+            _dest, 
+            _amount
+        );
 
-        if (autoPay) doConfirmPayment(idPayment);
+        if (autoPay) 
+            doConfirmPayment(idPayment);
 
         return idPayment;
     }
 
-    function confirmPayment(uint _idPayment) onlyOwner {
+    function confirmPayment(uint _idPayment) public onlyOwner {
         doConfirmPayment(_idPayment);
     }
 
@@ -99,7 +105,7 @@ contract Vault is Owned {
         ConfirmPayment(_idPayment);
     }
 
-    function cancelPayment(uint _idPayment) onlyOwner {
+    function cancelPayment(uint _idPayment) public onlyOwner {
         doCancelPayment(_idPayment);
     }
 
@@ -116,19 +122,21 @@ contract Vault is Owned {
 
     }
 
-    function multiConfirm(uint[] _idPayments) onlyOwner {
-        for (uint i=0; i < _idPayments.length; i++) {
+    function multiConfirm(uint[] _idPayments) public onlyOwner {
+        for (uint i = 0; i < _idPayments.length; i++) {
             doConfirmPayment(_idPayments[i]);
         }
     }
 
-    function multiCancel(uint[] _idPayments) onlyOwner {
-        for (uint i=0; i < _idPayments.length; i++) {
+
+    function multiCancel(uint[] _idPayments) public onlyOwner {
+        for (uint i = 0; i < _idPayments.length; i++) {
             doCancelPayment(_idPayments[i]);
         }
     }
 
-    function nPayments() constant returns (uint) {
+
+    function nPayments() constant public returns (uint) {
         return payments.length;
     }
 
