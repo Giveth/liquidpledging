@@ -39,7 +39,7 @@ contract LiquidPledgingBase {
     enum PledgeAdminType { Giver, Delegate, Project }
     enum PaymentState { Pledged, Paying, Paid } // TODO name change Pledged
 
-    /// @dev This struct defines the details of each the PledgeAdmin, these
+    /// @notice This struct defines the details of each the PledgeAdmin, these
     ///  PledgeAdmins can own pledges and act as delegates
     struct PledgeAdmin { // TODO name change PledgeAdmin
         PledgeAdminType adminType; // Giver, Delegate or Project
@@ -100,7 +100,11 @@ contract LiquidPledgingBase {
 // Adminss functions
 //////
 
-    /// @notice Creates a giver.
+    /// @notice `addGiver` Creates a giver and adds them to the list of admins.
+    /// @param name This is the name used to identify the giver.
+    /// @param url This is a link to the givers profile or a representative site.
+    /// @param commitTime Set the default commit time period for this giver.
+    /// @param plugin This is givers liquid pledge plugin allowing for extended functionality.
     function addGiver(string name, string url, uint64 commitTime, ILiquidPledgingPlugin plugin
         ) returns (uint64 idGiver) {
 
@@ -121,7 +125,15 @@ contract LiquidPledgingBase {
 
     event GiverAdded(uint64 indexed idGiver);
 
-    ///@notice Changes the address, name or commitTime associated with a specific giver
+    /// @notice `updateGiver` allows for basic update operation to change the address,
+    ///  name or commitTime associated with a specific giver.
+    /// @param idGiver This is the internal ID used to specify the admin lookup
+    ///  that coresponds to the giver.
+    /// @param newAddr This parameter specifies an address to change the given
+    ///  correspondancec between the giver's internal ID and an external address.
+    /// @param newName This is the name used to identify the giver.
+    /// @param newUrl This is a link to the givers profile or a representative site.
+    /// @param newCommitTime Set the default commit time period for this giver.
     function updateGiver(
         uint64 idGiver,
         address newAddr,
@@ -141,8 +153,17 @@ contract LiquidPledgingBase {
 
     event GiverUpdated(uint64 indexed idGiver);
 
-    /// @notice Creates a new Delegate
-    function addDelegate(string name, string url, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idDelegate) { //TODO return index number
+    /// @notice `addDelegate` Creates a delegate and adds them to the list of admins.
+    /// @param name This is the name used to identify the delegate.
+    /// @param url This is a link to the delegates profile or a representative site.
+    /// @param commitTime Set the default commit time period for this delegate.
+    /// @param plugin This is givers liquid pledge plugin allowing for extended functionality.
+    function addDelegate(
+        string name,
+        string url,
+        uint64 commitTime,
+        ILiquidPledgingPlugin plugin
+    ) returns (uint64 idDelegate) { //TODO return index number
 
         idDelegate = uint64(admins.length);
 
@@ -161,7 +182,15 @@ contract LiquidPledgingBase {
 
     event DelegateAdded(uint64 indexed idDelegate);
 
-    ///@notice Changes the address, name or commitTime associated with a specific delegate
+    /// @notice `updateDelegate` allows for basic update operation to change the address,
+    ///  name or commitTime associated with a specific delegate.
+    /// @param idGiver This is the internal ID used to specify the admin lookup
+    ///  that coresponds to the delegate.
+    /// @param newAddr This parameter specifies an address to change the given
+    ///  correspondancec between the giver's internal ID and an external address.
+    /// @param newName This is the name used to identify the delegate.
+    /// @param newUrl This is a link to the delegates profile or a representative site.
+    /// @param newCommitTime Set the default commit time period for this giver.
     function updateDelegate(
         uint64 idDelegate,
         address newAddr,
@@ -180,8 +209,22 @@ contract LiquidPledgingBase {
 
     event DelegateUpdated(uint64 indexed idDelegate);
 
-    /// @notice Creates a new Project
-    function addProject(string name, string url, address projectAdmin, uint64 parentProject, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idProject) {
+    /// @notice `addProject` Creates a project and adds it to the list of admins.
+    /// @param name This is the name used to identify the project.
+    /// @param url This is a link to the projects profile or a representative site.
+    /// @param projectAdmin This is the projects admin. This should be a trusted individual.
+    /// @param parentProject If this project has a parent project or a project it's 
+    ///  derived from use this parameter to supply it.
+    /// @param commitTime Set the default commit time period for this project.
+    /// @param plugin This is the projects liquid pledge plugin allowing for extended functionality.
+    function addProject(
+        string name,
+        string url,
+        address projectAdmin,
+        uint64 parentProject,
+        uint64 commitTime,
+        ILiquidPledgingPlugin plugin
+    ) returns (uint64 idProject) {
         if (parentProject != 0) {
             PledgeAdmin storage pa = findAdmin(parentProject);
             require(pa.adminType == PledgeAdminType.Project);
@@ -206,7 +249,15 @@ contract LiquidPledgingBase {
 
     event ProjectAdded(uint64 indexed idProject);
 
-    ///@notice Changes the address, name or commitTime associated with a specific Project
+    /// @notice `updateProject` allows for basic update operation to change the address,
+    ///  name or commitTime associated with a specific project.
+    /// @param idProject This is the internal ID used to specify the admin lookup
+    ///  that coresponds to the project.
+    /// @param newAddr This parameter specifies an address to change the given
+    ///  correspondance between the project's internal ID and an external address.
+    /// @param newName This is the name used to identify the project.
+    /// @param newUrl This is a link to the projects profile or a representative site.
+    /// @param newCommitTime Set the default commit time period for this project.
     function updateProject(
         uint64 idProject,
         address newAddr,
@@ -231,11 +282,15 @@ contract LiquidPledgingBase {
 // Public constant functions
 //////////
 
-    /// @notice Public constant that states how many pledgess are in the system
+    /// @notice `numberOfPledges` is a constant getter that simply returns 
+    ///  the number of pledges.
     function numberOfPledges() constant returns (uint) {
         return pledges.length - 1;
     }
-    /// @notice Public constant that states the details of the specified Pledge
+
+    /// @notice `getPledge` is a constant getter that simply returns 
+    ///  the amount, owner, the number of delegates, the intended project,
+    ///  the current commit time and the previous pledge attached to a specific pledge.
     function getPledge(uint64 idPledge) constant returns(
         uint amount,
         uint64 owner,
@@ -254,24 +309,33 @@ contract LiquidPledgingBase {
         oldPledge = n.oldPledge;
         paymentState = n.paymentState;
     }
-    /// @notice Public constant that states the delegates one by one, because
-    ///  an array cannot be returned
-    function getPledgeDelegate(uint64 idPledge, uint idxDelegate) constant returns(
+
+    /// @notice `getPledgeDelegate` returns a single delegate given the pledge ID
+    ///  and the delegate ID.
+    /// @param idPledge The ID internally representing the pledge.
+    /// @param idDelegate The ID internally representing the delegate.
+    function getPledgeDelegate(uint64 idPledge, uint idDelegate) constant returns(
         uint64 idDelegate,
         address addr,
         string name
     ) {
         Pledge storage n = findPledge(idPledge);
-        idDelegate = n.delegationChain[idxDelegate - 1];
+        idDelegate = n.delegationChain[idDelegate - 1];
         PledgeAdmin storage delegate = findAdmin(idDelegate);
         addr = delegate.addr;
         name = delegate.name;
     }
-    /// @notice Public constant that states the number of admins in the system
+
+    /// @notice `numberOfPledgeAdmins` is a constant getter that simply returns 
+    ///  the number of admins (Givers, Delegates and Projects are all "admins").
     function numberOfPledgeAdmins() constant returns(uint) {
         return admins.length - 1;
     }
-    /// @notice Public constant that states the details of the specified admin
+
+    /// @notice `getPledgeAdmin` is a constant getter that simply returns 
+    ///  the address, name, url, the current commit time and the previous
+    ///  the parentProject, whether the project has been cancelled
+    ///  and the projects plugin for a specific project.
     function getPledgeAdmin(uint64 idAdmin) constant returns (
         PledgeAdminType adminType,
         address addr,
