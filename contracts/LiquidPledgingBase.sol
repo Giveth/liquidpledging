@@ -19,8 +19,8 @@ pragma solidity ^0.4.11;
 
 import "./ILiquidPledgingPlugin.sol";
 
-/// @dev This is declares a few functions from `Vault` so that the
-///  `LiquidPledgingBase` contract can interface with the `Vault` contract
+/// @dev `Vault` serves as an interface to allow the `LiquidPledgingBase`
+///  contract to interface with a `Vault` contract
 contract Vault {
     function authorizePayment(bytes32 _ref, address _dest, uint _amount);
     function () payable;
