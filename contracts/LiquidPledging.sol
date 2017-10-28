@@ -91,7 +91,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param amount Quantity of value that's being moved
     /// @param idReceiver Destination of the value, can be a giver sending to 
     ///  a giver or a delegate, a delegate to another delegate or a project 
-    ///  to precommit it to that project
+    ///  to pre-commit it to that project
     function transfer(
         uint64 idSender,
         uint64 idPledge,
@@ -168,10 +168,10 @@ contract LiquidPledging is LiquidPledgingBase {
 
                 // If the receiver is already part of the delegate chain and is
                 // before the sender, then the sender and all of the other
-                // delegates after the RECEIVER are revomved from the chain,
-                // this is interesting because the delegate undelegates from the
-                // delegates that delegated to this delegate... game theory
-                // issues? should this be allowed
+                // delegates after the RECEIVER are removed from the chain,
+                // this is interesting because the delegate is removed from the
+                // delegates that delegated to this delegate. Are there game theory
+                // issues? should this be allowed?
                 } else if (receiverDIdx <= senderDIdx) {
                     undelegate(
                         idPledge,
@@ -182,7 +182,7 @@ contract LiquidPledging is LiquidPledgingBase {
                 return;
             }
 
-            // If the delegate wants to support a project, they undelegate all
+            // If the delegate wants to support a project, they remove all
             // the delegates after them in the chain and choose a project
             if (receiver.adminType == PledgeAdminType.Project) {
                 idPledge = undelegate(
@@ -285,7 +285,7 @@ contract LiquidPledging is LiquidPledgingBase {
         CancelProject(idProject);
     }
 
-    /// @notice Method called to cancel specfic pledge.
+    /// @notice Method called to cancel specific pledge.
     /// @param idPledge Id of the pledge that should be canceled.
     /// @param amount Quantity of Ether that wants to be rolled back.
     function cancelPledge(uint64 idPledge, uint amount) {
@@ -315,12 +315,12 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  efficiently
     /// @param idSender ID of the giver, delegate or project admin that is
     ///  transferring the funds from Pledge to Pledge. This admin must have 
-    ///  permissionsto move the value
+    ///  permissions to move the value
     /// @param amount An array of pledge amounts and IDs which are extrapolated
     ///  using the D64 bitmask
     /// @param idReceiver Destination of the value, can be a giver sending
     ///  to a giver or a delegate or a delegate to another delegate or a
-    ///  project to precommit it to that project
+    ///  project to pre-commit it to that project
     function mTransfer(
         uint64 idSender,
         uint[] pledgesAmounts,
@@ -360,7 +360,7 @@ contract LiquidPledging is LiquidPledgingBase {
         }
     }
 
-    /// @notice `mCancelPayment` allows for multiple pledges to be cancelled
+    /// @notice `mCancelPayment` allows for multiple pledges to be canceled
     ///  efficiently
     /// @param amount An array of pledge amounts and IDs which are extrapolated
     ///  using the D64 bitmask
@@ -390,11 +390,11 @@ contract LiquidPledging is LiquidPledgingBase {
 ///////
 
     /// @notice `transferOwnershipToProject` allows for the transfer of
-    ///  ownership to the project, but it can also be called to undelegate
+    ///  ownership to the project, but it can also be called to un-delegate
     ///  everyone by setting one's own id for the idReceiver
     /// @param idPledge Id of the pledge to be transfered.
     /// @param amount Quantity of value that's being transfered
-    /// @param idReceiver The new owner of the project (or self to undelegate)
+    /// @param idReceiver The new owner of the project (or self to un-delegate)
     function transferOwnershipToProject(
         uint64 idPledge,
         uint amount,
@@ -403,7 +403,7 @@ contract LiquidPledging is LiquidPledgingBase {
         Pledge storage n = findPledge(idPledge);
 
         // Ensure that the pledge is not already at max pledge depth
-        // and the project has not been cancelled
+        // and the project has not been canceled
         require(getPledgeLevel(n) < MAX_INTERPROJECT_LEVEL);
         require(!isProjectCanceled(idReceiver));
 
@@ -429,7 +429,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
     /// @notice `transferOwnershipToGiver` allows for the transfer of
     ///  value back to the Giver, value is placed in a pledged state
-    ///  without being attached to a project, delegation chain, or timeline.
+    ///  without being attached to a project, delegation chain, or time line.
     /// @param idPledge Id of the pledge to be transfered.
     /// @param amount Quantity of value that's being transfered
     /// @param idReceiver The new owner of the pledge
@@ -462,7 +462,9 @@ contract LiquidPledging is LiquidPledgingBase {
         Pledge storage n = findPledge(idPledge);
 
         require(n.delegationChain.length < MAX_DELEGATES);
-        uint64[] memory newDelegationChain = new uint64[](n.delegationChain.length + 1);
+        uint64[] memory newDelegationChain = new uint64[](
+            n.delegationChain.length + 1
+        );
         for (uint i = 0; i<n.delegationChain.length; i++) {
             newDelegationChain[i] = n.delegationChain[i];
         }
@@ -492,7 +494,9 @@ contract LiquidPledging is LiquidPledgingBase {
         uint q
     ) internal returns (uint64){
         Pledge storage n = findPledge(idPledge);
-        uint64[] memory newDelegationChain = new uint64[](n.delegationChain.length - q);
+        uint64[] memory newDelegationChain = new uint64[](
+            n.delegationChain.length - q
+        );
         for (uint i=0; i<n.delegationChain.length - q; i++) {
             newDelegationChain[i] = n.delegationChain[i];
         }
@@ -514,7 +518,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @dev This function should potentially be named more specifically.
     /// @param idPledge Id of the pledge that will be assigned.
     /// @param amount Quantity of value this pledge leader would be assigned.
-    /// @param idReceiver The project this pledge will potentialy 
+    /// @param idReceiver The project this pledge will potentially 
     ///  be assigned to.
     function proposeAssignProject(
         uint64 idPledge,
@@ -578,12 +582,12 @@ contract LiquidPledging is LiquidPledgingBase {
 
         Pledge storage n = findPledge(idPledge);
 
-        // Check to make sure this pledge hasnt already been used 
+        // Check to make sure this pledge hasn't already been used 
         // or is in the process of being used
         if (n.paymentState != PaymentState.Pledged)
             return idPledge;
 
-        // First send to a project if it's proposed and commited
+        // First send to a project if it's proposed and committed
         if ((n.intendedProject > 0) && ( getTime() > n.commitTime)) {
             uint64 oldPledge = findOrCreatePledge(
                 n.owner,
@@ -621,7 +625,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  Specifically what this does in relation to the plugin is something
     ///  that largely depends on the functions of that plugin. This function
     ///  is generally called in pairs, once before, and once after a transfer.
-    /// @param before This toggle determines whether the plugin call is occuring
+    /// @param before This toggle determines whether the plugin call is occurring
     ///  before or after a transfer.
     /// @param adminId This should be the Id of the *trusted* individual
     ///  who has control over this plugin.
