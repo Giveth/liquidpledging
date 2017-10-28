@@ -1,5 +1,5 @@
 
-//File: contracts/ILiquidPledgingPlugin.sol
+//File: contracts\ILiquidPledgingPlugin.sol
 pragma solidity ^0.4.11;
 
 contract ILiquidPledgingPlugin {
@@ -33,7 +33,7 @@ contract ILiquidPledgingPlugin {
         uint amount);
 }
 
-//File: contracts/LiquidPledgingBase.sol
+//File: contracts\LiquidPledgingBase.sol
 pragma solidity ^0.4.11;
 
 
