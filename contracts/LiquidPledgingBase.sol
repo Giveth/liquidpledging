@@ -21,7 +21,7 @@ import "./ILiquidPledgingPlugin.sol";
 
 /// @dev `Vault` serves as an interface to allow the `LiquidPledgingBase`
 ///  contract to interface with a `Vault` contract
-contract Vault {
+contract LPVault {
     function authorizePayment(bytes32 _ref, address _dest, uint _amount);
     function () payable;
 }
