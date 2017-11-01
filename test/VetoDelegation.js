@@ -89,13 +89,10 @@ describe('LiquidPledging test', () => {
     const origPledge = await liquidPledging.getPledge(2);
     assert.equal(origPledge.amount, '0');
 
-//    await printState(liquidPledgingState);
     // veto the delegation
     await liquidPledging.transfer(2, 3, '1000', 1, { from: giver1, gas: 400000 });
 
     const currentPledge = await liquidPledging.getPledge(2);
-
-//    await printState(liquidPledgingState);
 
     assert.equal(currentPledge.amount, '1000');
     assert.equal(currentPledge.nDelegates, 1);
