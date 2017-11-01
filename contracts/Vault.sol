@@ -75,13 +75,16 @@ contract LPVault is Owned {
 
     /// @notice `authorizePayment` is used in order to approve a payment 
     ///  from the liquid pledging contract. Whenever a project or other address
-    ///  needs to receve a payment it needs to be authorized with this contract.
+    ///  needs to receive a payment it needs to be authorized with this contract.
     /// @param _ref This parameter is used to reference details about the
-    ///  payment from another conttract.
+    ///  payment from another contract.
     /// @param _dest This is the address that payments will end up being sent to
     /// @param _amount This is the amount that the payment is being authorized
     ///  for.
-    function authorizePayment(bytes32 _ref, address _dest, uint _amount) onlyLiquidPledging returns (uint) {
+    function authorizePayment(
+        bytes32 _ref,
+        address _dest,
+        uint _amount ) onlyLiquidPledging returns (uint) {
         uint idPayment = payments.length;
         payments.length ++;
         payments[idPayment].state = PaymentStatus.Pending;
@@ -95,6 +98,9 @@ contract LPVault is Owned {
 
         return idPayment;
     }
+
+
+    
 
     /// @notice `confirmPayment` is a basic function used to allow the
     ///  owner of the vault to initiate a payment confirmation. Since 

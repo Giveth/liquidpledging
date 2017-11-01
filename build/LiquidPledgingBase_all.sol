@@ -1,11 +1,37 @@
 
-//File: contracts/ILiquidPledgingPlugin.sol
+//File: contracts\ILiquidPledgingPlugin.sol
 pragma solidity ^0.4.11;
 
+/*
+    Copyright 2017, Jordi Baylina
+    Contributor: Adrià Massanet <adria@codecontext.io>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
+
+/// @dev `ILiquidPledgingPlugin` is the basic interface for any
+///  liquid pledging plugin
 contract ILiquidPledgingPlugin {
+
     /// @notice Plugins are used (much like web hooks) to initiate an action
     ///  upon any donation, delegation, or transfer; this is an optional feature
-    ///  and allows for extreme customization of the contract
+    ///  and allows for extreme customization of the contract. This function
+    ///  implements any action that should be initiated before a transfer.
+    /// @param pledgeManager The admin or current manager of the pledge
+    /// @param pledgeFrom This is the Id from which value will be transfered.
+    /// @param pledgeTo This is the Id that value will be transfered to.    
     /// @param context The situation that is triggering the plugin:
     ///  0 -> Plugin for the owner transferring pledge to another party
     ///  1 -> Plugin for the first delegate transferring pledge to another party
@@ -18,34 +44,77 @@ contract ILiquidPledgingPlugin {
     ///  258 -> Plugin for the second delegate receiving pledge to another party
     ///  ...
     ///  511 -> Plugin for the intendedProject receiving pledge to another party
+    /// @param amount The amount of value that will be transfered.
     function beforeTransfer(
         uint64 pledgeManager,
         uint64 pledgeFrom,
         uint64 pledgeTo,
         uint64 context,
-        uint amount
-        ) returns (uint maxAllowed);
+        uint amount ) returns (uint maxAllowed);
+
+    /// @notice Plugins are used (much like web hooks) to initiate an action
+    ///  upon any donation, delegation, or transfer; this is an optional feature
+    ///  and allows for extreme customization of the contract. This function
+    ///  implements any action that should be initiated after a transfer.
+    /// @param pledgeManager The admin or current manager of the pledge
+    /// @param pledgeFrom This is the Id from which value will be transfered.
+    /// @param pledgeTo This is the Id that value will be transfered to.    
+    /// @param context The situation that is triggering the plugin:
+    ///  0 -> Plugin for the owner transferring pledge to another party
+    ///  1 -> Plugin for the first delegate transferring pledge to another party
+    ///  2 -> Plugin for the second delegate transferring pledge to another party
+    ///  ...
+    ///  255 -> Plugin for the intendedProject transferring pledge to another party
+    ///
+    ///  256 -> Plugin for the owner receiving pledge to another party
+    ///  257 -> Plugin for the first delegate receiving pledge to another party
+    ///  258 -> Plugin for the second delegate receiving pledge to another party
+    ///  ...
+    ///  511 -> Plugin for the intendedProject receiving pledge to another party
+    ///  @param amount The amount of value that will be transfered.
     function afterTransfer(
         uint64 pledgeManager,
         uint64 pledgeFrom,
         uint64 pledgeTo,
         uint64 context,
-        uint amount);
+        uint amount
+    );
 }
 
 //File: ./contracts/LiquidPledgingBase.sol
 pragma solidity ^0.4.11;
+/*
+    Copyright 2017, Jordi Baylina
+    Contributor: Adrià Massanet <adria@codecontext.io>
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
 
 
 
-/// @dev This is declares a few functions from `Vault` so that the
-///  `LiquidPledgingBase` contract can interface with the `Vault` contract
-contract Vault {
+/// @dev `Vault` serves as an interface to allow the `LiquidPledgingBase`
+///  contract to interface with a `Vault` contract
+contract LPVault {
     function authorizePayment(bytes32 _ref, address _dest, uint _amount);
     function () payable;
 }
 
+/// @dev `LiquidPledgingBase` is the base level contract used to carry out
+///  liquid pledging. This function mostly handles the data structures
+///  and basic CRUD methods for liquid pledging.
 contract LiquidPledgingBase {
+
     // Limits inserted to prevent large loops that could prevent canceling
     uint constant MAX_DELEGATES = 20;
     uint constant MAX_SUBPROJECT_LEVEL = 20;
@@ -54,7 +123,7 @@ contract LiquidPledgingBase {
     enum PledgeAdminType { Giver, Delegate, Project }
     enum PaymentState { Pledged, Paying, Paid } // TODO name change Pledged
 
-    /// @dev This struct defines the details of each the PledgeAdmin, these
+    /// @notice This struct defines the details of each the PledgeAdmin, these
     ///  PledgeAdmins can own pledges and act as delegates
     struct PledgeAdmin { // TODO name change PledgeAdmin
         PledgeAdminType adminType; // Giver, Delegate or Project
@@ -64,24 +133,31 @@ contract LiquidPledgingBase {
         uint64 commitTime;  // In seconds, used for Givers' & Delegates' vetos
         uint64 parentProject;  // Only for projects
         bool canceled;      //Always false except for canceled projects
-        ILiquidPledgingPlugin plugin; // if the plugin is 0x0 then nothing happens if its a contract address than that smart contract is called via the milestone contract
+        // if the plugin is 0x0 then nothing happens if its a contract address
+        // than that smart contract is called via the milestone contract
+        ILiquidPledgingPlugin plugin; 
     }
 
     struct Pledge {
         uint amount;
         uint64 owner; // PledgeAdmin
         uint64[] delegationChain; // list of index numbers
-        uint64 intendedProject; // TODO change the name only used for when delegates are precommiting to a project
-        uint64 commitTime;  // When the intendedProject will become the owner
-        uint64 oldPledge; // this points to the Pledge[] index that the Pledge was derived from
+        // TODO change the name only used for when delegates are 
+        // pre-committing to a project
+        uint64 intendedProject; 
+        // When the intendedProject will become the owner
+        uint64 commitTime;
+        // this points to the Pledge[] index that the Pledge was derived from  
+        uint64 oldPledge; 
         PaymentState paymentState;
     }
 
     Pledge[] pledges;
     PledgeAdmin[] admins; //The list of pledgeAdmins 0 means there is no admin
-    Vault public vault;
+    LPVault public vault;
 
-    // this mapping allows you to search for a specific pledge's index number by the hash of that pledge
+    // this mapping allows you to search for a specific pledge's 
+    // index number by the hash of that pledge
     mapping (bytes32 => uint64) hPledge2idx;//TODO Fix typo
 
 
@@ -89,6 +165,7 @@ contract LiquidPledgingBase {
 // Modifiers
 /////
 
+    /// @notice basic method to restrict a function to only the current vault
     modifier onlyVault() {
         require(msg.sender == address(vault));
         _;
@@ -99,12 +176,13 @@ contract LiquidPledgingBase {
 // Constructor
 //////
 
-    /// @notice The Constructor creates the `LiquidPledgingBase` on the blockchain
-    /// @param _vault Where the ETH is stored that the pledges represent
+    /// @notice The Constructor creates the `LiquidPledgingBase` 
+    ///  on the blockchain
+    /// @param _vault The vault where ETH backing this pledge is stored
     function LiquidPledgingBase(address _vault) {
         admins.length = 1; // we reserve the 0 admin
         pledges.length = 1; // we reserve the 0 pledge
-        vault = Vault(_vault);
+        vault = LPVault(_vault);
     }
 
 
@@ -112,9 +190,18 @@ contract LiquidPledgingBase {
 // Adminss functions
 //////
 
-    /// @notice Creates a giver.
-    function addGiver(string name, string url, uint64 commitTime, ILiquidPledgingPlugin plugin
-        ) returns (uint64 idGiver) {
+    /// @notice `addGiver` Creates a giver and adds them to the list of admins.
+    /// @param name This is the name used to identify the giver.
+    /// @param url This is a link to the givers profile or a representative site.
+    /// @param commitTime Set the default commit time period for this giver.
+    /// @param plugin This is givers liquid pledge plugin allowing for 
+    ///  extended functionality.
+    function addGiver(
+        string name,
+        string url,
+        uint64 commitTime,
+        ILiquidPledgingPlugin plugin
+    ) returns (uint64 idGiver) {
 
         idGiver = uint64(admins.length);
 
@@ -133,7 +220,15 @@ contract LiquidPledgingBase {
 
     event GiverAdded(uint64 indexed idGiver);
 
-    ///@notice Changes the address, name or commitTime associated with a specific giver
+    /// @notice `updateGiver` allows for basic update operation to change the address,
+    ///  name or commitTime associated with a specific giver.
+    /// @param idGiver This is the internal ID used to specify the admin lookup
+    ///  that coresponds to the giver.
+    /// @param newAddr This parameter specifies an address to change the given
+    ///  correspondancec between the giver's internal ID and an external address.
+    /// @param newName This is the name used to identify the giver.
+    /// @param newUrl This is a link to the givers profile or a representative site.
+    /// @param newCommitTime Set the default commit time period for this giver.
     function updateGiver(
         uint64 idGiver,
         address newAddr,
@@ -153,10 +248,19 @@ contract LiquidPledgingBase {
 
     event GiverUpdated(uint64 indexed idGiver);
 
-    /// @notice Creates a new Delegate
-    function addDelegate(string name, string url, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idDelegate) { //TODO return index number
+    /// @notice `addDelegate` Creates a delegate and adds them to the list of admins.
+    /// @param name This is the name used to identify the delegate.
+    /// @param url This is a link to the delegates profile or a representative site.
+    /// @param commitTime Set the default commit time period for this delegate.
+    /// @param plugin This is givers liquid pledge plugin allowing for extended functionality.
+    function addDelegate(
+        string name,
+        string url,
+        uint64 commitTime,
+        ILiquidPledgingPlugin plugin
+    ) returns (uint64 idxDelegate) { //TODO return index number
 
-        idDelegate = uint64(admins.length);
+        idxDelegate = uint64(admins.length);
 
         admins.push(PledgeAdmin(
             PledgeAdminType.Delegate,
@@ -168,32 +272,54 @@ contract LiquidPledgingBase {
             false,
             plugin));
 
-        DelegateAdded(idDelegate);
+        DelegateAdded(idxDelegate);
     }
 
-    event DelegateAdded(uint64 indexed idDelegate);
+    event DelegateAdded(uint64 indexed idxDelegate);
 
-    ///@notice Changes the address, name or commitTime associated with a specific delegate
+    /// @notice `updateDelegate` allows for basic update operation to change the address,
+    ///  name or commitTime associated with a specific delegate.
+    /// @param idxDelegate This is the internal ID used to specify the admin lookup
+    ///  that coresponds to the delegate.
+    /// @param newAddr This parameter specifies an address to change the given
+    ///  correspondancec between the giver's internal ID and an external address.
+    /// @param newName This is the name used to identify the delegate.
+    /// @param newUrl This is a link to the delegates profile or a representative site.
+    /// @param newCommitTime Set the default commit time period for this giver.
     function updateDelegate(
-        uint64 idDelegate,
+        uint64 idxDelegate,
         address newAddr,
         string newName,
         string newUrl,
         uint64 newCommitTime) {
-        PledgeAdmin storage delegate = findAdmin(idDelegate);
+        PledgeAdmin storage delegate = findAdmin(idxDelegate);
         require(delegate.adminType == PledgeAdminType.Delegate);
         require(delegate.addr == msg.sender);
         delegate.addr = newAddr;
         delegate.name = newName;
         delegate.url = newUrl;
         delegate.commitTime = newCommitTime;
-        DelegateUpdated(idDelegate);
+        DelegateUpdated(idxDelegate);
     }
 
-    event DelegateUpdated(uint64 indexed idDelegate);
+    event DelegateUpdated(uint64 indexed idxDelegate);
 
-    /// @notice Creates a new Project
-    function addProject(string name, string url, address projectAdmin, uint64 parentProject, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idProject) {
+    /// @notice `addProject` Creates a project and adds it to the list of admins.
+    /// @param name This is the name used to identify the project.
+    /// @param url This is a link to the projects profile or a representative site.
+    /// @param projectAdmin This is the projects admin. This should be a trusted individual.
+    /// @param parentProject If this project has a parent project or a project it's 
+    ///  derived from use this parameter to supply it.
+    /// @param commitTime Set the default commit time period for this project.
+    /// @param plugin This is the projects liquid pledge plugin allowing for extended functionality.
+    function addProject(
+        string name,
+        string url,
+        address projectAdmin,
+        uint64 parentProject,
+        uint64 commitTime,
+        ILiquidPledgingPlugin plugin
+    ) returns (uint64 idProject) {
         if (parentProject != 0) {
             PledgeAdmin storage pa = findAdmin(parentProject);
             require(pa.adminType == PledgeAdminType.Project);
@@ -218,7 +344,15 @@ contract LiquidPledgingBase {
 
     event ProjectAdded(uint64 indexed idProject);
 
-    ///@notice Changes the address, name or commitTime associated with a specific Project
+    /// @notice `updateProject` allows for basic update operation to change the address,
+    ///  name or commitTime associated with a specific project.
+    /// @param idProject This is the internal ID used to specify the admin lookup
+    ///  that coresponds to the project.
+    /// @param newAddr This parameter specifies an address to change the given
+    ///  correspondance between the project's internal ID and an external address.
+    /// @param newName This is the name used to identify the project.
+    /// @param newUrl This is a link to the projects profile or a representative site.
+    /// @param newCommitTime Set the default commit time period for this project.
     function updateProject(
         uint64 idProject,
         address newAddr,
@@ -243,11 +377,15 @@ contract LiquidPledgingBase {
 // Public constant functions
 //////////
 
-    /// @notice Public constant that states how many pledgess are in the system
+    /// @notice `numberOfPledges` is a constant getter that simply returns 
+    ///  the number of pledges.
     function numberOfPledges() constant returns (uint) {
         return pledges.length - 1;
     }
-    /// @notice Public constant that states the details of the specified Pledge
+
+    /// @notice `getPledge` is a constant getter that simply returns 
+    ///  the amount, owner, the number of delegates, the intended project,
+    ///  the current commit time and the previous pledge attached to a specific pledge.
     function getPledge(uint64 idPledge) constant returns(
         uint amount,
         uint64 owner,
@@ -266,24 +404,33 @@ contract LiquidPledgingBase {
         oldPledge = n.oldPledge;
         paymentState = n.paymentState;
     }
-    /// @notice Public constant that states the delegates one by one, because
-    ///  an array cannot be returned
-    function getPledgeDelegate(uint64 idPledge, uint idxDelegate) constant returns(
-        uint64 idDelegate,
+
+    /// @notice `getPledgeDelegate` returns a single delegate given the pledge ID
+    ///  and the delegate ID.
+    /// @param idPledge The ID internally representing the pledge.
+    /// @param idxDelegate The ID internally representing the delegate.
+    function getPledgeDelegate(uint64 idPledge, uint _idxDelegate) constant returns(
+        uint64 idxDelegate,
         address addr,
         string name
     ) {
         Pledge storage n = findPledge(idPledge);
-        idDelegate = n.delegationChain[idxDelegate - 1];
-        PledgeAdmin storage delegate = findAdmin(idDelegate);
+        idxDelegate = n.delegationChain[_idxDelegate - 1];
+        PledgeAdmin storage delegate = findAdmin(idxDelegate);
         addr = delegate.addr;
         name = delegate.name;
     }
-    /// @notice Public constant that states the number of admins in the system
+
+    /// @notice `numberOfPledgeAdmins` is a constant getter that simply returns 
+    ///  the number of admins (Givers, Delegates and Projects are all "admins").
     function numberOfPledgeAdmins() constant returns(uint) {
         return admins.length - 1;
     }
-    /// @notice Public constant that states the details of the specified admin
+
+    /// @notice `getPledgeAdmin` is a constant getter that simply returns 
+    ///  the address, name, url, the current commit time and the previous
+    ///  the parentProject, whether the project has been cancelled
+    ///  and the projects plugin for a specific project.
     function getPledgeAdmin(uint64 idAdmin) constant returns (
         PledgeAdminType adminType,
         address addr,
@@ -309,10 +456,16 @@ contract LiquidPledgingBase {
 // Private methods
 ///////
 
-    /// @notice All pledges technically exist... but if the pledge hasn't been
-    ///  created in this system yet then it wouldn't be in the hash array
-    ///  hPledge2idx[]; this creates a Pledge with and amount of 0 if one is not
-    ///  created already...
+    /// @notice All pledges technically exist. If the pledge hasn't been
+    ///  created in this system yet it simply isn't in the hash array
+    ///  hPledge2idx[] yet; this creates a Pledge with an initial amount of 0 if one is not
+    ///  created already. Otherwise 
+    /// @param owner The owner of the pledge being looked up.
+    /// @param delegationChain The array of all delegates.
+    /// @param intendedProject The intended project is the project this pledge will Fund.
+    /// @param oldPledge This value is used to store the pledge the current pledge 
+    ///  is "coming from."
+    /// @param paid Based on the payment state this shows whether the pledge has been paid.
     function findOrCreatePledge(
         uint64 owner,
         uint64[] delegationChain,
@@ -331,11 +484,17 @@ contract LiquidPledgingBase {
         return idx;
     }
 
+    /// @notice `findAdmin` is a basic getter to return a 
+    ///  specific admin (giver, delegate, or project)
+    /// @param idAdmin The admin ID to lookup.
     function findAdmin(uint64 idAdmin) internal returns (PledgeAdmin storage) {
         require(idAdmin < admins.length);
         return admins[idAdmin];
     }
 
+    /// @notice `findPledge` is a basic getter to return a 
+    ///  specific pledge 
+    /// @param idPledge The admin ID to pledge.
     function findPledge(uint64 idPledge) internal returns (Pledge storage) {
         require(idPledge < pledges.length);
         return pledges[idPledge];
@@ -344,25 +503,32 @@ contract LiquidPledgingBase {
     // a constant for the case that a delegate is requested that is not a delegate in the system
     uint64 constant  NOTFOUND = 0xFFFFFFFFFFFFFFFF;
 
-    // helper function that searches the delegationChain fro a specific delegate and
-    // level of delegation returns their idx in the delegation chain which reflect their level of authority
-    function getDelegateIdx(Pledge n, uint64 idDelegate) internal returns(uint64) {
+    /// @notice `getDelegateIdx` is a helper function that searches the delegationChain
+    ///  for a specific delegate and level of delegation returns their idx in the 
+    ///  delegation chain which reflect their level of authority. Returns MAX uint64
+    ///  if no delegate is found.
+    /// @param n The pledge that will be searched.
+    /// @param idxDelegate The internal ID of the delegate that's searched for.
+    function getDelegateIdx(Pledge n, uint64 idxDelegate) internal returns(uint64) {
         for (uint i=0; i<n.delegationChain.length; i++) {
-            if (n.delegationChain[i] == idDelegate) return uint64(i);
+            if (n.delegationChain[i] == idxDelegate) return uint64(i);
         }
         return NOTFOUND;
     }
-
-    // helper function that returns the pledge level solely to check that transfers
-    // between Projects not violate MAX_INTERPROJECT_LEVEL
+ 
+    /// @notice `getPledgeLevel` is a helper function that returns the pledge "depth"
+    ///  which can be used to check that transfers between Projects 
+    ///  not violate MAX_INTERPROJECT_LEVEL
+    /// @param n The pledge that will be searched.
     function getPledgeLevel(Pledge n) internal returns(uint) {
         if (n.oldPledge == 0) return 0; //changed
         Pledge storage oldN = findPledge(n.oldPledge);
         return getPledgeLevel(oldN) + 1;
     }
 
-    // helper function that returns the max commit time of the owner and all the
-    // delegates
+    /// @notice  `maxCommitTime` is a helper function that returns the maximum
+    ///  commit time of the owner and all the delegates.
+    /// @param n The pledge that will be searched.
     function maxCommitTime(Pledge n) internal returns(uint commitTime) {
         PledgeAdmin storage m = findAdmin(n.owner);
         commitTime = m.commitTime;
@@ -373,8 +539,9 @@ contract LiquidPledgingBase {
         }
     }
 
-    // helper function that returns the project level solely to check that there
-    // are not too many Projects that violate MAX_SUBCAMPAIGNS_LEVEL
+    /// @notice `getProjectLevel` is a helper function that returns the project
+    ///  level which can be used to check that there are not too many Projects
+    ///  that violate MAX_SUBCAMPAIGNS_LEVEL.
     function getProjectLevel(PledgeAdmin m) internal returns(uint) {
         assert(m.adminType == PledgeAdminType.Project);
         if (m.parentProject == 0) return(1);
@@ -382,6 +549,9 @@ contract LiquidPledgingBase {
         return getProjectLevel(parentNM);
     }
 
+    /// @notice `isProjectCanceled` is a basic helper function to check if
+    ///  a project has been cancelled.
+    /// @param projectId The internal id of the project to lookup.
     function isProjectCanceled(uint64 projectId) constant returns (bool) {
         PledgeAdmin storage m = findAdmin(projectId);
         if (m.adminType == PledgeAdminType.Giver) return false;
@@ -391,8 +561,9 @@ contract LiquidPledgingBase {
         return isProjectCanceled(m.parentProject);
     }
 
-    // @notice A helper function for canceling projects
-    // @param idPledge the pledge that may or may not be canceled
+    /// @notice `getOldestPledgeNotCanceled` is a helper function to get the oldest pledge
+    ///  that hasn't been cancelled recursively.
+    /// @param idPledge The starting place to lookup the pledges from
     function getOldestPledgeNotCanceled(uint64 idPledge) internal constant returns(uint64) { //todo rename
         if (idPledge == 0) return 0;
         Pledge storage n = findPledge(idPledge);
@@ -406,6 +577,12 @@ contract LiquidPledgingBase {
         return getOldestPledgeNotCanceled(n.oldPledge);
     }
 
+    /// @notice `checkAdminOwner` is a helper function designed to throw
+    ///  an error code if the user is not an admin. As PledgeAdmin is an
+    ///  an internal structure this basically works like a modifier check
+    ///  would however using internal data.
+    /// @dev Looking into whether this can be done with a modifier would be good
+    /// @param m A PledgeAdmin structure object.
     function checkAdminOwner(PledgeAdmin m) internal constant {
         require((msg.sender == m.addr) || (msg.sender == address(m.plugin)));
     }

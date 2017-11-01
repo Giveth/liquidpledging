@@ -70,7 +70,7 @@ contract LiquidPledgingBase {
 
     Pledge[] pledges;
     PledgeAdmin[] admins; //The list of pledgeAdmins 0 means there is no admin
-    Vault public vault;
+    LPVault public vault;
 
     // this mapping allows you to search for a specific pledge's 
     // index number by the hash of that pledge
@@ -98,7 +98,7 @@ contract LiquidPledgingBase {
     function LiquidPledgingBase(address _vault) {
         admins.length = 1; // we reserve the 0 admin
         pledges.length = 1; // we reserve the 0 pledge
-        vault = Vault(_vault);
+        vault = LPVault(_vault);
     }
 
 
@@ -195,7 +195,7 @@ contract LiquidPledgingBase {
 
     /// @notice `updateDelegate` allows for basic update operation to change the address,
     ///  name or commitTime associated with a specific delegate.
-    /// @param idGiver This is the internal ID used to specify the admin lookup
+    /// @param idxDelegate This is the internal ID used to specify the admin lookup
     ///  that coresponds to the delegate.
     /// @param newAddr This parameter specifies an address to change the given
     ///  correspondancec between the giver's internal ID and an external address.
@@ -325,13 +325,13 @@ contract LiquidPledgingBase {
     ///  and the delegate ID.
     /// @param idPledge The ID internally representing the pledge.
     /// @param idxDelegate The ID internally representing the delegate.
-    function getPledgeDelegate(uint64 idPledge, uint idxDelegate) constant returns(
+    function getPledgeDelegate(uint64 idPledge, uint _idxDelegate) constant returns(
         uint64 idxDelegate,
         address addr,
         string name
     ) {
         Pledge storage n = findPledge(idPledge);
-        idxDelegate = n.delegationChain[idxDelegate - 1];
+        idxDelegate = n.delegationChain[_idxDelegate - 1];
         PledgeAdmin storage delegate = findAdmin(idxDelegate);
         addr = delegate.addr;
         name = delegate.name;

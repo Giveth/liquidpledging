@@ -316,7 +316,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idSender ID of the giver, delegate or project admin that is
     ///  transferring the funds from Pledge to Pledge. This admin must have 
     ///  permissions to move the value
-    /// @param amount An array of pledge amounts and IDs which are extrapolated
+    /// @param pledgesAmounts An array of pledge amounts and IDs which are extrapolated
     ///  using the D64 bitmask
     /// @param idReceiver Destination of the value, can be a giver sending
     ///  to a giver or a delegate or a delegate to another delegate or a
@@ -336,7 +336,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
     /// @notice `mWithdraw` allows for multiple pledges to be
     ///  withdrawn efficiently
-    /// @param amount An array of pledge amounts and IDs which are
+    /// @param pledgesAmounts An array of pledge amounts and IDs which are
     ///  extrapolated using the D64 bitmask
     function mWithdraw(uint[] pledgesAmounts) {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
@@ -349,7 +349,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
     /// @notice `mConfirmPayment` allows for multiple pledges to be confirmed
     ///  efficiently
-    /// @param amount An array of pledge amounts and IDs which are extrapolated
+    /// @param pledgesAmounts An array of pledge amounts and IDs which are extrapolated
     ///  using the D64 bitmask
     function mConfirmPayment(uint[] pledgesAmounts) {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
@@ -362,7 +362,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
     /// @notice `mCancelPayment` allows for multiple pledges to be canceled
     ///  efficiently
-    /// @param amount An array of pledge amounts and IDs which are extrapolated
+    /// @param pledgesAmounts An array of pledge amounts and IDs which are extrapolated
     ///  using the D64 bitmask
     function mCancelPayment(uint[] pledgesAmounts) {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
@@ -375,7 +375,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
     /// @notice `mNormalizePledge` allows for multiple pledges to be
     ///  normalized efficiently
-    /// @param amount An array of pledge IDs which are extrapolated using
+    /// @param pledges An array of pledge IDs which are extrapolated using
     ///  the D64 bitmask
     function mNormalizePledge(uint[] pledges) returns(uint64) {
         for (uint i = 0; i < pledges.length; i++ ) {
@@ -682,7 +682,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  is being called.
     /// @param fromPledge This is the Id from which value is being transfered.
     /// @param toPledge This is the Id that value is being transfered to.
-    /// @param _amount The amount of value that is being transfered.
+    /// @param amount The amount of value that is being transfered.
     function callPluginsPledge(
         bool before,
         uint64 idPledge,

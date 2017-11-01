@@ -42,14 +42,13 @@ contract ILiquidPledgingPlugin {
     ///  258 -> Plugin for the second delegate receiving pledge to another party
     ///  ...
     ///  511 -> Plugin for the intendedProject receiving pledge to another party
-    /// @param _amount The amount of value that will be transfered.
+    /// @param amount The amount of value that will be transfered.
     function beforeTransfer(
         uint64 pledgeManager,
         uint64 pledgeFrom,
         uint64 pledgeTo,
         uint64 context,
-        uint amount
-    ) returns (uint maxAllowed);
+        uint amount ) returns (uint maxAllowed);
 
     /// @notice Plugins are used (much like web hooks) to initiate an action
     ///  upon any donation, delegation, or transfer; this is an optional feature
@@ -70,7 +69,7 @@ contract ILiquidPledgingPlugin {
     ///  258 -> Plugin for the second delegate receiving pledge to another party
     ///  ...
     ///  511 -> Plugin for the intendedProject receiving pledge to another party
-    /// @param _amount The amount of value that will be transfered.
+    ///  @param amount The amount of value that will be transfered.
     function afterTransfer(
         uint64 pledgeManager,
         uint64 pledgeFrom,
