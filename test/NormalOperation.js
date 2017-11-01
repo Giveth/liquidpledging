@@ -9,7 +9,7 @@ const assertFail = require('./helpers/assertFail');
 const { utils } = Web3;
 
 const LiquidPledging = liquidpledging.LiquidPledgingMock;
-const Vault = liquidpledging.Vault;
+const LPVault = liquidpledging.LPVault;
 const LiquidPledgingState = liquidpledging.LiquidPledgingState;
 const assert = chai.assert;
 
@@ -19,7 +19,7 @@ const printState = async (liquidPledgingState) => {
   console.log(JSON.stringify(st, null, 2));
 };
 
-describe('LiquidPledging test', () => {
+describe('LiquidPledging Normal Operation', () => {
   let testrpc;
   let web3;
   let accounts;
@@ -60,7 +60,7 @@ describe('LiquidPledging test', () => {
     done();
   });
   it('Should deploy LiquidPledging contract', async () => {
-    vault = await Vault.new(web3);
+    vault = await LPVault.new(web3);
     liquidPledging = await LiquidPledging.new(web3, vault.$address, { gas: 5800000 });
     await vault.setLiquidPledging(liquidPledging.$address);
     liquidPledgingState = new LiquidPledgingState(liquidPledging);

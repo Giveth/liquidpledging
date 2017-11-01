@@ -1,5 +1,5 @@
-const VaultAbi = require('../build/LPVault.sol').VaultAbi;
-const VaultByteCode = require('../build/LPVault.sol').VaultByteCode;
+const LPVaultAbi = require('../build/LPVault.sol').LPVaultAbi;
+const LPVaultByteCode = require('../build/LPVault.sol').LPVaultByteCode;
 const generateClass = require('eth-contract-class').default;
 
-module.exports = generateClass(VaultAbi, VaultByteCode);
+module.exports = generateClass(LPVaultAbi, LPVaultByteCode);

@@ -7,7 +7,7 @@ const liquidpledging = require('../index.js');
 
 const LiquidPledging = liquidpledging.LiquidPledgingMock;
 const LiquidPledgingState = liquidpledging.LiquidPledgingState;
-const Vault = liquidpledging.Vault;
+const LPVault = liquidpledging.LPVault;
 const assert = chai.assert;
 
 const printState = async (liquidPledgingState) => {
@@ -15,7 +15,7 @@ const printState = async (liquidPledgingState) => {
   console.log(JSON.stringify(st, null, 2));
 };
 
-describe('LiquidPledging test', () => {
+describe('Liquid Pledging Veto Delegation', () => {
   let testrpc;
   let web3;
   let accounts;
@@ -48,7 +48,7 @@ describe('LiquidPledging test', () => {
   });
 
   it('Should deploy LiquidPledgin contract', async () => {
-    vault = await Vault.new(web3);
+    vault = await LPVault.new(web3);
     liquidPledging = await LiquidPledging.new(web3, vault.$address, { gas: 5800000 });
     await vault.setLiquidPledging(liquidPledging.$address);
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
