@@ -1,6 +1,6 @@
 pragma solidity ^0.4.11;
 
-/// @title Vault
+/// @title LPVault
 /// @author Jordi Baylina
 /// @notice This contract holds ether securely for liquid pledging systems. For
 ///  this iteration the funds will come straight from the Giveth Multisig as a
@@ -9,7 +9,7 @@ pragma solidity ^0.4.11;
 ///  to allow for an optional escape hatch to be implemented
 import "./Owned.sol";
 
-/// @dev `LiquidPledging` is a basic interface to allow the `Vault` contract
+/// @dev `LiquidPledging` is a basic interface to allow the `LPVault` contract
 ///  to confirm and cancel payments in the `LiquidPledging` contract.
 contract LiquidPledging {
     function confirmPayment(uint64 idNote, uint amount);
@@ -17,7 +17,7 @@ contract LiquidPledging {
 }
 
 
-/// @dev `Vault` is a higher level contract built off of the `Owned`
+/// @dev `LPVault` is a higher level contract built off of the `Owned`
 ///  contract that holds funds for the liquid pledging system.
 contract LPVault is Owned {
 
@@ -39,7 +39,7 @@ contract LPVault is Owned {
         uint amount; // amount of ETH (in wei) to be sent
     }
 
-    // @dev An array that contains all the payments for this Vault
+    // @dev An array that contains all the payments for this LPVault
     Payment[] public payments;
 
     // @dev `liquidPledging` is the only address that can call a function with
@@ -58,7 +58,7 @@ contract LPVault is Owned {
     }
 
     /// @notice `setLiquidPledging` is used to attach a specific liquid pledging
-    ///  instance to this vault. Keep in mind this isn't a single pledge but
+    ///  instance to this LPvault. Keep in mind this isn't a single pledge but
     ///  instead an entire liquid pledging contract.
     /// @param _newLiquidPledging A full liquid pledging contract
     function setLiquidPledging(address _newLiquidPledging) onlyOwner {
@@ -66,7 +66,7 @@ contract LPVault is Owned {
         liquidPledging = LiquidPledging(_newLiquidPledging);
     }
 
-    /// @notice `setAutopay` is used to toggle whether the vault will
+    /// @notice `setAutopay` is used to toggle whether the LPvault will
     ///  automatically confirm a payment after the payment has been authorized.
     /// @param _automatic If true payments will confirm automatically
     function setAutopay(bool _automatic) onlyOwner {
@@ -98,9 +98,6 @@ contract LPVault is Owned {
 
         return idPayment;
     }
-
-
-    
 
     /// @notice `confirmPayment` is a basic function used to allow the
     ///  owner of the vault to initiate a payment confirmation. Since 
