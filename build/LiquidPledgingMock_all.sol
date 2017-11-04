@@ -646,11 +646,13 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         idPledge = normalizePledge(idPledge);
 
         Pledge storage n = findPledge(idPledge);
+        require(n.oldPledge != 0);
 
         PledgeAdmin storage m = findAdmin(n.owner);
         checkAdminOwner(m);
 
-        doTransfer(idPledge, n.oldPledge, amount);
+        uint64 oldPledge = getOldestPledgeNotCanceled(n.oldPledge);
+        doTransfer(idPledge, oldPledge, amount);
     }
 
 
