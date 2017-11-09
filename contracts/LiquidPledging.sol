@@ -179,9 +179,6 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
         require(n.paymentState == PaymentState.Paying);
 
-        // Check the project is not canceled in the while.
-        require(!isProjectCanceled(n.owner));
-
         uint64 idNewPledge = findOrCreatePledge(
             n.owner,
             n.delegationChain,
