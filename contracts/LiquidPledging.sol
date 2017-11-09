@@ -22,7 +22,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idReceiver To whom it's transfered. Can be the same giver, another
     ///  giver, a delegate or a project
 
-function donate(uint64 idGiver, uint64 idReceiver) payable {
+    function donate(uint64 idGiver, uint64 idReceiver) payable {
         if (idGiver == 0) {
             idGiver = addGiver('', '', 259200, ILiquidPledgingPlugin(0x0)); // default to 3 day commitTime
         }
