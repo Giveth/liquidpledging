@@ -39,7 +39,7 @@
     "random-bytes": "^1.0.0",
     "mocha": "^3.5.0",
     "solcpiler": "0.0.4",
-    "web3": "git://github.com/perissology/web3.js.git#all_fixes"
+    "web3": "1.0.0-beta.24"
   },
   "homepage": "https://github.com/Giveth/liquidpledging#readme",
   "dependencies": {
@@ -47,5 +47,6 @@
     "chai": "^4.1.0",
     "eth-contract-class": "0.0.4",
     "giveth-common-contracts": "0.4.0"
+    "eth-contract-class": "0.0.6"
   }
 }
