@@ -19,7 +19,8 @@ const printState = async (liquidPledgingState) => {
   console.log(JSON.stringify(st, null, 2));
 };
 
-describe('LiquidPledging Normal Operation', () => {
+describe('LiquidPledging test', function () {
+  this.timeout(0);
   let testrpc;
   let web3;
   let accounts;
@@ -59,12 +60,13 @@ describe('LiquidPledging Normal Operation', () => {
     testrpc.close();
     done();
   });
+
   it('Should deploy LiquidPledging contract', async () => {
     vault = await LPVault.new(web3);
     liquidPledging = await LiquidPledging.new(web3, vault.$address, { gas: 5800000 });
     await vault.setLiquidPledging(liquidPledging.$address);
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
-  }).timeout(6000);
+  });
   it('Should create a giver', async () => {
     await liquidPledging.addGiver('Giver1', 'URLGiver1', 86400, 0, { from: giver1 });
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
@@ -75,13 +77,13 @@ describe('LiquidPledging Normal Operation', () => {
     assert.equal(res[2], 'Giver1');
     assert.equal(res[3], 'URLGiver1');
     assert.equal(res[4], 86400);
-  }).timeout(6000);
+  });
   it('Should make a donation', async () => {
     await liquidPledging.donate(1, 1, { from: giver1, value: utils.toWei(1) });
     const nPledges = await liquidPledging.numberOfPledges();
     assert.equal(nPledges, 1);
     await liquidPledging.getPledge(1);
-  }).timeout(6000);
+  });
   it('Should create a delegate', async () => {
     await liquidPledging.addDelegate('Delegate1', 'URLDelegate1', 0, 0, { from: delegate1 });
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
@@ -92,7 +94,7 @@ describe('LiquidPledging Normal Operation', () => {
     assert.equal(res[2], 'Delegate1');
     assert.equal(res[3], 'URLDelegate1');
     assert.equal(res[4], 0);
-  }).timeout(6000);
+  });
   it('Giver should delegate on the delegate', async () => {
     await liquidPledging.transfer(1, 1, utils.toWei(0.5), 2, { from: giver1 });
     const nPledges = await liquidPledging.numberOfPledges();
@@ -107,7 +109,7 @@ describe('LiquidPledging Normal Operation', () => {
     assert.equal(d[0], 2);
     assert.equal(d[1], delegate1);
     assert.equal(d[2], 'Delegate1');
-  }).timeout(6000);
+  });
   it('Should create a 2 projects', async () => {
     await liquidPledging.addProject('Project1', 'URLProject1', adminProject1, 0, 86400, 0, { from: adminProject1 });
 
@@ -134,7 +136,7 @@ describe('LiquidPledging Normal Operation', () => {
     assert.equal(res4[4], 86400);
     assert.equal(res4[5], 0);
     assert.equal(res4[6], false);
-  }).timeout(6000);
+  });
   it('Delegate should assign to project1', async () => {
     const n = Math.floor(new Date().getTime() / 1000);
     await liquidPledging.transfer(2, 2, utils.toWei(0.2), 3, { from: delegate1 });
@@ -148,7 +150,7 @@ describe('LiquidPledging Normal Operation', () => {
     assert.isAbove(utils.toDecimal(res3[4]), n + 86000);
     assert.equal(res3[5], 0); // Old Node
     assert.equal(res3[6], 0); // Not Paid
-  }).timeout(6000);
+  });
   it('Giver should change his mind and assign half of it to project2', async () => {
     await liquidPledging.transfer(1, 3, utils.toWei(0.1), 4, { from: giver1 });
     const nPledges = await liquidPledging.numberOfPledges();
@@ -162,7 +164,7 @@ describe('LiquidPledging Normal Operation', () => {
     assert.equal(res4[4], 0);
     assert.equal(res4[5], 2); // Old Node
     assert.equal(res4[6], 0); // Not Paid
-  }).timeout(6000);
+  });
   it('After the time, the project1 should be able to spend part of it', async () => {
     const n = Math.floor(new Date().getTime() / 1000);
     await liquidPledging.setMockedTime(n + 86401);
@@ -185,7 +187,7 @@ describe('LiquidPledging Normal Operation', () => {
     assert.equal(res6[4], 0);            // commit time
     assert.equal(res6[5], 2); // Old Node
     assert.equal(res6[6], 1); // Peinding paid Paid
-  }).timeout(6000);
+  });
   it('Should collect the Ether', async () => {
     const initialBalance = await web3.eth.getBalance(adminProject1);
 
@@ -206,19 +208,19 @@ describe('LiquidPledging Normal Operation', () => {
     assert.equal(res7[4], 0);            // commit time
     assert.equal(res7[5], 2); // Old Node
     assert.equal(res7[6], 2); // Peinding paid Paid
-  }).timeout(6000);
+  });
   it('Admin of the project1 should be able to cancel project1', async () => {
     await liquidPledging.cancelProject(3, { from: adminProject1 });
     const st = await liquidPledgingState.getState(liquidPledging);
     assert.equal(st.admins[3].canceled, true);
-  }).timeout(6000);
+  });
   it('Should not allow to withdraw from a canceled project', async () => {
     const st = await liquidPledgingState.getState(liquidPledging);
     assert.equal(utils.fromWei(st.pledges[5].amount), 0.05);
     await assertFail(async () => {
       await liquidPledging.withdraw(5, utils.toWei(0.01), { from: adminProject1 });
     });
-  }).timeout(6000);
+  });
   it('Delegate should send part of this ETH to project2', async () => {
     await liquidPledging.transfer(2, 5, utils.toWei(0.03), 4, {
       $extraGas: 100000,
@@ -231,34 +233,34 @@ describe('LiquidPledging Normal Operation', () => {
     assert.equal(st.pledges[8].delegates.length, 1);
     assert.equal(st.pledges[8].delegates[0].id, 2);
     assert.equal(st.pledges[8].intendedProject, 4);
-  }).timeout(6000);
+  });
   it('Giver should be able to send the remaining to project2', async () => {
     await liquidPledging.transfer(1, 5, utils.toWei(0.02), 4, { from: giver1, $extraGas: 100000 });
     const st = await liquidPledgingState.getState(liquidPledging);
     assert.equal(st.pledges.length, 9);
     assert.equal(utils.fromWei(st.pledges[5].amount), 0);
     assert.equal(utils.fromWei(st.pledges[4].amount), 0.12);
-  }).timeout(6000);
+  });
   it('A subproject 2a and a delegate2 is created', async () => {
     await liquidPledging.addProject('Project2a', 'URLProject2a', adminProject2a, 4, 86400, 0, { from: adminProject2 });
     await liquidPledging.addDelegate('Delegate2', 'URLDelegate2', 0, 0, { from: delegate2 });
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 6);
-  }).timeout(6000);
+  });
   it('Project 2 delegate in delegate2', async () => {
     await liquidPledging.transfer(4, 4, utils.toWei(0.02), 6, { from: adminProject2 });
     const st = await liquidPledgingState.getState(liquidPledging);
     assert.equal(st.pledges.length, 10);
     assert.equal(utils.fromWei(st.pledges[9].amount), 0.02);
     assert.equal(utils.fromWei(st.pledges[4].amount), 0.1);
-  }).timeout(6000);
+  });
   it('delegate2 assigns to projec2a', async () => {
     await liquidPledging.transfer(6, 9, utils.toWei(0.01), 5, { from: delegate2 });
     const st = await liquidPledgingState.getState(liquidPledging);
     assert.equal(st.pledges.length, 11);
     assert.equal(utils.fromWei(st.pledges[9].amount), 0.01);
     assert.equal(utils.fromWei(st.pledges[10].amount), 0.01);
-  }).timeout(4000);
+  });
   it('project2a authorize to spend a litle', async () => {
     const n = Math.floor(new Date().getTime() / 1000);
     await liquidPledging.setMockedTime(n + (86401 * 3));
@@ -268,20 +270,20 @@ describe('LiquidPledging Normal Operation', () => {
     assert.equal(utils.fromWei(st.pledges[10].amount), 0);
     assert.equal(utils.fromWei(st.pledges[11].amount), 0.005);
     assert.equal(utils.fromWei(st.pledges[12].amount), 0.005);
-  }).timeout(4000);
+  });
   it('project2 is canceled', async () => {
     await liquidPledging.cancelProject(4, { from: adminProject2 });
-  }).timeout(6000);
+  });
   it('project2 should not be able to confirm payment', async () => {
     await assertFail(async () => {
       await vault.confirmPayment(1);
     });
-  }).timeout(6000);
+  });
   it('Should not be able to withdraw it', async () => {
     await assertFail(async () => {
       await liquidPledging.withdraw(12, utils.toWei(0.005), { from: giver1 });
     });
-  }).timeout(6000);
+  });
   it('Should be able to cancel payment', async () => {
     // bug somewhere which will throw invalid op_code if we don't provide gas or extraGas
     await vault.cancelPayment(1, { $extraGas: 100000 });
@@ -290,14 +292,22 @@ describe('LiquidPledging Normal Operation', () => {
     assert.equal(utils.fromWei(st.pledges[2].amount), 0.31);
     assert.equal(utils.fromWei(st.pledges[11].amount), 0);
     assert.equal(utils.fromWei(st.pledges[12].amount), 0);
-  }).timeout(6000);
+  });
   it('original owner should recover the remaining funds', async () => {
-    await liquidPledging.withdraw(1, utils.toWei(0.5), { from: giver1 });
-    await liquidPledging.withdraw(2, utils.toWei(0.31), { from: giver1 });
-    await liquidPledging.withdraw(4, utils.toWei(0.1), { $extraGas: 100000, from: giver1 });
+    const pledges = [
+      { amount: utils.toWei(0.5), id: 1 },
+      { amount: utils.toWei(0.31), id: 2 },
+      { amount: utils.toWei(0.1), id: 4 },
+      { amount: utils.toWei(0.03), id: 8 },
+      { amount: utils.toWei(0.01), id: 9 },
+    ];
 
-    await liquidPledging.withdraw(8, utils.toWei(0.03), { $extraGas: 100000, from: giver1 });
-    await liquidPledging.withdraw(9, utils.toWei(0.01), { $extraGas: 100000, from: giver1 });
+    // .substring is to remove the 0x prefix on the toHex result
+    const encodedPledges = pledges.map(p => {
+      return '0x' + utils.padLeft(utils.toHex(p.amount).substring(2), 48) + utils.padLeft(utils.toHex(p.id).substring(2), 16);
+    });
+
+    await liquidPledging.mWithdraw(encodedPledges, { from: giver1, $extraGas: 500000 });
 
     const initialBalance = await web3.eth.getBalance(giver1);
     await vault.multiConfirm([2, 3, 4, 5, 6]);
@@ -306,7 +316,7 @@ describe('LiquidPledging Normal Operation', () => {
     const collected = utils.fromWei(utils.toBN(finalBalance).sub(utils.toBN(initialBalance)));
 
     assert.equal(collected, 0.95);
-  }).timeout(12000);
+  });
   it('Should make a donation and create giver', async () => {
     const oldNPledges = await liquidPledging.numberOfPledges();
     const oldNAdmins = await liquidPledging.numberOfPledgeAdmins();
@@ -321,11 +331,11 @@ describe('LiquidPledging Normal Operation', () => {
     assert.equal(res[2], '');
     assert.equal(res[3], '');
     assert.equal(res[4], 259200); // default to 3 day commitTime
-  }).timeout(6000);
+  });
   it('Should allow childProject with different parentProject owner', async () => {
     const nAdminsBefore = await liquidPledging.numberOfPledgeAdmins();
     await liquidPledging.addProject('Project3', 'URLProject3', adminProject3, 4, 86400, 0, { from: adminProject3 });
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, utils.toDecimal(nAdminsBefore) + 1);
-  }).timeout(6000);
+  });
 });
