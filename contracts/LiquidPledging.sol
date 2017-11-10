@@ -379,7 +379,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  normalized efficiently
     /// @param pledges An array of pledge IDs which are extrapolated using
     ///  the D64 bitmask
-    function mNormalizePledge(uint[] pledges) {
+    function mNormalizePledge(uint64[] pledges) {
         for (uint i = 0; i < pledges.length; i++ ) {
             normalizePledge( pledges[i] );
         }

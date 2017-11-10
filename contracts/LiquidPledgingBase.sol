@@ -325,14 +325,14 @@ contract LiquidPledgingBase {
     ///  and the delegate ID.
     /// @param idPledge The ID internally representing the pledge.
     /// @param idxDelegate The ID internally representing the delegate.
-    function getPledgeDelegate(uint64 idPledge, uint _idxDelegate) constant returns(
-        uint64 idxDelegate,
+    function getPledgeDelegate(uint64 idPledge, uint idxDelegate) constant returns(
+        uint64 idDelegate,
         address addr,
         string name
     ) {
         Pledge storage n = findPledge(idPledge);
-        idxDelegate = n.delegationChain[_idxDelegate - 1];
-        PledgeAdmin storage delegate = findAdmin(idxDelegate);
+        idDelegate = n.delegationChain[idxDelegate - 1];
+        PledgeAdmin storage delegate = findAdmin(idDelegate);
         addr = delegate.addr;
         name = delegate.name;
     }

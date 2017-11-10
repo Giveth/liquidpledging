@@ -7,7 +7,7 @@ const liquidpledging = require('../index.js');
 
 const LiquidPledging = liquidpledging.LiquidPledgingMock;
 const LiquidPledgingState = liquidpledging.LiquidPledgingState;
-const Vault = liquidpledging.Vault;
+const Vault = liquidpledging.LPVault;
 const assertFail = require('./helpers/assertFail');
 const assert = chai.assert;
 

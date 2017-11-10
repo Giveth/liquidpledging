@@ -409,14 +409,14 @@ contract LiquidPledgingBase {
     ///  and the delegate ID.
     /// @param idPledge The ID internally representing the pledge.
     /// @param idxDelegate The ID internally representing the delegate.
-    function getPledgeDelegate(uint64 idPledge, uint _idxDelegate) constant returns(
-        uint64 idxDelegate,
+    function getPledgeDelegate(uint64 idPledge, uint idxDelegate) constant returns(
+        uint64 idDelegate,
         address addr,
         string name
     ) {
         Pledge storage n = findPledge(idPledge);
-        idxDelegate = n.delegationChain[_idxDelegate - 1];
-        PledgeAdmin storage delegate = findAdmin(idxDelegate);
+        idDelegate = n.delegationChain[idxDelegate - 1];
+        PledgeAdmin storage delegate = findAdmin(idDelegate);
         addr = delegate.addr;
         name = delegate.name;
     }
@@ -829,7 +829,7 @@ contract LiquidPledging is LiquidPledgingBase {
         require(n.paymentState == PaymentState.Paying);
 
         // Check the project is not canceled in the while.
-        require(getOldestPledgeNotCanceled(idPledge) == idPledge);
+        require(!isProjectCanceled(n.owner));
 
         uint64 idNewPledge = findOrCreatePledge(
             n.owner,
@@ -970,11 +970,9 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  normalized efficiently
     /// @param pledges An array of pledge IDs which are extrapolated using
     ///  the D64 bitmask
-    function mNormalizePledge(uint[] pledges) returns(uint64) {
+    function mNormalizePledge(uint64[] pledges) {
         for (uint i = 0; i < pledges.length; i++ ) {
-            uint64 idPledge = uint64( pledges[i] & (D64-1) );
-
-            normalizePledge(idPledge);
+            normalizePledge( pledges[i] );
         }
     }
 

@@ -163,9 +163,9 @@ contract LPVault is Owned {
         require(p.state == PaymentStatus.Pending);
 
         p.state = PaymentStatus.Paid;
-        p.dest.transfer(p.amount);  // only ETH denominated in wei
-
         liquidPledging.confirmPayment(uint64(p.ref), p.amount);
+
+        p.dest.transfer(p.amount);  // only ETH denominated in wei
 
         ConfirmPayment(_idPayment);
     }
