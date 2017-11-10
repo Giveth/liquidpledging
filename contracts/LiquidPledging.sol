@@ -81,8 +81,31 @@ contract LiquidPledging is LiquidPledgingBase {
             } else if (receiver.adminType == PledgeAdminType.Project) {
                 transferOwnershipToProject(idPledge, amount, idReceiver);
             } else if (receiver.adminType == PledgeAdminType.Delegate) {
-                idPledge = undelegate(idPledge, amount, n.delegationChain.length);
-                appendDelegate(idPledge, amount, idReceiver);
+
+                uint recieverDIdx = getDelegateIdx(n, idReceiver);
+                if (n.intendedProject > 0 && recieverDIdx != NOTFOUND) {
+                    // if there is an intendedProject and the receiver is in the delegationChain,
+                    // then we want to preserve the delegationChain as this is a veto of the
+                    // intendedProject by the owner
+
+                    if (recieverDIdx == n.delegationChain.length - 1) {
+                        uint64 toPledge = findOrCreatePledge(
+                            n.owner,
+                            n.delegationChain,
+                            0,
+                            0,
+                            n.oldPledge,
+                            PaymentState.Pledged);
+                        doTransfer(idPledge, toPledge, amount);
+                    } else {
+                        undelegate(idPledge, amount, n.delegationChain.length - receiverDIdx - 1);
+                    }
+                } else {
+                    // owner is transferring pledge to a new delegate, so we want to reset
+                    // the delegationChain
+                    idPledge = undelegate(idPledge, amount, n.delegationChain.length);
+                    appendDelegate(idPledge, amount, idReceiver);
+                }
             } else {
                 assert(false);
             }
