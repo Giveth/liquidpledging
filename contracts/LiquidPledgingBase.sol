@@ -2,7 +2,7 @@ pragma solidity ^0.4.11;
 
 import "./ILiquidPledgingPlugin.sol";
 
-/// @dev This is declares a few functions from `Vault` so that the
+/// @dev This declares a few functions from `Vault` so that the
 ///  `LiquidPledgingBase` contract can interface with the `Vault` contract
 contract Vault {
     function authorizePayment(bytes32 _ref, address _dest, uint _amount);
@@ -20,7 +20,7 @@ contract LiquidPledgingBase {
 
     /// @dev This struct defines the details of each the PledgeAdmin, these
     ///  PledgeAdmins can own pledges and act as delegates
-    struct PledgeAdmin { // TODO name change PledgeAdmin
+    struct PledgeAdmin { 
         PledgeAdminType adminType; // Giver, Delegate or Project
         address addr; // account or contract address for admin
         string name;
