@@ -275,11 +275,6 @@ describe('LiquidPledging test', function () {
   it('project2 is canceled', async () => {
     await liquidPledging.cancelProject(4, { from: adminProject2 });
   });
-  it('project2 should not be able to confirm payment', async () => {
-    await assertFail(async () => {
-      await vault.confirmPayment(1);
-    });
-  });
   it('Should not be able to withdraw it', async () => {
     await assertFail(async () => {
       await liquidPledging.withdraw(12, utils.toWei(0.005), { from: giver1 });
