@@ -88,7 +88,6 @@ describe('LiquidPledging plugins test', function () {
   it('Should deploy TestSimpleProjectPlugin and add project', async function() {
     // add plugin as valid plugin
     const codeHash = web3.utils.soliditySha3(simpleProjectPluginRuntimeByteCode);
-    console.log(codeHash);
     await liquidPledging.addValidPlugin(codeHash);
 
     // deploy new plugin
