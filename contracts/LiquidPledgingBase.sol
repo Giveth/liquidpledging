@@ -18,6 +18,7 @@ pragma solidity ^0.4.11;
 */
 
 import "./ILiquidPledgingPlugin.sol";
+import "../node_modules/giveth-common-contracts/contracts/Owned.sol";
 
 /// @dev `Vault` serves as an interface to allow the `LiquidPledgingBase`
 ///  contract to interface with a `Vault` contract
@@ -29,8 +30,7 @@ contract LPVault {
 /// @dev `LiquidPledgingBase` is the base level contract used to carry out
 ///  liquid pledging. This function mostly handles the data structures
 ///  and basic CRUD methods for liquid pledging.
-contract LiquidPledgingBase {
-
+contract LiquidPledgingBase is Owned {
     // Limits inserted to prevent large loops that could prevent canceling
     uint constant MAX_DELEGATES = 20;
     uint constant MAX_SUBPROJECT_LEVEL = 20;
@@ -75,6 +75,9 @@ contract LiquidPledgingBase {
     // this mapping allows you to search for a specific pledge's 
     // index number by the hash of that pledge
     mapping (bytes32 => uint64) hPledge2idx;//TODO Fix typo
+    mapping (bytes32 => bool) pluginWhitelist;
+
+    bool public usePluginWhitelist = true;
 
 
 /////
@@ -103,7 +106,7 @@ contract LiquidPledgingBase {
 
 
 ///////
-// Adminss functions
+// Admin functions
 //////
 
     /// @notice `addGiver` Creates a giver and adds them to the list of admins.
@@ -118,7 +121,7 @@ contract LiquidPledgingBase {
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
     ) returns (uint64 idGiver) {
-
+        require(isValidPlugin(plugin));
         idGiver = uint64(admins.length);
 
         admins.push(PledgeAdmin(
@@ -174,8 +177,8 @@ contract LiquidPledgingBase {
         string url,
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
-    ) returns (uint64 idxDelegate) { //TODO return index number
-
+    ) returns (uint64 idDelegate) { //TODO return index number
+        require(isValidPlugin(plugin));
         idxDelegate = uint64(admins.length);
 
         admins.push(PledgeAdmin(
@@ -218,7 +221,7 @@ contract LiquidPledgingBase {
         DelegateUpdated(idxDelegate);
     }
 
-    event DelegateUpdated(uint64 indexed idxDelegate);
+    event DelegateUpdated(uint64 indexed idDelegate);
 
     /// @notice `addProject` Creates a project and adds it to the list of admins.
     /// @param name This is the name used to identify the project.
@@ -236,6 +239,8 @@ contract LiquidPledgingBase {
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
     ) returns (uint64 idProject) {
+        require(isValidPlugin(plugin));
+
         if (parentProject != 0) {
             PledgeAdmin storage pa = findAdmin(parentProject);
             require(pa.adminType == PledgeAdminType.Project);
@@ -501,5 +506,47 @@ contract LiquidPledgingBase {
     /// @param m A PledgeAdmin structure object.
     function checkAdminOwner(PledgeAdmin m) internal constant {
         require((msg.sender == m.addr) || (msg.sender == address(m.plugin)));
+    }
+
+////////
+// Plugin Whitelist Methods
+///////
+
+    function addValidPlugin(bytes32 contractHash) external onlyOwner {
+        pluginWhitelist[contractHash] = true;
+    }
+
+    function removeValidPlugin(bytes32 contractHash) external onlyOwner {
+        pluginWhitelist[contractHash] = false;
+    }
+
+    function useWhitelist(bool useWhitelist) external onlyOwner {
+        usePluginWhitelist = useWhitelist;
+    }
+
+    function isValidPlugin(address addr) public returns(bool) {
+        if (!usePluginWhitelist || addr == 0x0) return true;
+
+        bytes32 contractHash = getCodeHash(addr);
+
+        return pluginWhitelist[contractHash];
+    }
+
+    function getCodeHash(address addr) public returns(bytes32) {
+        bytes memory o_code;
+        assembly {
+            // retrieve the size of the code, this needs assembly
+            let size := extcodesize(addr)
+            // allocate output byte array - this could also be done without assembly
+            // by using o_code = new bytes(size)
+            o_code := mload(0x40)
+            // new "memory end" including padding
+            mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), not(0x1f))))
+            // store length in memory
+            mstore(o_code, size)
+            // actually retrieve the code, this needs assembly
+            extcodecopy(addr, add(o_code, 0x20), 0, size)
+        }
+        return keccak256(o_code);
     }
 }
