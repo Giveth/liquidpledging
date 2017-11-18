@@ -7,7 +7,7 @@ pragma solidity ^0.4.11;
 ///  safety precaution, but once fully tested and optimized this contract will
 ///  be a safe place to store funds equipped with optional variable time delays
 ///  to allow for an optional escape hatch to be implemented
-import "./Owned.sol";
+import "../node_modules/giveth-common-contracts/contracts/Owned.sol";
 
 /// @dev This is declares a few functions from `LiquidPledging` so that the
 ///  `Vault` contract can interface with the `LiquidPledging` contract

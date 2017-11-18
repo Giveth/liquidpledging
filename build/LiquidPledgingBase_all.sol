@@ -1,5 +1,5 @@
 
-//File: contracts/ILiquidPledgingPlugin.sol
+//File: contracts\ILiquidPledgingPlugin.sol
 pragma solidity ^0.4.11;
 
 contract ILiquidPledgingPlugin {
