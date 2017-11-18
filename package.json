@@ -7,8 +7,8 @@
     "test": "test"
   },
   "scripts": {
-    "build": "solcpiler",
-    "test": "solcpiler; mocha --harmony"
+    "build": "solcpiler -i './contracts/**/*.sol'",
+    "test": "npm run build; mocha --harmony"
   },
   "repository": {
     "type": "git",
@@ -38,7 +38,7 @@
     "lerna": "^2.2.0",
     "random-bytes": "^1.0.0",
     "mocha": "^3.5.0",
-    "solcpiler": "0.0.4",
+    "solcpiler": "0.0.7",
     "web3": "1.0.0-beta.24"
   },
   "homepage": "https://github.com/Giveth/liquidpledging#readme",
@@ -46,6 +46,6 @@
     "async": "^2.4.0",
     "chai": "^4.1.0",
     "eth-contract-class": "0.0.6",
-    "giveth-common-contracts": "0.4.0"
+    "giveth-common-contracts": "^0.4.0"
   }
 }
