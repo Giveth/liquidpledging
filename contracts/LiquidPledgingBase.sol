@@ -177,7 +177,7 @@ contract LiquidPledgingBase is Owned {
         string url,
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
-    ) returns (uint64 idDelegate) { //TODO return index number
+    ) returns (uint64 idxDelegate) { //TODO return index number
         require(isValidPlugin(plugin));
         idxDelegate = uint64(admins.length);
 
@@ -221,7 +221,7 @@ contract LiquidPledgingBase is Owned {
         DelegateUpdated(idxDelegate);
     }
 
-    event DelegateUpdated(uint64 indexed idDelegate);
+    event DelegateUpdated(uint64 indexed idxDelegate);
 
     /// @notice `addProject` Creates a project and adds it to the list of admins.
     /// @param name This is the name used to identify the project.
