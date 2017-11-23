@@ -33,8 +33,93 @@ contract ILiquidPledgingPlugin {
         uint amount);
 }
 
+//File: node_modules/giveth-common-contracts/contracts/Owned.sol
+pragma solidity ^0.4.15;
+
+
+/// @title Owned
+/// @author Adrià Massanet <adria@codecontext.io>
+/// @notice The Owned contract has an owner address, and provides basic 
+///  authorization control functions, this simplifies & the implementation of
+///  user permissions; this contract has three work flows for a change in
+///  ownership, the first requires the new owner to validate that they have the
+///  ability to accept ownership, the second allows the ownership to be
+///  directly transfered without requiring acceptance, and the third allows for
+///  the ownership to be removed to allow for decentralization 
+contract Owned {
+
+    address public owner;
+    address public newOwnerCandidate;
+
+    event OwnershipRequested(address indexed by, address indexed to);
+    event OwnershipTransferred(address indexed from, address indexed to);
+    event OwnershipRemoved();
+
+    /// @dev The constructor sets the `msg.sender` as the`owner` of the contract
+    function Owned() public {
+        owner = msg.sender;
+    }
+
+    /// @dev `owner` is the only address that can call a function with this
+    /// modifier
+    modifier onlyOwner() {
+        require (msg.sender == owner);
+        _;
+    }
+    
+    /// @dev In this 1st option for ownership transfer `proposeOwnership()` must
+    ///  be called first by the current `owner` then `acceptOwnership()` must be
+    ///  called by the `newOwnerCandidate`
+    /// @notice `onlyOwner` Proposes to transfer control of the contract to a
+    ///  new owner
+    /// @param _newOwnerCandidate The address being proposed as the new owner
+    function proposeOwnership(address _newOwnerCandidate) public onlyOwner {
+        newOwnerCandidate = _newOwnerCandidate;
+        OwnershipRequested(msg.sender, newOwnerCandidate);
+    }
+
+    /// @notice Can only be called by the `newOwnerCandidate`, accepts the
+    ///  transfer of ownership
+    function acceptOwnership() public {
+        require(msg.sender == newOwnerCandidate);
+
+        address oldOwner = owner;
+        owner = newOwnerCandidate;
+        newOwnerCandidate = 0x0;
+
+        OwnershipTransferred(oldOwner, owner);
+    }
+
+    /// @dev In this 2nd option for ownership transfer `changeOwnership()` can
+    ///  be called and it will immediately assign ownership to the `newOwner`
+    /// @notice `owner` can step down and assign some other address to this role
+    /// @param _newOwner The address of the new owner
+    function changeOwnership(address _newOwner) public onlyOwner {
+        require(_newOwner != 0x0);
+
+        address oldOwner = owner;
+        owner = _newOwner;
+        newOwnerCandidate = 0x0;
+
+        OwnershipTransferred(oldOwner, owner);
+    }
+
+    /// @dev In this 3rd option for ownership transfer `removeOwnership()` can
+    ///  be called and it will immediately assign ownership to the 0x0 address;
+    ///  it requires a 0xdece be input as a parameter to prevent accidental use
+    /// @notice Decentralizes the contract, this operation cannot be undone 
+    /// @param _dac `0xdac` has to be entered for this function to work
+    function removeOwnership(address _dac) public onlyOwner {
+        require(_dac == 0xdac);
+        owner = 0x0;
+        newOwnerCandidate = 0x0;
+        OwnershipRemoved();     
+    }
+} 
+
 //File: contracts/LiquidPledgingBase.sol
 pragma solidity ^0.4.11;
+
 
 
 
@@ -45,7 +130,7 @@ contract Vault {
     function () payable;
 }
 
-contract LiquidPledgingBase {
+contract LiquidPledgingBase is Owned {
     // Limits inserted to prevent large loops that could prevent canceling
     uint constant MAX_DELEGATES = 20;
     uint constant MAX_SUBPROJECT_LEVEL = 20;
@@ -83,6 +168,9 @@ contract LiquidPledgingBase {
 
     // this mapping allows you to search for a specific pledge's index number by the hash of that pledge
     mapping (bytes32 => uint64) hPledge2idx;//TODO Fix typo
+    mapping (bytes32 => bool) pluginWhitelist;
+
+    bool public usePluginWhitelist = true;
 
 
 /////
@@ -109,12 +197,13 @@ contract LiquidPledgingBase {
 
 
 ///////
-// Adminss functions
+// Admin functions
 //////
 
     /// @notice Creates a giver.
     function addGiver(string name, string url, uint64 commitTime, ILiquidPledgingPlugin plugin
         ) returns (uint64 idGiver) {
+        require(isValidPlugin(plugin));
 
         idGiver = uint64(admins.length);
 
@@ -155,6 +244,7 @@ contract LiquidPledgingBase {
 
     /// @notice Creates a new Delegate
     function addDelegate(string name, string url, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idDelegate) { //TODO return index number
+        require(isValidPlugin(plugin));
 
         idDelegate = uint64(admins.length);
 
@@ -194,6 +284,8 @@ contract LiquidPledgingBase {
 
     /// @notice Creates a new Project
     function addProject(string name, string url, address projectAdmin, uint64 parentProject, uint64 commitTime, ILiquidPledgingPlugin plugin) returns (uint64 idProject) {
+        require(isValidPlugin(plugin));
+
         if (parentProject != 0) {
             PledgeAdmin storage pa = findAdmin(parentProject);
             require(pa.adminType == PledgeAdminType.Project);
@@ -409,6 +501,48 @@ contract LiquidPledgingBase {
     function checkAdminOwner(PledgeAdmin m) internal constant {
         require((msg.sender == m.addr) || (msg.sender == address(m.plugin)));
     }
+
+////////
+// Plugin Whitelist Methods
+///////
+
+    function addValidPlugin(bytes32 contractHash) external onlyOwner {
+        pluginWhitelist[contractHash] = true;
+    }
+
+    function removeValidPlugin(bytes32 contractHash) external onlyOwner {
+        pluginWhitelist[contractHash] = false;
+    }
+
+    function useWhitelist(bool useWhitelist) external onlyOwner {
+        usePluginWhitelist = useWhitelist;
+    }
+
+    function isValidPlugin(address addr) public returns(bool) {
+        if (!usePluginWhitelist || addr == 0x0) return true;
+
+        bytes32 contractHash = getCodeHash(addr);
+
+        return pluginWhitelist[contractHash];
+    }
+
+    function getCodeHash(address addr) public returns(bytes32) {
+        bytes memory o_code;
+        assembly {
+            // retrieve the size of the code, this needs assembly
+            let size := extcodesize(addr)
+            // allocate output byte array - this could also be done without assembly
+            // by using o_code = new bytes(size)
+            o_code := mload(0x40)
+            // new "memory end" including padding
+            mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), not(0x1f))))
+            // store length in memory
+            mstore(o_code, size)
+            // actually retrieve the code, this needs assembly
+            extcodecopy(addr, add(o_code, 0x20), 0, size)
+        }
+        return keccak256(o_code);
+    }
 }
 
 //File: contracts/LiquidPledging.sol
@@ -436,7 +570,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idReceiver To whom it's transfered. Can be the same giver, another
     ///  giver, a delegate or a project
 
-function donate(uint64 idGiver, uint64 idReceiver) payable {
+    function donate(uint64 idGiver, uint64 idReceiver) payable {
         if (idGiver == 0) {
             idGiver = addGiver('', '', 259200, ILiquidPledgingPlugin(0x0)); // default to 3 day commitTime
         }
@@ -593,9 +727,6 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
 
         require(n.paymentState == PaymentState.Paying);
 
-        // Check the project is not canceled in the while.
-        require(getOldestPledgeNotCanceled(idPledge) == idPledge);
-
         uint64 idNewPledge = findOrCreatePledge(
             n.owner,
             n.delegationChain,
@@ -699,11 +830,9 @@ function donate(uint64 idGiver, uint64 idReceiver) payable {
         }
     }
 
-    function mNormalizePledge(uint[] pledges) returns(uint64) {
+    function mNormalizePledge(uint64[] pledges) {
         for (uint i = 0; i < pledges.length; i++ ) {
-            uint64 idPledge = uint64( pledges[i] & (D64-1) );
-
-            normalizePledge(idPledge);
+            normalizePledge( pledges[i] );
         }
     }
 
