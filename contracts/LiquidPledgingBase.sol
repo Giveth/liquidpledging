@@ -351,7 +351,7 @@ contract LiquidPledgingBase is Owned {
         assert(m.adminType == PledgeAdminType.Project);
         if (m.parentProject == 0) return(1);
         PledgeAdmin storage parentNM = findAdmin(m.parentProject);
-        return getProjectLevel(parentNM);
+        return getProjectLevel(parentNM) + 1;
     }
 
     function isProjectCanceled(uint64 projectId) constant returns (bool) {
