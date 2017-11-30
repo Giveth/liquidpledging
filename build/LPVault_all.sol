@@ -1,5 +1,5 @@
 
-//File: contracts\Owned.sol
+//File: contracts/Owned.sol
 pragma solidity ^0.4.11;
 
 

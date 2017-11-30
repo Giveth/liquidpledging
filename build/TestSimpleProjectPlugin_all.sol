@@ -1539,53 +1539,56 @@ contract LiquidPledging is LiquidPledgingBase {
 
 }
 
-//File: ./contracts/LiquidPledgingMock.sol
+//File: ./contracts/test/TestSimpleProjectPlugin.sol
 pragma solidity ^0.4.11;
-/*
-    Copyright 2017, Jordi Baylina
-    Contributor: Adrià Massanet <adria@codecontext.io>
-
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 3 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 
 
 
-/// @dev `LiquidPledgingMock` allows for mocking up
-///  a `LiquidPledging` contract with the added ability
-///  to manipulate the block time for testing purposes.
-contract LiquidPledgingMock is LiquidPledging {
+// simple liquidPledging plugin contract for testing whitelist
+contract TestSimpleProjectPlugin {
 
-    uint public mock_time;
+    uint64 public idProject;
+    bool initPending;
 
-    /// @dev `LiquidPledgingMock` creates a standard `LiquidPledging`
-    ///  instance and sets the mocked time to the current blocktime.
-    /// @param _vault The vault where ETH backing this pledge is stored    
-    function LiquidPledgingMock(address _vault) LiquidPledging(_vault) {
-        mock_time = now;
+    event BeforeTransfer(uint64 pledgeAdmin, uint64 pledgeFrom, uint64 pledgeTo, uint64 context, uint amount);
+    event AfterTransfer(uint64 pledgeAdmin, uint64 pledgeFrom, uint64 pledgeTo, uint64 context, uint amount);
+
+    function TestSimpleProjectPlugin() {
+        require(msg.sender != tx.origin); // Avoids being created directly by mistake.
+        initPending = true;
     }
 
-    /// @dev `getTime` is a basic getter function for
-    ///  the mock_time parameter
-    function getTime() internal returns (uint) {
-        return mock_time;
+    function init(
+        LiquidPledging liquidPledging,
+        string name,
+        string url,
+        uint64 parentProject
+    ) {
+        require(initPending);
+        idProject = liquidPledging.addProject(name, url, address(this), parentProject, 0, ILiquidPledgingPlugin(this));
+        initPending = false;
     }
 
-    /// @dev `setMockedTime` is a basic setter function for
-    ///  the mock_time parameter
-    /// @param _t This is the value to which the mocked time
-    ///  will be set.
-    function setMockedTime(uint _t) {
-        mock_time = _t;
+    function beforeTransfer(
+        uint64 pledgeAdmin,
+        uint64 pledgeFrom,
+        uint64 pledgeTo,
+        uint64 context,
+        uint amount
+    ) external returns (uint maxAllowed) {
+        require(!initPending);
+        BeforeTransfer(pledgeAdmin, pledgeFrom, pledgeTo, context, amount);
     }
+
+    function afterTransfer(
+        uint64 pledgeAdmin,
+        uint64 pledgeFrom,
+        uint64 pledgeTo,
+        uint64 context,
+        uint amount
+    ) external {
+        require(!initPending);
+        AfterTransfer(pledgeAdmin, pledgeFrom, pledgeTo, context, amount);
+    }
+
 }
