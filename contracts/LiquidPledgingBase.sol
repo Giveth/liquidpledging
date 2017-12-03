@@ -40,8 +40,9 @@ contract LiquidPledgingBase is Owned {
     enum PledgeAdminType { Giver, Delegate, Project }
     enum PaymentState { Pledged, Paying, Paid }
 
-    /// @dev This struct defines the details of the `PledgeAdmin` which are 
-    ///  Referenced by their id and can own pledges and act as delegates
+    /// @dev This struct defines the details of a `PledgeAdmin` which are 
+    ///  commonly referenced by their index in the `admins` array.
+    ///  and can own pledges and act as delegates
     struct PledgeAdmin { 
         PledgeAdminType adminType; // Giver, Delegate or Project
         address addr; // Account or contract address for admin
@@ -172,9 +173,9 @@ contract LiquidPledgingBase is Owned {
     /// @notice Creates a Delegate Admin with the `msg.sender` as the Admin addr
     /// @param name The name used to identify the Delegate
     /// @param url The link to the Delegate's profile often an IPFS hash
-    /// @param commitTime Sets the length of time in seconds the Delegate has to
-    ///   veto when the Delegate delegates to another Delegate and they pledge 
-    ///   those funds to a project
+    /// @param commitTime Sets the length of time in seconds that this delegate
+    ///  can be vetoed. Whenever this delegate is in a delegate chain the time
+    ///  allowed to veto any event must be greater than or equal to this time.
     /// @param plugin This is Delegate's liquid pledge plugin allowing for 
     ///  extended functionality
     /// @return idxDelegate The id number used to reference this Delegate within
@@ -212,9 +213,10 @@ contract LiquidPledgingBase is Owned {
     /// @param newAddr The new address that represents this Delegate
     /// @param newName The new name used to identify the Delegate
     /// @param newUrl The new link to the Delegate's profile often an IPFS hash
-    /// @param newCommitTime Sets the length of time in seconds the Delegate has
-    ///  to veto when the Delegate delegates to a Delegate and they pledge those
-    ///  funds to a project
+    /// @param newCommitTime Sets the length of time in seconds that this 
+    ///  delegate can be vetoed. Whenever this delegate is in a delegate chain 
+    ///  the time allowed to veto any event must be greater than or equal to
+    ///  this time.
     function updateDelegate(
         uint64 idxDelegate,
         address newAddr,
@@ -237,7 +239,7 @@ contract LiquidPledgingBase is Owned {
     /// @param name The name used to identify the Project
     /// @param url The link to the Project's profile often an IPFS hash
     /// @param projectAdmin The address for the trusted project manager 
-    /// @param parentProject The Admin id number for the parent Campaign or 0 if
+    /// @param parentProject The Admin id number for the parent project or 0 if
     ///  there is no parentProject
     /// @param commitTime Sets the length of time in seconds the Project has to
     ///   veto when the Project delegates to another Delegate and they pledge 
@@ -372,7 +374,7 @@ contract LiquidPledgingBase is Owned {
     /// @return commitTime The length of time in seconds the Admin has to veto
     ///   when the Admin delegates to a Delegate and that Delegate pledges those
     ///   funds to a project
-    /// @return parentProject The Admin id number for the parent Campaign or 0
+    /// @return parentProject The Admin id number for the parent project or 0
     ///  if there is no parentProject
     /// @return canceled 0 for Delegates & Givers, true if a Project has been 
     ///  canceled
@@ -462,9 +464,10 @@ contract LiquidPledgingBase is Owned {
     ///  authority a specific delegate has within a Pledge
     /// @param n The Pledge that will be searched
     /// @param idxDelegate The specified delegate that's searched for
-    /// @return How many Delegates have more authority than the specified 
-    ///  delegate; if the delegate is not in the delegationChain it will return
-    ///  `0xFFFFFFFFFFFFFFFF`
+    /// @return If the delegate chain contains the delegate with the
+    ///  `admins` array index `idxDelegae` this returns that delegates
+    ///  corresponding index in the delegationChain. Otherwise it returns
+    ///  the maximum address.
     function getDelegateIdx(Pledge n, uint64 idxDelegate) internal returns(uint64) {
         for (uint i=0; i<n.delegationChain.length; i++) {
             if (n.delegationChain[i] == idxDelegate) return uint64(i);

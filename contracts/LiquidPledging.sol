@@ -91,7 +91,8 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param amount Quantity of value that's being moved
     /// @param idReceiver Destination of the value, can be a giver sending to 
     ///  a giver or a delegate, a delegate to another delegate or a project 
-    ///  to pre-commit it to that project
+    ///  to pre-commit it to that project if called from a delegate,
+    ///  or to commit it to the project if called from the owner. 
     function transfer(
         uint64 idSender,
         uint64 idPledge,
@@ -197,10 +198,8 @@ contract LiquidPledging is LiquidPledgingBase {
         assert(false);  // It is not the owner nor any delegate.
     }
 
-
     /// @notice This method is used to withdraw value from the system.
-    ///  This can be used by the givers to avoid committing the donation
-    ///  or by project admin to use the Ether.
+    ///  This can be used by the givers withdraw any un-commited donations.
     /// @param idPledge Id of the pledge that wants to be withdrawn.
     /// @param amount Quantity of Ether that wants to be withdrawn.
     function withdraw(uint64 idPledge, uint amount) {
@@ -374,8 +373,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
     /// @notice `mNormalizePledge` allows for multiple pledges to be
     ///  normalized efficiently
-    /// @param pledges An array of pledge IDs which are extrapolated using
-    ///  the D64 bitmask
+    /// @param pledges An array of pledge IDs
     function mNormalizePledge(uint64[] pledges) {
         for (uint i = 0; i < pledges.length; i++ ) {
             normalizePledge( pledges[i] );
@@ -387,8 +385,8 @@ contract LiquidPledging is LiquidPledgingBase {
 ///////
 
     /// @notice `transferOwnershipToProject` allows for the transfer of
-    ///  ownership to the project, but it can also be called to un-delegate
-    ///  everyone by setting one's own id for the idReceiver
+    ///  ownership to the project, but it can also be called by a project
+    ///  to un-delegate everyone by setting one's own id for the idReceiver
     /// @param idPledge Id of the pledge to be transfered.
     /// @param amount Quantity of value that's being transfered
     /// @param idReceiver The new owner of the project (or self to un-delegate)
@@ -545,10 +543,12 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param _amount The amount of value that will be transfered.
     function doTransfer(uint64 from, uint64 to, uint _amount) internal {
         uint amount = callPlugins(true, from, to, _amount);
-        if (from == to) 
+        if (from == to) { 
             return;
-        if (amount == 0) 
+        }
+        if (amount == 0) {
             return;
+        }
         Pledge storage nFrom = findPledge(from);
         Pledge storage nTo = findPledge(to);
         require(nFrom.amount >= amount);
@@ -581,8 +581,9 @@ contract LiquidPledging is LiquidPledgingBase {
 
         // Check to make sure this pledge hasn't already been used 
         // or is in the process of being used
-        if (n.paymentState != PaymentState.Pledged)
+        if (n.paymentState != PaymentState.Pledged) {
             return idPledge;
+        }
 
         // First send to a project if it's proposed and committed
         if ((n.intendedProject > 0) && ( getTime() > n.commitTime)) {
@@ -592,14 +593,16 @@ contract LiquidPledging is LiquidPledgingBase {
                 0,
                 0,
                 n.oldPledge,
-                PaymentState.Pledged);
+                PaymentState.Pledged
+            );
             uint64 toPledge = findOrCreatePledge(
                 n.intendedProject,
                 new uint64[](0),
                 0,
                 0,
                 oldPledge,
-                PaymentState.Pledged);
+                PaymentState.Pledged
+            );
             doTransfer(idPledge, toPledge, n.amount);
             idPledge = toPledge;
             n = findPledge(idPledge);
