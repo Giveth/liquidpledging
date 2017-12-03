@@ -185,11 +185,11 @@ contract LiquidPledgingBase is Owned {
         string url,
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
-    ) returns (uint64 idxDelegate) { 
+    ) returns (uint64 idDelegate) { 
 
         require(isValidPlugin(plugin)); // Plugin check
 
-        idxDelegate = uint64(admins.length);
+        idDelegate = uint64(admins.length);
 
         admins.push(PledgeAdmin(
             PledgeAdminType.Delegate,
@@ -201,15 +201,15 @@ contract LiquidPledgingBase is Owned {
             false,
             plugin));
 
-        DelegateAdded(idxDelegate);
+        DelegateAdded(idDelegate);
     }
 
-    event DelegateAdded(uint64 indexed idxDelegate);
+    event DelegateAdded(uint64 indexed idDelegate);
 
     /// @notice Updates a Delegate's info to change the address, name, url, or 
     ///  commitTime, it cannot be used to change a plugin, and it must be called
     ///  by the current address of the Delegate
-    /// @param idxDelegate The Admin id number used to specify the Delegate
+    /// @param idDelegate The Admin id number used to specify the Delegate
     /// @param newAddr The new address that represents this Delegate
     /// @param newName The new name used to identify the Delegate
     /// @param newUrl The new link to the Delegate's profile often an IPFS hash
@@ -218,22 +218,22 @@ contract LiquidPledgingBase is Owned {
     ///  the time allowed to veto any event must be greater than or equal to
     ///  this time.
     function updateDelegate(
-        uint64 idxDelegate,
+        uint64 idDelegate,
         address newAddr,
         string newName,
         string newUrl,
         uint64 newCommitTime) {
-        PledgeAdmin storage delegate = findAdmin(idxDelegate);
+        PledgeAdmin storage delegate = findAdmin(idDelegate);
         require(delegate.adminType == PledgeAdminType.Delegate);
         require(delegate.addr == msg.sender);// Current addr had to send this tx
         delegate.addr = newAddr;
         delegate.name = newName;
         delegate.url = newUrl;
         delegate.commitTime = newCommitTime;
-        DelegateUpdated(idxDelegate);
+        DelegateUpdated(idDelegate);
     }
 
-    event DelegateUpdated(uint64 indexed idxDelegate);
+    event DelegateUpdated(uint64 indexed idDelegate);
 
     /// @notice Creates a Project Admin with the `msg.sender` as the Admin addr
     /// @param name The name used to identify the Project
@@ -468,7 +468,7 @@ contract LiquidPledgingBase is Owned {
     ///  `admins` array index `idxDelegae` this returns that delegates
     ///  corresponding index in the delegationChain. Otherwise it returns
     ///  the maximum address.
-    function getDelegateIdx(Pledge n, uint64 idxDelegate) internal returns(uint64) {
+    function getDelegateId(Pledge n, uint64 idxDelegate) internal returns(uint64) {
         for (uint i=0; i<n.delegationChain.length; i++) {
             if (n.delegationChain[i] == idxDelegate) return uint64(i);
         }
