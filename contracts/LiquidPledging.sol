@@ -559,11 +559,12 @@ contract LiquidPledging is LiquidPledgingBase {
         callPlugins(false, from, to, amount);
     }
 
-    /// @notice `normalizePledge` does 2 things:
-    ///   #1: Checks to make sure that the pledges are correct. Then if 
-    ///       a pledged project has already been committed, it changes
-    ///       the owner to be the proposed project (The UI 
-    ///       will have to read the commit time and manually do what
+    /// @notice `normalizePledge` only affects pledges with the Pledged PaymentState
+    /// and does 2 things:
+    ///   #1: Checks if the pledge should be committed. This means that
+    ///       if the pledge has an intendedProject and it is past the
+    ///       commitTime, it changes the owner to be the proposed project
+    ///       (The UI will have to read the commit time and manually do what
     ///       this function does to the pledge for the end user
     ///       at the expiration of the commitTime)
     ///

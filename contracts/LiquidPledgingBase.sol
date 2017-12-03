@@ -463,14 +463,14 @@ contract LiquidPledgingBase is Owned {
     /// @notice A getter that searches the delegationChain for the level of
     ///  authority a specific delegate has within a Pledge
     /// @param n The Pledge that will be searched
-    /// @param idxDelegate The specified delegate that's searched for
+    /// @param idDelegate The specified delegate that's searched for
     /// @return If the delegate chain contains the delegate with the
-    ///  `admins` array index `idxDelegae` this returns that delegates
+    ///  `admins` array index `idDelegate` this returns that delegates
     ///  corresponding index in the delegationChain. Otherwise it returns
-    ///  the maximum address.
-    function getDelegateId(Pledge n, uint64 idxDelegate) internal returns(uint64) {
-        for (uint i=0; i<n.delegationChain.length; i++) {
-            if (n.delegationChain[i] == idxDelegate) return uint64(i);
+    ///  the NOTFOUND constant
+    function getDelegateIdx(Pledge n, uint64 idDelegate) internal returns(uint64) {
+        for (uint i=0; i < n.delegationChain.length; i++) {
+            if (n.delegationChain[i] == idDelegate) return uint64(i);
         }
         return NOTFOUND;
     }
