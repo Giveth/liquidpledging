@@ -7,7 +7,7 @@ pragma solidity ^0.4.11;
 ///  safety precaution, but once fully tested and optimized this contract will
 ///  be a safe place to store funds equipped with optional variable time delays
 ///  to allow for an optional escape hatch to be implemented
-import "./Owned.sol";
+import "../node_modules/giveth-common-contracts/contracts/Escapable.sol";
 
 /// @dev `LiquidPledging` is a basic interface to allow the `LPVault` contract
 ///  to confirm and cancel payments in the `LiquidPledging` contract.
@@ -17,9 +17,9 @@ contract LiquidPledging {
 }
 
 
-/// @dev `LPVault` is a higher level contract built off of the `Owned`
+/// @dev `LPVault` is a higher level contract built off of the `Escapable`
 ///  contract that holds funds for the liquid pledging system.
-contract LPVault is Owned {
+contract LPVault is Escapable {
 
     LiquidPledging public liquidPledging; // liquidPledging contract's address
     bool public autoPay; // if false, payments will take 2 txs to be completed
@@ -42,20 +42,18 @@ contract LPVault is Owned {
     // @dev An array that contains all the payments for this LPVault
     Payment[] public payments;
 
+    function Vault(address _escapeHatchCaller, address _escapeHatchDestination)
+        Escapable(_escapeHatchCaller, _escapeHatchDestination) public {
+    }
+
     /// @dev `liquidPledging` is the only address that can call a function with
     ///  this modifier
     modifier onlyLiquidPledging() {
         require(msg.sender == address(liquidPledging));
         _;
     }
-    /// @dev USED FOR TESTING???
-    function VaultMock() public pure {
 
-    }
-
-    function () public payable {
-
-    }
+    function () public payable {}
 
     /// @notice `setLiquidPledging` is used to attach a specific liquid pledging
     ///  instance to this LPvault. Keep in mind this isn't a single pledge but
@@ -176,7 +174,29 @@ contract LPVault is Owned {
         return payments.length;
     }
 
+    /// Transfer eth or tokens to the escapeHatchDestination.
+    /// Used as a safety mechanism to prevent the vault from holding too much value
+    /// before being thoroughly battle-tested.
+    /// @param _token to transfer, use 0x0 for ether
+    /// @param _amount to transfer
+    function escapeFunds(address _token, uint _amount) public onlyOwner {
+        /// @dev Logic for ether
+        if (_token == 0x0) {
+            require(this.balance >= _amount);
+            escapeHatchDestination.transfer(_amount);
+            EscapeHatchCalled(_token, _amount);
+            return;
+        }
+        /// @dev Logic for tokens
+        ERC20 token = ERC20(_token);
+        uint balance = token.balanceOf(this);
+        require(balance >= _amount);
+        require(token.transfer(escapeHatchDestination, _amount));
+        EscapeFundsCalled(_token, _amount);
+    }
+
     event ConfirmPayment(uint indexed idPayment);
     event CancelPayment(uint indexed idPayment);
     event AuthorizePayment(uint indexed idPayment, bytes32 indexed ref, address indexed dest, uint amount);
+    event EscapeFundsCalled(address _token, uint _amount);
 }

@@ -51,7 +51,7 @@ describe('LiquidPledging cancelPledge normal scenario', function () {
   });
 
   it('Should deploy LiquidPledging contract', async () => {
-    vault = await Vault.new(web3);
+    vault = await Vault.new(web3, accounts[0], accounts[1]);
     liquidPledging = await LiquidPledging.new(web3, vault.$address, { gas: 5800000 });
     await vault.setLiquidPledging(liquidPledging.$address);
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
