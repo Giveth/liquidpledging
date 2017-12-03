@@ -14,9 +14,10 @@ contract Owned {
 
     address public owner;
 
+
     /// @notice The Constructor assigns the account deploying the contract to be
     ///  the `owner`
-    function Owned() {
+    function Owned() public {
         owner = msg.sender;
     }
 
@@ -28,12 +29,12 @@ contract Owned {
     /// @param _newOwner The address of the new owner. A simple contract with
     ///  the ability to accept ownership but the inability to do anything else
     ///  can be used to create an unowned contract to achieve decentralization
-    function changeOwner(address _newOwner) onlyOwner {
+    function changeOwner(address _newOwner) public onlyOwner {
         newOwner = _newOwner;
     }
 
     /// @notice `newOwner` can accept ownership over this contract
-    function acceptOwnership() {
+    function acceptOwnership() public {
         require(msg.sender == newOwner);
         owner = newOwner;
     }

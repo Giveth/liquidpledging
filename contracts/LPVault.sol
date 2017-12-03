@@ -12,8 +12,8 @@ import "./Owned.sol";
 /// @dev `LiquidPledging` is a basic interface to allow the `LPVault` contract
 ///  to confirm and cancel payments in the `LiquidPledging` contract.
 contract LiquidPledging {
-    function confirmPayment(uint64 idNote, uint amount);
-    function cancelPayment(uint64 idNote, uint amount);
+    function confirmPayment(uint64 idNote, uint amount) public;
+    function cancelPayment(uint64 idNote, uint amount) public;
 }
 
 
@@ -42,18 +42,18 @@ contract LPVault is Owned {
     // @dev An array that contains all the payments for this LPVault
     Payment[] public payments;
 
-    // @dev `liquidPledging` is the only address that can call a function with
-    /// this modifier
+    /// @dev `liquidPledging` is the only address that can call a function with
+    ///  this modifier
     modifier onlyLiquidPledging() {
         require(msg.sender == address(liquidPledging));
         _;
     }
     /// @dev USED FOR TESTING???
-    function VaultMock() {
+    function VaultMock() public pure {
 
     }
 
-    function () payable {
+    function () public payable {
 
     }
 
@@ -61,7 +61,7 @@ contract LPVault is Owned {
     ///  instance to this LPvault. Keep in mind this isn't a single pledge but
     ///  instead an entire liquid pledging contract.
     /// @param _newLiquidPledging A full liquid pledging contract
-    function setLiquidPledging(address _newLiquidPledging) onlyOwner {
+    function setLiquidPledging(address _newLiquidPledging) public onlyOwner {
         require(address(liquidPledging) == 0x0);
         liquidPledging = LiquidPledging(_newLiquidPledging);
     }
@@ -69,7 +69,7 @@ contract LPVault is Owned {
     /// @notice `setAutopay` is used to toggle whether the LPvault will
     ///  automatically confirm a payment after the payment has been authorized.
     /// @param _automatic If true payments will confirm automatically
-    function setAutopay(bool _automatic) onlyOwner {
+    function setAutopay(bool _automatic) public onlyOwner {
         autoPay = _automatic;
     }
 
@@ -84,7 +84,7 @@ contract LPVault is Owned {
     function authorizePayment(
         bytes32 _ref,
         address _dest,
-        uint _amount ) onlyLiquidPledging returns (uint) {
+        uint _amount ) public onlyLiquidPledging returns (uint) {
         uint idPayment = payments.length;
         payments.length ++;
         payments[idPayment].state = PaymentStatus.Pending;
@@ -92,9 +92,11 @@ contract LPVault is Owned {
         payments[idPayment].dest = _dest;
         payments[idPayment].amount = _amount;
 
-        AuthorizePayment(idPayment, _ref, _dest,  _amount);
+        AuthorizePayment(idPayment, _ref, _dest, _amount);
 
-        if (autoPay) doConfirmPayment(idPayment);
+        if (autoPay) {
+            doConfirmPayment(idPayment);
+        }
 
         return idPayment;
     }
@@ -105,7 +107,7 @@ contract LPVault is Owned {
     ///  this is generally used when `autopay` is `false` after a payment has
     ///  has been authorized.
     /// @param _idPayment Array lookup for the payment.
-    function confirmPayment(uint _idPayment) onlyOwner {
+    function confirmPayment(uint _idPayment) public onlyOwner {
         doConfirmPayment(_idPayment);
     }
 
@@ -129,7 +131,7 @@ contract LPVault is Owned {
     /// @notice `cancelPayment` is used when `autopay` is `false` in order
     ///  to allow the owner to cancel a payment instead of confirming it.
     /// @param _idPayment Array lookup for the payment.
-    function cancelPayment(uint _idPayment) onlyOwner {
+    function cancelPayment(uint _idPayment) public onlyOwner {
         doCancelPayment(_idPayment);
     }
 
@@ -152,8 +154,8 @@ contract LPVault is Owned {
     /// @notice `multiConfirm` allows for more efficient confirmation of
     ///  multiple payments.
     /// @param _idPayments An array of multiple payment ids
-    function multiConfirm(uint[] _idPayments) onlyOwner {
-        for (uint i=0; i < _idPayments.length; i++) {
+    function multiConfirm(uint[] _idPayments) public onlyOwner {
+        for (uint i = 0; i < _idPayments.length; i++) {
             doConfirmPayment(_idPayments[i]);
         }
     }
@@ -161,8 +163,8 @@ contract LPVault is Owned {
     /// @notice `multiCancel` allows for more efficient cancellation of
     ///  multiple payments.
     /// @param _idPayments An array of multiple payment ids
-    function multiCancel(uint[] _idPayments) onlyOwner {
-        for (uint i=0; i < _idPayments.length; i++) {
+    function multiCancel(uint[] _idPayments) public onlyOwner {
+        for (uint i = 0; i < _idPayments.length; i++) {
             doCancelPayment(_idPayments[i]);
         }
     }
@@ -170,7 +172,7 @@ contract LPVault is Owned {
     /// @notice `nPayments` Basic getter to return the number of payments
     ///  currently held in the system. Since payments are not removed from
     ///  the array this represents all payments over all time.
-    function nPayments() constant returns (uint) {
+    function nPayments() constant public returns (uint) {
         return payments.length;
     }
 
