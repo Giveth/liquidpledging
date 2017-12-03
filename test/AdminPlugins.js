@@ -11,7 +11,7 @@ const LiquidPledgingState = liquidpledging.LiquidPledgingState;
 const simpleProjectPluginFactoryAbi = require('../build/TestSimpleProjectPluginFactory.sol').TestSimpleProjectPluginFactoryAbi;
 const simpleProjectPluginFactoryByteCode = require('../build/TestSimpleProjectPluginFactory.sol').TestSimpleProjectPluginFactoryByteCode;
 const simpleProjectPluginRuntimeByteCode = require('../build/TestSimpleProjectPluginFactory.sol').TestSimpleProjectPluginRuntimeByteCode;
-const Vault = liquidpledging.Vault;
+const Vault = liquidpledging.LPVault;
 const assert = chai.assert;
 
 const printState = async (liquidPledgingState) => {
