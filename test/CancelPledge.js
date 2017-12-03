@@ -8,7 +8,7 @@ const assertFail = require('./helpers/assertFail');
 
 const LiquidPledging = liquidpledging.LiquidPledgingMock;
 const LiquidPledgingState = liquidpledging.LiquidPledgingState;
-const Vault = liquidpledging.Vault;
+const Vault = liquidpledging.LPVault;
 const assert = chai.assert;
 
 const printState = async (liquidPledgingState) => {

@@ -4,11 +4,15 @@
   "description": "Liquid Pledging Smart Contract",
   "main": "index.js",
   "directories": {
+    "lib": "lib",
     "test": "test"
   },
   "scripts": {
-    "build": "solcpiler",
-    "test": "solcpiler; mocha --harmony"
+    "test": "npm run build; mocha --harmony",
+    "sol-compile": "solcpiler -i './contracts/**/*.sol'",
+    "js-compile": "babel -d lib/ js/",
+    "build": "npm run sol-compile; npm run js-compile",
+    "prepublish": "npm run build"
   },
   "repository": {
     "type": "git",
@@ -29,7 +33,9 @@
     "url": "https://github.com/Giveth/liquidpledging/issues"
   },
   "devDependencies": {
+    "babel-cli": "^6.26.0",
     "babel-eslint": "^7.2.3",
+    "babel-preset-env": "^1.6.0",
     "eslint-config-airbnb": "^15.0.1",
     "eslint-plugin-import": "^2.6.0",
     "eslint-plugin-jsx-a11y": "^6.0.2",
@@ -38,13 +44,14 @@
     "lerna": "^2.2.0",
     "random-bytes": "^1.0.0",
     "mocha": "^3.5.0",
-    "solcpiler": "0.0.4",
+    "solcpiler": "0.0.7",
     "web3": "1.0.0-beta.24"
   },
   "homepage": "https://github.com/Giveth/liquidpledging#readme",
   "dependencies": {
     "async": "^2.4.0",
     "chai": "^4.1.0",
-    "eth-contract-class": "0.0.6"
+    "eth-contract-class": "0.0.6",
+    "giveth-common-contracts": "^0.4.0"
   }
 }
