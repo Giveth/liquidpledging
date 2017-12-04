@@ -2,7 +2,8 @@ pragma solidity ^0.4.11;
 
 /*
     Copyright 2017, Jordi Baylina
-    Contributor: Adrià Massanet <adria@codecontext.io>
+    Contributors: Adrià Massanet <adria@codecontext.io>, RJ Ewing, Griff
+    Green, Arthur Lunn
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -18,7 +19,6 @@ pragma solidity ^0.4.11;
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-// Contract Imports
 import "./LiquidPledgingBase.sol";
 
 /// @dev `LiquidPleding` allows for liquid pledging through the use of
@@ -40,33 +40,30 @@ contract LiquidPledging is LiquidPledgingBase {
     function LiquidPledging(address _vault) LiquidPledgingBase(_vault) {
     }
 
-    /// @notice This is how value enters into the system which creates pledges;
-    ///  the token of value goes into the vault and the amount in the pledge
-    ///  relevant to this Giver without delegates is increased, and a normal
-    ///  transfer is done to the idReceiver
-    /// @param idGiver Identifier of the giver thats donating.
-    /// @param idReceiver To whom it's transfered. Can be the same giver,
-    ///  another giver, a delegate or a project.
+    /// @notice This is how value enters the system and how pledges are created;
+    ///  the ether is sent to the vault, an pledge for the Giver is created (or
+    ///  found), the amount of ETH donated in wei is added to the `amount` in
+    ///  the Giver's Pledge, and an LP transfer is done to the idReceiver for
+    ///  the full amount
+    /// @param idGiver The id of the Giver donating; if 0, a new id is created
+    /// @param idReceiver The Admin receiving the donation; can be any Admin:
+    ///  the Giver themselves, another Giver, a Delegate or a Project
     function donate(uint64 idGiver, uint64 idReceiver) payable {
         if (idGiver == 0) {
-            // default to 3 day commitTime
+
+            // default to a 3 day (259200 seconds) commitTime
             idGiver = addGiver("", "", 259200, ILiquidPledgingPlugin(0x0));
         }
 
         PledgeAdmin storage sender = findAdmin(idGiver);
-
         checkAdminOwner(sender);
-
         require(sender.adminType == PledgeAdminType.Giver);
-
         uint amount = msg.value;
-
         require(amount > 0);
-
-        vault.transfer(amount); // transfers the baseToken to the Vault
+        vault.transfer(amount); // Sends the `msg.value` (in wei) to the `vault`
         uint64 idPledge = findOrCreatePledge(
             idGiver,
-            new uint64[](0), //what is new?
+            new uint64[](0), // Creates empty array for delegationChain
             0,
             0,
             0,
@@ -77,29 +74,26 @@ contract LiquidPledging is LiquidPledgingBase {
         Pledge storage nTo = findPledge(idPledge);
         nTo.amount += amount;
 
-        Transfer(0, idPledge, amount);
+        Transfer(0, idPledge, amount); // An event
 
-        transfer(idGiver, idPledge, amount, idReceiver);
+        transfer(idGiver, idPledge, amount, idReceiver); // LP accounting
     }
 
-
-    /// @notice Moves value between pledges
-    /// @param idSender ID of the giver, delegate or project admin that is 
-    ///  transferring the funds from Pledge to Pledge; this admin must have 
-    ///  permissions to move the value
+    /// @notice Transfers amounts between pledges for internal accounting 
+    /// @param idSender Id of the Admin that is transferring the amount from
+    ///  Pledge to Pledge; this admin must have permissions to move the value
     /// @param idPledge Id of the pledge that's moving the value
-    /// @param amount Quantity of value that's being moved
-    /// @param idReceiver Destination of the value, can be a giver sending to 
-    ///  a giver or a delegate, a delegate to another delegate or a project 
-    ///  to pre-commit it to that project if called from a delegate,
-    ///  or to commit it to the project if called from the owner. 
-    function transfer(
+    /// @param amount Quantity of ETH (in wei) that this pledge is transferring 
+    ///  the authority to withdraw from the vault
+    /// @param idReceiver Destination of the `amount`, can be a Giver sending to 
+    ///  a Giver, a Delegate or a Project; a Delegate sending to another
+    ///  Delegate, or a Delegate pre-commiting it to a Project 
+    function transfer( 
         uint64 idSender,
         uint64 idPledge,
         uint amount,
         uint64 idReceiver
-    )
-    {
+    ){
 
         idPledge = normalizePledge(idPledge);
 
@@ -110,7 +104,7 @@ contract LiquidPledging is LiquidPledgingBase {
         checkAdminOwner(sender);
         require(n.paymentState == PaymentState.Pledged);
 
-        // If the sender is the owner
+        // If the sender is the owner of the Pledge
         if (n.owner == idSender) {
             if (receiver.adminType == PledgeAdminType.Giver) {
                 transferOwnershipToGiver(idPledge, amount, idReceiver);
@@ -124,29 +118,27 @@ contract LiquidPledging is LiquidPledgingBase {
                 );
                 appendDelegate(idPledge, amount, idReceiver);
             } else {
-                assert(false);
+                assert(false); // The owner of the pledge must be idSender
             }
             return;
         }
 
-        // If the sender is a delegate
+        // If the sender is a Delegate
         uint senderDIdx = getDelegateIdx(n, idSender);
         if (senderDIdx != NOTFOUND) {
 
-            // If the receiver is another giver
+            // And the receiver is another Giver
             if (receiver.adminType == PledgeAdminType.Giver) {
-                // Only accept to change to the original giver to
-                // remove all delegates
                 assert(n.owner == idReceiver);
                 undelegate(idPledge, amount, n.delegationChain.length);
                 return;
             }
 
-            // If the receiver is another delegate
+            // And the receiver is another Delegate
             if (receiver.adminType == PledgeAdminType.Delegate) {
                 uint receiverDIdx = getDelegateIdx(n, idReceiver);
 
-                // If the receiver is not in the delegate list
+                // And not in the delegationChain
                 if (receiverDIdx == NOTFOUND) {
                     idPledge = undelegate(
                         idPledge,
@@ -155,10 +147,9 @@ contract LiquidPledging is LiquidPledgingBase {
                     );
                     appendDelegate(idPledge, amount, idReceiver);
 
-                // If the receiver is already part of the delegate chain and is
-                // after the sender, then all of the other delegates after the
-                // sender are removed and the receiver is appended at the
-                // end of the delegation chain
+                // And part of the delegationChain and is after the sender, then
+                //  all of the other delegates after the sender are removed and
+                //  the receiver is appended at the end of the delegationChain
                 } else if (receiverDIdx > senderDIdx) {
                     idPledge = undelegate(
                         idPledge,
@@ -167,13 +158,10 @@ contract LiquidPledging is LiquidPledgingBase {
                     );
                     appendDelegate(idPledge, amount, idReceiver);
 
-                // If the receiver is already part of the delegate chain and is
-                // before the sender, then the sender and all of the other
-                // delegates after the RECEIVER are removed from the chain,
-                // this is interesting because the delegate is removed from the
-                // delegates that delegated to this delegate. Are there game theory
-                // issues? should this be allowed?
-                } else if (receiverDIdx <= senderDIdx) {
+                // And is already part of the delegate chain but is before the
+                //  sender, then the sender and all of the other delegates after
+                //  the RECEIVER are removed from the delegationChain 
+                } else if (receiverDIdx <= senderDIdx) {//TODO Check for Game Theory issues (from Arthur) this allows the sender to sort of go komakosi and remove himself and the delegates between himself and the receiver... should this authority be allowed? 
                     undelegate(
                         idPledge,
                         amount,
@@ -183,8 +171,8 @@ contract LiquidPledging is LiquidPledgingBase {
                 return;
             }
 
-            // If the delegate wants to support a project, they remove all
-            // the delegates after them in the chain and choose a project
+            // And the receiver is a Project, all the delegates after the sender
+            //  are removed and the amount is pre-committed to the project
             if (receiver.adminType == PledgeAdminType.Project) {
                 idPledge = undelegate(
                     idPledge,
@@ -195,23 +183,18 @@ contract LiquidPledging is LiquidPledgingBase {
                 return;
             }
         }
-        assert(false);  // It is not the owner nor any delegate.
+        assert(false);  // When the sender is not an owner or a delegate 
     }
 
-    /// @notice This method is used to withdraw value from the system.
-    ///  This can be used by the givers withdraw any un-commited donations.
+    /// @notice Authorizes a payment be made from the `vault` can be used by the
+    ///  Giver to veto a pre-committed donation from a Delegate to an intended
     /// @param idPledge Id of the pledge that wants to be withdrawn.
-    /// @param amount Quantity of Ether that wants to be withdrawn.
-    function withdraw(uint64 idPledge, uint amount) {
-
-        idPledge = normalizePledge(idPledge);
-
+    /// @param amount Quantity of ether (in wei) to be authorized
+    function withdraw(uint64 idPledge, uint amount) { 
+        idPledge = normalizePledge(idPledge); // Updates pledge info 
         Pledge storage n = findPledge(idPledge);
-
         require(n.paymentState == PaymentState.Pledged);
-
         PledgeAdmin storage owner = findAdmin(n.owner);
-
         checkAdminOwner(owner);
 
         uint64 idNewPledge = findOrCreatePledge(
@@ -230,7 +213,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
     /// @notice Method called by the vault to confirm a payment.
     /// @param idPledge Id of the pledge that wants to be withdrawn.
-    /// @param amount Quantity of Ether that wants to be withdrawn.
+     /// @param amount Quantity of ether (in wei) to be withdrawn
     function confirmPayment(uint64 idPledge, uint amount) onlyVault {
         Pledge storage n = findPledge(idPledge);
 
@@ -250,11 +233,11 @@ contract LiquidPledging is LiquidPledgingBase {
 
     /// @notice Method called by the vault to cancel a payment.
     /// @param idPledge Id of the pledge that wants to be canceled for withdraw.
-    /// @param amount Quantity of Ether that wants to be rolled back.
+    /// @param amount Quantity of ether (in wei) to be rolled back
     function cancelPayment(uint64 idPledge, uint amount) onlyVault {
         Pledge storage n = findPledge(idPledge);
 
-        require(n.paymentState == PaymentState.Paying); //TODO change to revert
+        require(n.paymentState == PaymentState.Paying); //TODO change to revert????????????????????????????
 
         // When a payment is canceled, never is assigned to a project.
         uint64 oldPledge = findOrCreatePledge(
@@ -273,7 +256,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
     /// @notice Method called to cancel this project.
     /// @param idProject Id of the projct that wants to be canceled.
-    function cancelProject(uint64 idProject) {
+    function cancelProject(uint64 idProject) { 
         PledgeAdmin storage project = findAdmin(idProject);
         checkAdminOwner(project);
         project.canceled = true;
@@ -284,7 +267,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @notice Method called to cancel specific pledge.
     /// @param idPledge Id of the pledge that should be canceled.
     /// @param amount Quantity of Ether that wants to be rolled back.
-    function cancelPledge(uint64 idPledge, uint amount) {
+    function cancelPledge(uint64 idPledge, uint amount) { 
         idPledge = normalizePledge(idPledge);
 
         Pledge storage n = findPledge(idPledge);
@@ -482,16 +465,16 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  end of the delegate chain for a given Pledge.
     /// @param idPledge Id of the pledge thats delegate chain will be modified.
     /// @param amount Quantity of value that's shifted from delegates.
-    /// @param q Number (or depth) to remove as delegates
-    function undelegate(
-        uint64 idPledge,
-        uint amount,
-        uint q
-    ) internal returns (uint64){
+    /// @param q Number (or depth) of delegates to remove
+    /// @return toPledge The id for the pledge being adjusted or created
+    function undelegate(uint64 idPledge, uint amount, uint q
+        ) internal returns (uint64){
+        
         Pledge storage n = findPledge(idPledge);
         uint64[] memory newDelegationChain = new uint64[](
             n.delegationChain.length - q
         );
+
         for (uint i=0; i<n.delegationChain.length - q; i++) {
             newDelegationChain[i] = n.delegationChain[i];
         }
@@ -559,8 +542,7 @@ contract LiquidPledging is LiquidPledgingBase {
         callPlugins(false, from, to, amount);
     }
 
-    /// @notice `normalizePledge` only affects pledges with the Pledged PaymentState
-    /// and does 2 things:
+    /// @notice Only affects pledges with the Pledged PaymentState for 2 things:
     ///   #1: Checks if the pledge should be committed. This means that
     ///       if the pledge has an intendedProject and it is past the
     ///       commitTime, it changes the owner to be the proposed project
@@ -573,9 +555,10 @@ contract LiquidPledging is LiquidPledgingBase {
     ///       appropriately.
     ///
     /// This function can be called by anybody at anytime on any pledge.
-    /// In general it can be called to force the calls of the affected 
-    /// plugins, which also need to be predicted by the UI
+    ///  In general it can be called to force the calls of the affected 
+    ///  plugins, which also need to be predicted by the UI
     /// @param idPledge This is the id of the pledge that will be normalized
+    /// @return The normalized Pledge!
     function normalizePledge(uint64 idPledge) returns(uint64) {
 
         Pledge storage n = findPledge(idPledge);
