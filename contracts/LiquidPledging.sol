@@ -522,7 +522,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ) internal {
         Pledge storage n = findPledge(idPledge);
 
-        require(getPledgeLevel(n) < MAX_SUBPROJECT_LEVEL);
+        require(getPledgeLevel(n) < MAX_INTERPROJECT_LEVEL);
         require(!isProjectCanceled(idReceiver));
 
         uint64 toPledge = findOrCreatePledge(
@@ -609,7 +609,7 @@ contract LiquidPledging is LiquidPledgingBase {
             n = findPledge(idPledge);
         }
 
-        toPledge = getOldestPledgeNotCanceled(idPledge);// TODO toPledge is pledge defined
+        toPledge = getOldestPledgeNotCanceled(idPledge);
         if (toPledge != idPledge) {
             doTransfer(idPledge, toPledge, n.amount);
         }
@@ -738,11 +738,11 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @notice `callPlugins` calls `callPluginsPledge` once for the transfer
     ///  context and once for the receiving context. The aggregated 
     ///  allowed amount is then returned.
-    /// @param before This toggle determines whether the plugin call is occuring
+    /// @param before This toggle determines whether the plugin call is occurring
     ///  before or after a transfer.
-    /// @param fromPledge This is the Id from which value is being transfered.
-    /// @param toPledge This is the Id that value is being transfered to.
-    /// @param amount The amount of value that is being transfered.    
+    /// @param fromPledge This is the Id from which value is being transferred.
+    /// @param toPledge This is the Id that value is being transferred to.
+    /// @param amount The amount of value that is being transferred.
     function callPlugins(
         bool before,
         uint64 fromPledge,
