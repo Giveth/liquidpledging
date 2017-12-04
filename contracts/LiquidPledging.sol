@@ -85,8 +85,8 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idPledge Id of the pledge that's moving the value
     /// @param amount Quantity of ETH (in wei) that this pledge is transferring 
     ///  the authority to withdraw from the vault
-    /// @param idReceiver Destination of the `amount`, can be a Giver sending to 
-    ///  a Giver, a Delegate or a Project; a Delegate sending to another
+    /// @param idReceiver Destination of the `amount`, can be a Giver/Project sending
+    ///  to a Giver, a Delegate or a Project; a Delegate sending to another
     ///  Delegate, or a Delegate pre-commiting it to a Project 
     function transfer( 
         uint64 idSender,
@@ -118,7 +118,9 @@ contract LiquidPledging is LiquidPledgingBase {
                 );
                 appendDelegate(idPledge, amount, idReceiver);
             } else {
-                assert(false); // The owner of the pledge must be idSender
+                // This should never be reached as the reciever.adminType
+                // should always be either a Giver, Project, or Delegate
+                assert(false);
             }
             return;
         }
@@ -129,6 +131,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
             // And the receiver is another Giver
             if (receiver.adminType == PledgeAdminType.Giver) {
+                // Only transfer to the Giver who owns the pldege
                 assert(n.owner == idReceiver);
                 undelegate(idPledge, amount, n.delegationChain.length);
                 return;
@@ -187,7 +190,8 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
     /// @notice Authorizes a payment be made from the `vault` can be used by the
-    ///  Giver to veto a pre-committed donation from a Delegate to an intended
+    ///  Giver to veto a pre-committed donation from a Delegate to an
+    ///  intendedProject
     /// @param idPledge Id of the pledge that wants to be withdrawn.
     /// @param amount Quantity of ether (in wei) to be authorized
     function withdraw(uint64 idPledge, uint amount) { 
