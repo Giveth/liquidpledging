@@ -151,7 +151,7 @@ contract LPVault is Owned {// TODO NEEDS TO BE ESCAPABLE!!! AND WE NEED TO ADD A
         ConfirmPayment(_idPayment);
     }
 
-    /// @notice When `autopay` is `false` and after a payment has been 
+    /// @notice When `autopay` is `false` and after a payment has been authorized
     ///  to allow the owner to cancel a payment instead of confirming it.
     /// @param _idPayment Array lookup for the payment.
     function cancelPayment(uint _idPayment) public onlyOwner {
@@ -189,7 +189,7 @@ contract LPVault is Owned {// TODO NEEDS TO BE ESCAPABLE!!! AND WE NEED TO ADD A
         }
     }
 
-    /// @return The total number of payments that have ever been made
+    /// @return The total number of payments that have ever been authorized
     function nPayments() constant public returns (uint) {
         return payments.length;
     }
