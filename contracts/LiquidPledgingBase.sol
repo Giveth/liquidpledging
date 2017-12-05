@@ -1,7 +1,8 @@
 pragma solidity ^0.4.11;
 /*
     Copyright 2017, Jordi Baylina
-    Contributor: Adrià Massanet <adria@codecontext.io>
+    Contributors: Adrià Massanet <adria@codecontext.io>, RJ Ewing, Griff
+    Green, Arthur Lunn
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
@@ -20,15 +21,16 @@ pragma solidity ^0.4.11;
 import "./ILiquidPledgingPlugin.sol";
 import "../node_modules/giveth-common-contracts/contracts/Owned.sol";
 
-/// @dev `LPVault` serves as an interface to allow the `LiquidPledgingBase`
-///  contract to interface with a `LPVault` contract
-contract LPVault {
+/// @dev This is an interface for `LPVault` which serves as a secure storage for
+///  the ETH that backs the Pledges, only after `LiquidPledging` authorizes
+///  payments can Pledges be converted for ETH
+contract LPVault { // TODO: This should be `interface` instead of contract????????????????????????????????????????
     function authorizePayment(bytes32 _ref, address _dest, uint _amount);
     function () payable;
 }
 
 /// @dev `LiquidPledgingBase` is the base level contract used to carry out
-///  liquid pledging's most basic functions, mostly handling and searching  the
+///  liquidPledging's most basic functions, mostly handling and searching the
 ///  data structures
 contract LiquidPledgingBase is Owned {
 
@@ -38,10 +40,10 @@ contract LiquidPledgingBase is Owned {
     uint constant MAX_INTERPROJECT_LEVEL = 20;
 
     enum PledgeAdminType { Giver, Delegate, Project }
-    enum PaymentState { Pledged, Paying, Paid }
+    enum PaymentState { Pledged, Paying, Paid } //TODO Very confusing with PaymentStatus rename to PledgeState??????????????
 
     /// @dev This struct defines the details of a `PledgeAdmin` which are 
-    ///  commonly referenced by their index in the `admins` array.
+    ///  commonly referenced by their index in the `admins` array
     ///  and can own pledges and act as delegates
     struct PledgeAdmin { 
         PledgeAdminType adminType; // Giver, Delegate or Project
@@ -64,7 +66,7 @@ contract LiquidPledgingBase is Owned {
         uint64 intendedProject; // Used when delegates are sending to projects
         uint64 commitTime;  // When the intendedProject will become the owner  
         uint64 oldPledge; // Points to the id that this Pledge was derived from
-        PaymentState paymentState; //  Pledged, Paying, Paid 
+        PaymentState paymentState; //  Pledged, Paying, Paid //TODO Very confusing with PaymentStatus rename to pledgeState??????????????
     }
 
     Pledge[] pledges;
@@ -427,7 +429,7 @@ contract LiquidPledgingBase is Owned {
         uint64 intendedProject,
         uint64 commitTime,
         uint64 oldPledge,
-        PaymentState paid
+        PaymentState paid // TODO CHANGE PAID TO STATE
         ) internal returns (uint64)
     {
         bytes32 hPledge = sha3(
