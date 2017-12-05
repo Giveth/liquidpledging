@@ -12,8 +12,8 @@ import "./Owned.sol";
 /// @dev `LiquidPledging` is a basic interface to allow the `LPVault` contract
 ///  to confirm and cancel payments in the `LiquidPledging` contract.
 contract LiquidPledging {
-    function confirmPayment(uint64 idNote, uint amount) public;
-    function cancelPayment(uint64 idNote, uint amount) public;
+    function confirmPayment(uint64 idPledge, uint amount) public;
+    function cancelPayment(uint64 idPledge, uint amount) public;
 }
 
 
