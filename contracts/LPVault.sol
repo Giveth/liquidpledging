@@ -1,13 +1,33 @@
 pragma solidity ^0.4.11;
 
+/*
+    Copyright 2017, Jordi Baylina
+    Contributors: RJ Ewing, Griff Green, Arthur Lunn
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 /// @title LPVault
 /// @author Jordi Baylina
-/// @notice This contract holds ether securely for liquid pledging systems. For
-///  this iteration the funds will come straight from the Giveth Multisig as a
-///  safety precaution, but once fully tested and optimized this contract will
+
+/// @dev This contract holds ether securely for liquid pledging systems; for
+///  this iteration the funds will come often be escaped to the Giveth Multisig
+///  (safety precaution), but once fully tested and optimized this contract will
 ///  be a safe place to store funds equipped with optional variable time delays
-///  to allow for an optional escape hatch to be implemented
-import "./Owned.sol";
+///  to allow for an optional escapeHatch to be implemented in case of issues;
+///  future versions of this contract will be enabled for tokens
+import "./Owned.sol";// TODO IMPORT ESCAPABLE :-D...............................???????????????????????????/
 
 /// @dev `LiquidPledging` is a basic interface to allow the `LPVault` contract
 ///  to confirm and cancel payments in the `LiquidPledging` contract.
@@ -19,21 +39,21 @@ contract LiquidPledging {
 
 /// @dev `LPVault` is a higher level contract built off of the `Owned`
 ///  contract that holds funds for the liquid pledging system.
-contract LPVault is Owned {
+contract LPVault is Owned {// TODO NEEDS TO BE ESCAPABLE!!! AND WE NEED TO ADD A `WITHDRAW PARTIAL` FUNCTION????????????????
 
-    LiquidPledging public liquidPledging; // liquidPledging contract's address
-    bool public autoPay; // if false, payments will take 2 txs to be completed
+    LiquidPledging public liquidPledging; // LiquidPledging contract's address
+    bool public autoPay; // If false, payments will take 2 txs to be completed
 
     enum PaymentStatus {
-        Pending, // means the payment is awaiting confirmation
-        Paid,    // means the payment has been sent
-        Canceled // means the payment will never be sent
+        Pending, // When the payment is awaiting confirmation
+        Paid,    // When the payment has been sent
+        Canceled // When the payment will never be sent
     }
     /// @dev `Payment` is a public structure that describes the details of
     ///  each payment the `ref` param makes it easy to track the movements of
     ///  funds transparently by its connection to other `Payment` structs
     struct Payment {
-        PaymentStatus state; //
+        PaymentStatus state; // Pending, Paid or Canceled
         bytes32 ref; // an input that references details from other contracts
         address dest; // recipient of the ETH
         uint amount; // amount of ETH (in wei) to be sent
@@ -42,45 +62,49 @@ contract LPVault is Owned {
     // @dev An array that contains all the payments for this LPVault
     Payment[] public payments;
 
-    /// @dev `liquidPledging` is the only address that can call a function with
-    ///  this modifier
+    /// @dev The attached `LiquidPledging` contract is the only address that can
+    ///  call a function with this modifier
     modifier onlyLiquidPledging() {
         require(msg.sender == address(liquidPledging));
         _;
     }
-    /// @dev USED FOR TESTING???
+    /// @dev Used for testing... SHOULD BE REMOVED FOR MAINNET LAUNCH OR MAYBE NOT????????????????????....................
     function VaultMock() public pure {
 
     }
-
+    /// @dev The fall back function allows ETH to be deposited into the LPVault
+    ///  through a simple send
     function () public payable {
 
     }
 
-    /// @notice `setLiquidPledging` is used to attach a specific liquid pledging
-    ///  instance to this LPvault. Keep in mind this isn't a single pledge but
-    ///  instead an entire liquid pledging contract.
+    /// @notice `onlyOwner` used to attach a specific liquidPledging instance
+    ///  to this LPvault; keep in mind that once a liquidPledging contract is 
+    ///  attached it cannot be undone, this vault will be forever connected
     /// @param _newLiquidPledging A full liquid pledging contract
     function setLiquidPledging(address _newLiquidPledging) public onlyOwner {
         require(address(liquidPledging) == 0x0);
         liquidPledging = LiquidPledging(_newLiquidPledging);
     }
 
-    /// @notice `setAutopay` is used to toggle whether the LPvault will
-    ///  automatically confirm a payment after the payment has been authorized.
-    /// @param _automatic If true payments will confirm automatically
+    /// @notice Used to decentralize, toggles whether the LPVault will
+    ///  automatically confirm a payment after the payment has been authorized
+    /// @param _automatic If true, payments will confirm instantly, if false
+    ///  the training wheels are put on and the owner must manually approve 
+    ///  every payment
     function setAutopay(bool _automatic) public onlyOwner {
         autoPay = _automatic;
+        AutoPaySet();
     }
 
-    /// @notice `authorizePayment` is used in order to approve a payment 
-    ///  from the liquid pledging contract. Whenever a project or other address
-    ///  needs to receive a payment it needs to be authorized with this contract.
-    /// @param _ref This parameter is used to reference details about the
-    ///  payment from another contract.
-    /// @param _dest This is the address that payments will end up being sent to
-    /// @param _amount This is the amount that the payment is being authorized
-    ///  for.
+    /// @notice `onlyLiquidPledging` authorizes payments from this contract, if 
+    ///  `autoPay == true` the transfer happens automatically `else` the `owner`
+    ///  must call `confirmPayment()` for a transfer to occur (training wheels);
+    ///  either way, a new payment is added to `payments[]` 
+    /// @param _ref References the payment will normally be the pledgeID
+    /// @param _dest The address that payments will be sent to
+    /// @param _amount The amount that the payment is being authorized for
+    /// @return idPayment The id of the payment (needed by the owner to confirm)
     function authorizePayment(
         bytes32 _ref,
         address _dest,
@@ -101,20 +125,18 @@ contract LPVault is Owned {
         return idPayment;
     }
 
-    /// @notice `confirmPayment` is a basic function used to allow the
-    ///  owner of the vault to initiate a payment confirmation. Since 
-    ///  `authorizePayment` is the only pay to populate the `payments` array
+    /// @notice Allows the owner to confirm payments;  since 
+    ///  `authorizePayment` is the only way to populate the `payments[]` array
     ///  this is generally used when `autopay` is `false` after a payment has
-    ///  has been authorized.
+    ///  has been authorized
     /// @param _idPayment Array lookup for the payment.
     function confirmPayment(uint _idPayment) public onlyOwner {
         doConfirmPayment(_idPayment);
     }
 
-    /// @notice `doConfirmPayment` is used to actually initiate a payment
-    ///  to the final destination. All of the payment information should be
-    ///  set before calling this function.
-    /// @param _idPayment Array lookup for the payment.
+    /// @notice Transfers ETH according to the data held within the specified
+    ///  payment id (internal function)
+    /// @param _idPayment id number for the payment about to be fulfilled 
     function doConfirmPayment(uint _idPayment) internal {
         require(_idPayment < payments.length);
         Payment storage p = payments[_idPayment];
@@ -123,21 +145,20 @@ contract LPVault is Owned {
         p.state = PaymentStatus.Paid;
         liquidPledging.confirmPayment(uint64(p.ref), p.amount);
 
-        p.dest.transfer(p.amount);  // only ETH denominated in wei
+        p.dest.transfer(p.amount);  // Transfers ETH denominated in wei
 
         ConfirmPayment(_idPayment);
     }
 
-    /// @notice `cancelPayment` is used when `autopay` is `false` in order
+    /// @notice When `autopay` is `false` and after a payment has been authorized
     ///  to allow the owner to cancel a payment instead of confirming it.
     /// @param _idPayment Array lookup for the payment.
     function cancelPayment(uint _idPayment) public onlyOwner {
         doCancelPayment(_idPayment);
     }
 
-    /// @notice `doCancelPayment` This carries out the task of actually
-    ///  canceling a payment instead of confirming it.
-    /// @param _idPayment Array lookup for the payment.    
+    /// @notice Cancels a pending payment (internal function)
+    /// @param _idPayment id number for the payment    
     function doCancelPayment(uint _idPayment) internal {
         require(_idPayment < payments.length);
         Payment storage p = payments[_idPayment];
@@ -151,8 +172,7 @@ contract LPVault is Owned {
 
     }
 
-    /// @notice `multiConfirm` allows for more efficient confirmation of
-    ///  multiple payments.
+    /// @notice `onlyOwner` An efficient way to confirm multiple payments
     /// @param _idPayments An array of multiple payment ids
     function multiConfirm(uint[] _idPayments) public onlyOwner {
         for (uint i = 0; i < _idPayments.length; i++) {
@@ -160,8 +180,7 @@ contract LPVault is Owned {
         }
     }
 
-    /// @notice `multiCancel` allows for more efficient cancellation of
-    ///  multiple payments.
+    /// @notice `onlyOwner` An efficient way to cancel multiple payments
     /// @param _idPayments An array of multiple payment ids
     function multiCancel(uint[] _idPayments) public onlyOwner {
         for (uint i = 0; i < _idPayments.length; i++) {
@@ -169,14 +188,18 @@ contract LPVault is Owned {
         }
     }
 
-    /// @notice `nPayments` Basic getter to return the number of payments
-    ///  currently held in the system. Since payments are not removed from
-    ///  the array this represents all payments over all time.
+    /// @return The total number of payments that have ever been authorized
     function nPayments() constant public returns (uint) {
         return payments.length;
     }
 
+    event AutoPaySet();
     event ConfirmPayment(uint indexed idPayment);
     event CancelPayment(uint indexed idPayment);
-    event AuthorizePayment(uint indexed idPayment, bytes32 indexed ref, address indexed dest, uint amount);
+    event AuthorizePayment(
+        uint indexed idPayment,
+        bytes32 indexed ref,
+        address indexed dest,
+        uint amount
+        );
 }
