@@ -25,7 +25,8 @@ pragma solidity ^0.4.11;
 ///  this iteration the funds will come often be escaped to the Giveth Multisig
 ///  (safety precaution), but once fully tested and optimized this contract will
 ///  be a safe place to store funds equipped with optional variable time delays
-///  to allow for an optional escape hatch to be implemented
+///  to allow for an optional escapeHatch to be implemented in case of issues;
+///  future versions of this contract will be enabled for tokens
 import "giveth-common-contracts/contracts/Escapable.sol";
 
 /// @dev `LiquidPledging` is a basic interface to allow the `LPVault` contract
