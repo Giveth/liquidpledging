@@ -70,7 +70,7 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             0,
-            PaymentState.Pledged
+            PledgeState.Pledged
         );
 
 
@@ -108,7 +108,7 @@ contract LiquidPledging is LiquidPledgingBase {
         PledgeAdmin storage sender = findAdmin(idSender);
 
         checkAdminOwner(sender);
-        require(n.paymentState == PaymentState.Pledged);
+        require(n.pledgeState == PledgeState.Pledged);
 
         // If the sender is the owner
         if (n.owner == idSender) {
@@ -208,7 +208,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         Pledge storage n = findPledge(idPledge);
 
-        require(n.paymentState == PaymentState.Pledged);
+        require(n.pledgeState == PledgeState.Pledged);
 
         PledgeAdmin storage owner = findAdmin(n.owner);
 
@@ -220,7 +220,7 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             n.oldPledge,
-            PaymentState.Paying
+            PledgeState.Paying
         );
 
         doTransfer(idPledge, idNewPledge, amount);
@@ -234,7 +234,7 @@ contract LiquidPledging is LiquidPledgingBase {
     function confirmPayment(uint64 idPledge, uint amount) onlyVault {
         Pledge storage n = findPledge(idPledge);
 
-        require(n.paymentState == PaymentState.Paying);
+        require(n.pledgeState == PledgeState.Paying);
 
         uint64 idNewPledge = findOrCreatePledge(
             n.owner,
@@ -242,7 +242,7 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             n.oldPledge,
-            PaymentState.Paid
+            PledgeState.Paid
         );
 
         doTransfer(idPledge, idNewPledge, amount);
@@ -254,7 +254,7 @@ contract LiquidPledging is LiquidPledgingBase {
     function cancelPayment(uint64 idPledge, uint amount) onlyVault {
         Pledge storage n = findPledge(idPledge);
 
-        require(n.paymentState == PaymentState.Paying); //TODO change to revert
+        require(n.pledgeState == PledgeState.Paying); //TODO change to revert
 
         // When a payment is canceled, never is assigned to a project.
         uint64 oldPledge = findOrCreatePledge(
@@ -263,7 +263,7 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             n.oldPledge,
-            PaymentState.Pledged
+            PledgeState.Pledged
         );
 
         oldPledge = normalizePledge(oldPledge);
@@ -408,7 +408,7 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             n.oldPledge,
-            PaymentState.Pledged
+            PledgeState.Pledged
         );
         uint64 toPledge = findOrCreatePledge(
             idReceiver,                     // Set the new owner
@@ -416,7 +416,7 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             oldPledge,
-            PaymentState.Pledged
+            PledgeState.Pledged
         );
         doTransfer(idPledge, toPledge, amount);
     }   
@@ -439,7 +439,7 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             0,
-            PaymentState.Pledged
+            PledgeState.Pledged
         );
         doTransfer(idPledge, toPledge, amount);
     }
@@ -473,7 +473,7 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             n.oldPledge,
-            PaymentState.Pledged
+            PledgeState.Pledged
         );
         doTransfer(idPledge, toPledge, amount);
     }
@@ -501,7 +501,7 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             n.oldPledge,
-            PaymentState.Pledged
+            PledgeState.Pledged
         );
         doTransfer(idPledge, toPledge, amount);
 
@@ -531,7 +531,7 @@ contract LiquidPledging is LiquidPledgingBase {
             idReceiver,
             uint64(getTime() + maxCommitTime(n)),
             n.oldPledge,
-            PaymentState.Pledged
+            PledgeState.Pledged
         );
         doTransfer(idPledge, toPledge, amount);
     }
@@ -559,7 +559,7 @@ contract LiquidPledging is LiquidPledgingBase {
         callPlugins(false, from, to, amount);
     }
 
-    /// @notice `normalizePledge` only affects pledges with the Pledged PaymentState
+    /// @notice `normalizePledge` only affects pledges with the Pledged PledgeState
     /// and does 2 things:
     ///   #1: Checks if the pledge should be committed. This means that
     ///       if the pledge has an intendedProject and it is past the
@@ -582,7 +582,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         // Check to make sure this pledge hasn't already been used 
         // or is in the process of being used
-        if (n.paymentState != PaymentState.Pledged) {
+        if (n.pledgeState != PledgeState.Pledged) {
             return idPledge;
         }
 
@@ -594,7 +594,7 @@ contract LiquidPledging is LiquidPledgingBase {
                 0,
                 0,
                 n.oldPledge,
-                PaymentState.Pledged
+                PledgeState.Pledged
             );
             uint64 toPledge = findOrCreatePledge(
                 n.intendedProject,
@@ -602,7 +602,7 @@ contract LiquidPledging is LiquidPledgingBase {
                 0,
                 0,
                 oldPledge,
-                PaymentState.Pledged
+                PledgeState.Pledged
             );
             doTransfer(idPledge, toPledge, n.amount);
             idPledge = toPledge;

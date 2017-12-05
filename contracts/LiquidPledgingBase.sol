@@ -24,7 +24,7 @@ import "../node_modules/giveth-common-contracts/contracts/Owned.sol";
 /// @dev This is an interface for `LPVault` which serves as a secure storage for
 ///  the ETH that backs the Pledges, only after `LiquidPledging` authorizes
 ///  payments can Pledges be converted for ETH
-contract LPVault { // TODO: This should be `interface` instead of contract????????????????????????????????????????
+interface LPVault {
     function authorizePayment(bytes32 _ref, address _dest, uint _amount);
     function () payable;
 }
@@ -40,7 +40,7 @@ contract LiquidPledgingBase is Owned {
     uint constant MAX_INTERPROJECT_LEVEL = 20;
 
     enum PledgeAdminType { Giver, Delegate, Project }
-    enum PaymentState { Pledged, Paying, Paid } //TODO Very confusing with PaymentStatus rename to PledgeState??????????????
+    enum PledgeState { Pledged, Paying, Paid }
 
     /// @dev This struct defines the details of a `PledgeAdmin` which are 
     ///  commonly referenced by their index in the `admins` array
@@ -66,7 +66,7 @@ contract LiquidPledgingBase is Owned {
         uint64 intendedProject; // Used when delegates are sending to projects
         uint64 commitTime;  // When the intendedProject will become the owner  
         uint64 oldPledge; // Points to the id that this Pledge was derived from
-        PaymentState paymentState; //  Pledged, Paying, Paid //TODO Very confusing with PaymentStatus rename to pledgeState??????????????
+        PledgeState pledgeState; //  Pledged, Paying, Paid
     }
 
     Pledge[] pledges;
@@ -336,7 +336,7 @@ contract LiquidPledgingBase is Owned {
         uint64 intendedProject,
         uint64 commitTime,
         uint64 oldPledge,
-        PaymentState paymentState
+        PledgeState pledgeState
     ) {
         Pledge storage n = findPledge(idPledge);
         amount = n.amount;
@@ -345,7 +345,7 @@ contract LiquidPledgingBase is Owned {
         intendedProject = n.intendedProject;
         commitTime = n.commitTime;
         oldPledge = n.oldPledge;
-        paymentState = n.paymentState;
+        pledgeState = n.pledgeState;
     }
 
     /// @notice Getter to find Delegate w/ the Pledge ID & the Delegate index
@@ -421,7 +421,7 @@ contract LiquidPledgingBase is Owned {
     /// @param oldPledge This value is used to store the pledge the current
     ///  pledge was came from, and in the case a Project is canceled, the Pledge
     ///  will revert back to it's previous state
-    /// @param paid The payment state: Pledged, Paying, or Paid 
+    /// @param state The pledge state: Pledged, Paying, or state
     /// @return The hPledge2idx index number
     function findOrCreatePledge(
         uint64 owner,
@@ -429,17 +429,17 @@ contract LiquidPledgingBase is Owned {
         uint64 intendedProject,
         uint64 commitTime,
         uint64 oldPledge,
-        PaymentState paid // TODO CHANGE PAID TO STATE
+        PledgeState state
         ) internal returns (uint64)
     {
         bytes32 hPledge = sha3(
-            owner, delegationChain, intendedProject, commitTime, oldPledge, paid);
+            owner, delegationChain, intendedProject, commitTime, oldPledge, state);
         uint64 idx = hPledge2idx[hPledge];
         if (idx > 0) return idx;
         idx = uint64(pledges.length);
         hPledge2idx[hPledge] = idx;
         pledges.push(Pledge(
-            0, owner, delegationChain, intendedProject, commitTime, oldPledge, paid));
+            0, owner, delegationChain, intendedProject, commitTime, oldPledge, state));
         return idx;
     }
 
