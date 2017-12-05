@@ -85,7 +85,6 @@ contract LPVault is Owned {// TODO NEEDS TO BE ESCAPABLE!!! AND WE NEED TO ADD A
     function setLiquidPledging(address _newLiquidPledging) public onlyOwner {
         require(address(liquidPledging) == 0x0);
         liquidPledging = LiquidPledging(_newLiquidPledging);
-        VaultSet(_newLiquidPledging);
     }
 
     /// @notice Used to decentralize, toggles whether the LPVault will
@@ -102,7 +101,7 @@ contract LPVault is Owned {// TODO NEEDS TO BE ESCAPABLE!!! AND WE NEED TO ADD A
     ///  `autoPay == true` the transfer happens automatically `else` the `owner`
     ///  must call `confirmPayment()` for a transfer to occur (training wheels);
     ///  either way, a new payment is added to `payments[]` 
-    /// @param _ref References the payment can be a URL, IPFS hash, etc
+    /// @param _ref References the payment will normally be the pledgeID
     /// @param _dest The address that payments will be sent to
     /// @param _amount The amount that the payment is being authorized for
     /// @return idPayment The id of the payment (needed by the owner to confirm)
@@ -195,7 +194,6 @@ contract LPVault is Owned {// TODO NEEDS TO BE ESCAPABLE!!! AND WE NEED TO ADD A
     }
 
     event AutoPaySet();
-    event VaultSet(address indexed liquidPledging);
     event ConfirmPayment(uint indexed idPayment);
     event CancelPayment(uint indexed idPayment);
     event AuthorizePayment(
