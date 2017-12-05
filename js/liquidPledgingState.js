@@ -20,14 +20,14 @@ class LiquidPledgingState {
       if (res.oldPledge) {
         pledge.oldPledge = res.oldPledge;
       }
-      if (res.paymentState === '0') {
-        pledge.paymentState = 'Pledged';
-      } else if (res.paymentState === '1') {
-        pledge.paymentState = 'Paying';
-      } else if (res.paymentState === '2') {
-        pledge.paymentState = 'Paid';
+      if (res.pledgeState === '0') {
+        pledge.pledgeState = 'Pledged';
+      } else if (res.pledgeState === '1') {
+        pledge.pledgeState = 'Paying';
+      } else if (res.pledgeState === '2') {
+        pledge.pledgeState = 'Paid';
       } else {
-        pledge.paymentState = 'Unknown';
+        pledge.pledgeState = 'Unknown';
       }
 
       const promises = [];
@@ -68,7 +68,7 @@ class LiquidPledgingState {
       admin.name = res.name;
       admin.url = res.url;
       admin.commitTime = res.commitTime;
-      if (admin.paymentState === 'Project') {
+      if (admin.adminType === 'Project') {
         admin.parentProject = res.parentProject;
         admin.canceled = res.canceled;
       }
