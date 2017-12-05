@@ -137,8 +137,8 @@ contract LiquidPledging is LiquidPledgingBase {
                         undelegate(idPledge, amount, n.delegationChain.length - receiverDIdx - 1);
                     }
                 } else {
-                    // owner is transferring pledge to a new delegate, so we want to reset
-                    // the delegationChain
+                    // owner is not vetoing an intendedProject and is transferring the pledge to a delegate,
+                    // so we want to reset the delegationChain
                     idPledge = undelegate(idPledge, amount, n.delegationChain.length);
                     appendDelegate(idPledge, amount, idReceiver);
                 }
