@@ -46,7 +46,7 @@ contract LPVault is Owned {// TODO NEEDS TO BE ESCAPABLE!!! AND WE NEED TO ADD A
 
     enum PaymentStatus {
         Pending, // When the payment is awaiting confirmation
-        Paid,    // When the payment has been sent //TODO CHANGE TO SENT?????????????????????????????????
+        Paid,    // When the payment has been sent
         Canceled // When the payment will never be sent
     }
     /// @dev `Payment` is a public structure that describes the details of
