@@ -338,14 +338,14 @@ contract LiquidPledgingBase is Owned {
         uint64 oldPledge,
         PledgeState pledgeState
     ) {
-        Pledge storage n = findPledge(idPledge);
-        amount = n.amount;
-        owner = n.owner;
-        nDelegates = uint64(n.delegationChain.length);
-        intendedProject = n.intendedProject;
-        commitTime = n.commitTime;
-        oldPledge = n.oldPledge;
-        pledgeState = n.pledgeState;
+        Pledge storage p = findPledge(idPledge);
+        amount = p.amount;
+        owner = p.owner;
+        nDelegates = uint64(p.delegationChain.length);
+        intendedProject = p.intendedProject;
+        commitTime = p.commitTime;
+        oldPledge = p.oldPledge;
+        pledgeState = p.pledgeState;
     }
 
     /// @notice Getter to find Delegate w/ the Pledge ID & the Delegate index
@@ -356,8 +356,8 @@ contract LiquidPledgingBase is Owned {
         address addr,
         string name
     ) {
-        Pledge storage n = findPledge(idPledge);
-        idDelegate = n.delegationChain[idxDelegate - 1];
+        Pledge storage p = findPledge(idPledge);
+        idDelegate = p.delegationChain[idxDelegate - 1];
         PledgeAdmin storage delegate = findAdmin(idDelegate);
         addr = delegate.addr;
         name = delegate.name;
@@ -464,39 +464,39 @@ contract LiquidPledgingBase is Owned {
 
     /// @notice A getter that searches the delegationChain for the level of
     ///  authority a specific delegate has within a Pledge
-    /// @param n The Pledge that will be searched
+    /// @param p The Pledge that will be searched
     /// @param idDelegate The specified delegate that's searched for
     /// @return If the delegate chain contains the delegate with the
     ///  `admins` array index `idDelegate` this returns that delegates
     ///  corresponding index in the delegationChain. Otherwise it returns
     ///  the NOTFOUND constant
-    function getDelegateIdx(Pledge n, uint64 idDelegate) internal returns(uint64) {
-        for (uint i=0; i < n.delegationChain.length; i++) {
-            if (n.delegationChain[i] == idDelegate) return uint64(i);
+    function getDelegateIdx(Pledge p, uint64 idDelegate) internal returns(uint64) {
+        for (uint i=0; i < p.delegationChain.length; i++) {
+            if (p.delegationChain[i] == idDelegate) return uint64(i);
         }
         return NOTFOUND;
     }
 
     /// @notice A getter to find how many old "parent" pledges a specific Pledge
     ///  had using a self-referential loop
-    /// @param n The Pledge being queried
+    /// @param p The Pledge being queried
     /// @return The number of old "parent" pledges a specific Pledge had
-    function getPledgeLevel(Pledge n) internal returns(uint) {
-        if (n.oldPledge == 0) return 0;
-        Pledge storage oldN = findPledge(n.oldPledge);
+    function getPledgeLevel(Pledge p) internal returns(uint) {
+        if (p.oldPledge == 0) return 0;
+        Pledge storage oldN = findPledge(p.oldPledge);
         return getPledgeLevel(oldN) + 1; // a loop lookup
     }
 
     /// @notice A getter to find the longest commitTime out of the owner and all
     ///  the delegates for a specified pledge
-    /// @param n The Pledge being queried
+    /// @param p The Pledge being queried
     /// @return The maximum commitTime out of the owner and all the delegates
-    function maxCommitTime(Pledge n) internal returns(uint commitTime) {
-        PledgeAdmin storage m = findAdmin(n.owner);
+    function maxCommitTime(Pledge p) internal returns(uint commitTime) {
+        PledgeAdmin storage m = findAdmin(p.owner);
         commitTime = m.commitTime; // start with the owner's commitTime
 
-        for (uint i=0; i<n.delegationChain.length; i++) {
-            m = findAdmin(n.delegationChain[i]);
+        for (uint i=0; i<p.delegationChain.length; i++) {
+            m = findAdmin(p.delegationChain[i]);
 
             // If a delegate's commitTime is longer, make it the new commitTime
             if (m.commitTime > commitTime) commitTime = m.commitTime;
@@ -532,15 +532,15 @@ contract LiquidPledgingBase is Owned {
     function getOldestPledgeNotCanceled(uint64 idPledge
         ) internal constant returns(uint64) {
         if (idPledge == 0) return 0;
-        Pledge storage n = findPledge(idPledge);
-        PledgeAdmin storage admin = findAdmin(n.owner);
+        Pledge storage p = findPledge(idPledge);
+        PledgeAdmin storage admin = findAdmin(p.owner);
         if (admin.adminType == PledgeAdminType.Giver) return idPledge;
 
         assert(admin.adminType == PledgeAdminType.Project);
 
-        if (!isProjectCanceled(n.owner)) return idPledge;
+        if (!isProjectCanceled(p.owner)) return idPledge;
 
-        return getOldestPledgeNotCanceled(n.oldPledge);
+        return getOldestPledgeNotCanceled(p.oldPledge);
     }
 
     /// @notice A check to see if the msg.sender is the owner or the
