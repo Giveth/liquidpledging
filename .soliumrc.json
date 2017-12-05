@@ -12,7 +12,7 @@
     "no-with": true,
     "no-empty-blocks": true,
     "no-unused-vars": true,
-    "double-quotes": true,
+    "quotes": true,
     "blank-lines": true,
     "indentation": true,
     "whitespace": true,

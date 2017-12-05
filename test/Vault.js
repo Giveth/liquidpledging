@@ -8,7 +8,7 @@ const assertFail = require('./helpers/assertFail');
 
 const LiquidPledging = liquidpledging.LiquidPledgingMock;
 const LiquidPledgingState = liquidpledging.LiquidPledgingState;
-const Vault = liquidpledging.Vault;
+const Vault = liquidpledging.LPVault;
 const assert = chai.assert;
 
 describe('Vault test', function () {
@@ -51,7 +51,7 @@ describe('Vault test', function () {
 
   it('Should deploy Vault contract', async function () {
     vault = await Vault.new(web3, escapeHatchCaller, escapeHatchDestination, { from: vaultOwner });
-    liquidPledging = await LiquidPledging.new(web3, vault.$address, { gas: 6500000 });
+    liquidPledging = await LiquidPledging.new(web3, vault.$address, escapeHatchCaller, escapeHatchDestination, { gas: 6500000 });
     await vault.setLiquidPledging(liquidPledging.$address, { from: vaultOwner });
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
 
@@ -94,7 +94,5 @@ describe('Vault test', function () {
 
     assert.equal(expected, postBalance);
   });
-
-  it('should')
 });
 

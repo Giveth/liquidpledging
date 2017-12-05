@@ -37,7 +37,12 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @dev This constructor  also calls the constructor 
     ///  for `LiquidPledgingBase`
     /// @param _vault The vault where ETH backing this pledge is stored
-    function LiquidPledging(address _vault) LiquidPledgingBase(_vault) {
+    function LiquidPledging(
+        address _vault,
+        address _escapeHatchCaller,
+        address _escapeHatchDestination
+    ) LiquidPledgingBase(_vault, _escapeHatchCaller, _escapeHatchDestination) {
+
     }
 
     /// @notice This is how value enters into the system which creates pledges;

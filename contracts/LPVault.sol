@@ -7,7 +7,8 @@ pragma solidity ^0.4.11;
 ///  safety precaution, but once fully tested and optimized this contract will
 ///  be a safe place to store funds equipped with optional variable time delays
 ///  to allow for an optional escape hatch to be implemented
-import "../node_modules/giveth-common-contracts/contracts/Escapable.sol";
+import "giveth-common-contracts/contracts/Escapable.sol";
+
 
 /// @dev `LiquidPledging` is a basic interface to allow the `LPVault` contract
 ///  to confirm and cancel payments in the `LiquidPledging` contract.
@@ -42,8 +43,9 @@ contract LPVault is Escapable {
     // @dev An array that contains all the payments for this LPVault
     Payment[] public payments;
 
-    function Vault(address _escapeHatchCaller, address _escapeHatchDestination)
-        Escapable(_escapeHatchCaller, _escapeHatchDestination) public {
+    function LPVault(address _escapeHatchCaller, address _escapeHatchDestination)
+        Escapable(_escapeHatchCaller, _escapeHatchDestination) public
+    {
     }
 
     /// @dev `liquidPledging` is the only address that can call a function with
@@ -82,7 +84,9 @@ contract LPVault is Escapable {
     function authorizePayment(
         bytes32 _ref,
         address _dest,
-        uint _amount ) public onlyLiquidPledging returns (uint) {
+        uint _amount
+    ) public onlyLiquidPledging returns (uint)
+    {
         uint idPayment = payments.length;
         payments.length ++;
         payments[idPayment].state = PaymentStatus.Pending;

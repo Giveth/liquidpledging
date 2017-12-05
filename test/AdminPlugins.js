@@ -55,7 +55,7 @@ describe('LiquidPledging plugins test', function () {
 
   it('Should deploy LiquidPledging contract', async function() {
     vault = await Vault.new(web3, accounts[0], accounts[1]);
-    liquidPledging = await LiquidPledging.new(web3, vault.$address, { gas: 6500000 });
+    liquidPledging = await LiquidPledging.new(web3, vault.$address, accounts[0], accounts[1], { gas: 6500000 });
     await vault.setLiquidPledging(liquidPledging.$address);
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
   });
