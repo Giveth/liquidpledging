@@ -2,7 +2,8 @@ pragma solidity ^0.4.11;
 
 /*
     Copyright 2017, Jordi Baylina
-    Contributor: Adrià Massanet <adria@codecontext.io>
+    Contributors: Adrià Massanet <adria@codecontext.io>, RJ Ewing, Griff
+    Green, Arthur Lunn
 
     This program is free software: you can redistribute it and/or modify
     it under the terms of the GNU General Public License as published by
