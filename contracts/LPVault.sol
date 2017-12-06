@@ -217,6 +217,7 @@ contract LPVault is Escapable {
     }
 
     event AutoPaySet();
+    event EscapeFundsCalled(address token, uint amount);
     event ConfirmPayment(uint indexed idPayment);
     event CancelPayment(uint indexed idPayment);
     event AuthorizePayment(
