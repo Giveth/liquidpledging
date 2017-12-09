@@ -193,7 +193,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @notice Authorizes a payment be made from the `vault` can be used by the
     ///  Giver to veto a pre-committed donation from a Delegate to an
     ///  intendedProject
-    /// @param idPledge Id of the pledge that wants to be withdrawn.
+    /// @param idPledge Id of the pledge that is to be redeemed into ether
     /// @param amount Quantity of ether (in wei) to be authorized
     function withdraw(uint64 idPledge, uint amount) {
         idPledge = normalizePledge(idPledge); // Updates pledge info 
@@ -216,9 +216,10 @@ contract LiquidPledging is LiquidPledgingBase {
         vault.authorizePayment(bytes32(idNewPledge), owner.addr, amount);
     }
 
-    /// @notice Method called by the vault to confirm a payment.
-    /// @param idPledge Id of the pledge that wants to be withdrawn.
-     /// @param amount Quantity of ether (in wei) to be withdrawn
+    /// @notice `onlyVault` Confirms a withdraw request changing the PledgeState
+    ///  from Paying to Paid
+    /// @param idPledge Id of the pledge that is to be withdrawn
+    /// @param amount Quantity of ether (in wei) to be withdrawn
     function confirmPayment(uint64 idPledge, uint amount) onlyVault {
         Pledge storage p = findPledge(idPledge);
 
@@ -236,9 +237,10 @@ contract LiquidPledging is LiquidPledgingBase {
         doTransfer(idPledge, idNewPledge, amount);
     }
 
-    /// @notice Method called by the vault to cancel a payment.
-    /// @param idPledge Id of the pledge that wants to be canceled for withdraw.
-    /// @param amount Quantity of ether (in wei) to be rolled back
+    /// @notice `onlyVault` Cancels a withdraw request, changing the PledgeState 
+    ///  from Paying back to Pledged
+    /// @param idPledge Id of the pledge that's withdraw is to be canceled
+    /// @param amount Quantity of ether (in wei) to be canceled
     function cancelPayment(uint64 idPledge, uint amount) onlyVault {
         Pledge storage p = findPledge(idPledge);
 
@@ -259,8 +261,8 @@ contract LiquidPledging is LiquidPledgingBase {
         doTransfer(idPledge, oldPledge, amount);
     }
 
-    /// @notice Method called to cancel this project.
-    /// @param idProject Id of the projct that wants to be canceled.
+    /// @notice Changes the `project.canceled` flag to `true`; cannot be undone
+    /// @param idProject Id of the project that is to be canceled
     function cancelProject(uint64 idProject) { 
         PledgeAdmin storage project = findAdmin(idProject);
         checkAdminOwner(project);
@@ -269,9 +271,11 @@ contract LiquidPledging is LiquidPledgingBase {
         CancelProject(idProject);
     }
 
-    /// @notice Method called to cancel specific pledge.
-    /// @param idPledge Id of the pledge that should be canceled.
-    /// @param amount Quantity of Ether that wants to be rolled back.
+    /// @notice Transfers `amount` in `idPledge` back to the `oldPledge` that
+    ///  that sent it there in the first place, a Ctrl-z 
+    /// @param idPledge Id of the pledge that is to be canceled
+    /// @param amount Quantity of ether (in wei) to be transfered to the 
+    ///  `oldPledge`
     function cancelPledge(uint64 idPledge, uint amount) { 
         idPledge = normalizePledge(idPledge);
 
