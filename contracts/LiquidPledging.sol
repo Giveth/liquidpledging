@@ -298,19 +298,19 @@ contract LiquidPledging is LiquidPledgingBase {
     // efficient (saves gas) than calling these functions in series
     
     
-    /// Bit mask used for dividing pledge amounts in Multi pledge methods
+    /// @dev Bitmask used for dividing pledge amounts in Multi pledge methods
     uint constant D64 = 0x10000000000000000;
 
-    /// @notice `mTransfer` allows for multiple pledges to be transferred
-    ///  efficiently
-    /// @param idSender ID of the giver, delegate or project admin that is
-    ///  transferring the funds from Pledge to Pledge. This admin must have 
-    ///  permissions to move the value
-    /// @param pledgesAmounts An array of pledge amounts and IDs which are extrapolated
-    ///  using the D64 bitmask
-    /// @param idReceiver Destination of the value, can be a giver sending
-    ///  to a giver or a delegate or a delegate to another delegate or a
-    ///  project to pre-commit it to that project
+    /// @notice Transfers multiple amounts within multiple Pledges in an
+    ///  efficient single call 
+    /// @param idSender Id of the Admin that is transferring the amounts from
+    ///  all the Pledges; this admin must have permissions to move the value
+    /// @param pledgesAmounts An array of Pledge amounts and the idPledges with 
+    ///  which the amounts are associated; these are extrapolated using the D64
+    ///  bitmask
+    /// @param idReceiver Destination of the `pledesAmounts`, can be a Giver or 
+    ///  Project sending to a Giver, a Delegate or a Project; a Delegate sending
+    ///  to another Delegate, or a Delegate pre-commiting it to a Project 
     function mTransfer(
         uint64 idSender,
         uint[] pledgesAmounts,
@@ -324,10 +324,11 @@ contract LiquidPledging is LiquidPledgingBase {
         }
     }
 
-    /// @notice `mWithdraw` allows for multiple pledges to be
-    ///  withdrawn efficiently
-    /// @param pledgesAmounts An array of pledge amounts and IDs which are
-    ///  extrapolated using the D64 bitmask
+    /// @notice Authorizes multiple amounts within multiple Pledges to be
+    ///  withdrawn from the `vault` in an efficient single call 
+    /// @param pledgesAmounts An array of Pledge amounts and the idPledges with 
+    ///  which the amounts are associated; these are extrapolated using the D64
+    ///  bitmask
     function mWithdraw(uint[] pledgesAmounts) {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
             uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
