@@ -35,7 +35,7 @@ interface LPVault {
 contract LiquidPledgingBase is Escapable {
 
     // Limits inserted to prevent large loops that could prevent canceling
-    uint constant MAX_DELEGATES = 20;
+    uint constant MAX_DELEGATES = 10;
     uint constant MAX_SUBPROJECT_LEVEL = 20;
     uint constant MAX_INTERPROJECT_LEVEL = 20;
 

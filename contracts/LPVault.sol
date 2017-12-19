@@ -149,7 +149,7 @@ contract LPVault is Escapable {
 
         p.dest.transfer(p.amount);  // Transfers ETH denominated in wei
 
-        ConfirmPayment(_idPayment);
+        ConfirmPayment(_idPayment, p.ref);
     }
 
     /// @notice When `autopay` is `false` and after a payment has been authorized
@@ -170,7 +170,7 @@ contract LPVault is Escapable {
 
         liquidPledging.cancelPayment(uint64(p.ref), p.amount);
 
-        CancelPayment(_idPayment);
+        CancelPayment(_idPayment, p.ref);
 
     }
 
@@ -218,8 +218,8 @@ contract LPVault is Escapable {
 
     event AutoPaySet();
     event EscapeFundsCalled(address token, uint amount);
-    event ConfirmPayment(uint indexed idPayment);
-    event CancelPayment(uint indexed idPayment);
+    event ConfirmPayment(uint indexed idPayment, bytes32 indexed ref);
+    event CancelPayment(uint indexed idPayment, bytes32 indexed ref);
     event AuthorizePayment(
         uint indexed idPayment,
         bytes32 indexed ref,
