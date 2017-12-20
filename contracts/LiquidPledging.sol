@@ -117,12 +117,36 @@ contract LiquidPledging is LiquidPledgingBase {
             } else if (receiver.adminType == PledgeAdminType.Project) {
                 transferOwnershipToProject(idPledge, amount, idReceiver);
             } else if (receiver.adminType == PledgeAdminType.Delegate) {
-                idPledge = undelegate(
-                    idPledge,
-                    amount,
-                    p.delegationChain.length
-                );
-                appendDelegate(idPledge, amount, idReceiver);
+
+                uint recieverDIdx = getDelegateIdx(p, idReceiver);
+                if (p.intendedProject > 0 && recieverDIdx != NOTFOUND) {
+                    // if there is an intendedProject and the receiver is in the delegationChain,
+                    // then we want to preserve the delegationChain as this is a veto of the
+                    // intendedProject by the owner
+
+                    if (recieverDIdx == p.delegationChain.length - 1) {
+                        uint64 toPledge = findOrCreatePledge(
+                            p.owner,
+                            p.delegationChain,
+                            0,
+                            0,
+                            p.oldPledge,
+                            PledgeState.Pledged);
+                        doTransfer(idPledge, toPledge, amount);
+                    } else {
+                        undelegate(idPledge, amount, p.delegationChain.length - receiverDIdx - 1);
+                    }
+                } else {
+                    // owner is not vetoing an intendedProject and is transferring the pledge to a delegate,
+                    // so we want to reset the delegationChain
+                    idPledge = undelegate(
+                        idPledge,
+                        amount,
+                        p.delegationChain.length
+                    );
+                    appendDelegate(idPledge, amount, idReceiver);
+                }
+                
             } else {
                 // This should never be reached as the reciever.adminType
                 // should always be either a Giver, Project, or Delegate

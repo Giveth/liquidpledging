@@ -178,5 +178,44 @@ describe('DelegationChain test', function () {
 
     const pledge = await liquidPledging.getPledge(8);
     assert.equal(pledge.commitTime, now + 259200); // 259200 is longest commitTime in delegationChain
-  })
+  });
+
+  it('delegation chain should remain the same when owner veto\'s delegation', async () => {
+    // owner veto delegation to project1
+    await liquidPledging.transfer(1, 8, 1000, 3, { from: giver1, $extraGas: 100000 });
+
+    const st = await liquidPledgingState.getState();
+    assert.equal(st.pledges[ 8 ].amount, 0);
+    assert.equal(st.pledges[ 3 ].amount, 1000);
+    assert.equal(st.pledges[ 3 ].delegates.length, 2);
+    assert.equal(st.pledges[ 3 ].delegates[ 0 ].id, 2);
+    assert.equal(st.pledges[ 3 ].delegates[ 1 ].id, 3);
+  });
+
+  it('delegation chain should remain the same upto delegate of reciever when owner veto\'s delegation', async () => {
+    // propose project1 delegation
+    await liquidPledging.transfer(3, 3, 1000, 5, { from: delegate2, $extraGas: 100000 });
+    // owner veto delegation to project1 and remove delegate2
+    await liquidPledging.transfer(1, 8, 1000, 2, { from: giver1, $extraGas: 100000 });
+
+    const pledge = await liquidPledging.getPledge(2);
+    assert.equal(pledge.amount, 1000);
+  });
+
+  it('owner should be able to transfer pledge to a new delegate at any time', async () => {
+    // propose project1 delegation
+    await liquidPledging.transfer(2, 2, 1000, 5, { from: delegate1, $extraGas: 100000 });
+    // owner veto delegation to project1 and assign new delgate
+    await liquidPledging.transfer(1, 9, 1000, 3, { from: giver1, $extraGas: 100000 });
+
+    const pledge = await liquidPledging.getPledge(10);
+    assert.equal(pledge.amount, 1000);
+    assert.equal(pledge.nDelegates, 1);
+
+    // owner assign new delegate w/o vetoing intendedProject
+    await liquidPledging.transfer(1, 10, 1000, 2, { from: giver1, $extraGas: 100000 });
+    const pledge2 = await liquidPledging.getPledge(2);
+    assert.equal(pledge2.amount, 1000);
+    await printState(liquidPledgingState);
+  });
 });
