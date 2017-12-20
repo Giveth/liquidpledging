@@ -515,7 +515,7 @@ contract LiquidPledgingBase is Escapable {
         assert(m.adminType == PledgeAdminType.Project);
         if (m.parentProject == 0) return(1);
         PledgeAdmin storage parentNM = findAdmin(m.parentProject);
-        return getProjectLevel(parentNM);
+        return getProjectLevel(parentNM) + 1;
     }
 
     /// @notice A getter to find if a specified Project has been canceled
