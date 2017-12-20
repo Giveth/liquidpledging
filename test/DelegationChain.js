@@ -216,6 +216,5 @@ describe('DelegationChain test', function () {
     await liquidPledging.transfer(1, 10, 1000, 2, { from: giver1, $extraGas: 100000 });
     const pledge2 = await liquidPledging.getPledge(2);
     assert.equal(pledge2.amount, 1000);
-    await printState(liquidPledgingState);
   });
 });
