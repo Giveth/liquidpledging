@@ -19,7 +19,7 @@ pragma solidity ^0.4.11;
 */
 
 import "./ILiquidPledgingPlugin.sol";
-import "../node_modules/giveth-common-contracts/contracts/Owned.sol";
+import "giveth-common-contracts/contracts/Escapable.sol";
 
 /// @dev This is an interface for `LPVault` which serves as a secure storage for
 ///  the ETH that backs the Pledges, only after `LiquidPledging` authorizes
@@ -32,10 +32,10 @@ interface LPVault {
 /// @dev `LiquidPledgingBase` is the base level contract used to carry out
 ///  liquidPledging's most basic functions, mostly handling and searching the
 ///  data structures
-contract LiquidPledgingBase is Owned {
+contract LiquidPledgingBase is Escapable {
 
     // Limits inserted to prevent large loops that could prevent canceling
-    uint constant MAX_DELEGATES = 20;
+    uint constant MAX_DELEGATES = 10;
     uint constant MAX_SUBPROJECT_LEVEL = 20;
     uint constant MAX_INTERPROJECT_LEVEL = 20;
 
@@ -99,7 +99,11 @@ contract LiquidPledgingBase is Owned {
 
     /// @notice The Constructor creates `LiquidPledgingBase` on the blockchain
     /// @param _vault The vault where the ETH backing the pledges is stored
-    function LiquidPledgingBase(address _vault) {
+    function LiquidPledgingBase(
+        address _vault,
+        address _escapeHatchCaller,
+        address _escapeHatchDestination
+    ) Escapable(_escapeHatchCaller, _escapeHatchDestination) public {
         admins.length = 1; // we reserve the 0 admin
         pledges.length = 1; // we reserve the 0 pledge
         vault = LPVault(_vault); // Assigns the specified vault

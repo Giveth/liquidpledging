@@ -27,7 +27,7 @@ pragma solidity ^0.4.11;
 ///  be a safe place to store funds equipped with optional variable time delays
 ///  to allow for an optional escapeHatch to be implemented in case of issues;
 ///  future versions of this contract will be enabled for tokens
-import "./Owned.sol";// TODO IMPORT ESCAPABLE :-D...............................???????????????????????????/
+import "giveth-common-contracts/contracts/Escapable.sol";
 
 /// @dev `LiquidPledging` is a basic interface to allow the `LPVault` contract
 ///  to confirm and cancel payments in the `LiquidPledging` contract.
@@ -37,9 +37,9 @@ contract LiquidPledging {
 }
 
 
-/// @dev `LPVault` is a higher level contract built off of the `Owned`
+/// @dev `LPVault` is a higher level contract built off of the `Escapable`
 ///  contract that holds funds for the liquid pledging system.
-contract LPVault is Owned {// TODO NEEDS TO BE ESCAPABLE!!! AND WE NEED TO ADD A `WITHDRAW PARTIAL` FUNCTION????????????????
+contract LPVault is Escapable {
 
     LiquidPledging public liquidPledging; // LiquidPledging contract's address
     bool public autoPay; // If false, payments will take 2 txs to be completed
@@ -62,21 +62,21 @@ contract LPVault is Owned {// TODO NEEDS TO BE ESCAPABLE!!! AND WE NEED TO ADD A
     // @dev An array that contains all the payments for this LPVault
     Payment[] public payments;
 
+    function LPVault(address _escapeHatchCaller, address _escapeHatchDestination)
+        Escapable(_escapeHatchCaller, _escapeHatchDestination) public
+    {
+    }
+
     /// @dev The attached `LiquidPledging` contract is the only address that can
     ///  call a function with this modifier
     modifier onlyLiquidPledging() {
         require(msg.sender == address(liquidPledging));
         _;
     }
-    /// @dev Used for testing... SHOULD BE REMOVED FOR MAINNET LAUNCH OR MAYBE NOT????????????????????....................
-    function VaultMock() public pure {
 
-    }
     /// @dev The fall back function allows ETH to be deposited into the LPVault
     ///  through a simple send
-    function () public payable {
-
-    }
+    function () public payable {}
 
     /// @notice `onlyOwner` used to attach a specific liquidPledging instance
     ///  to this LPvault; keep in mind that once a liquidPledging contract is 
@@ -108,7 +108,9 @@ contract LPVault is Owned {// TODO NEEDS TO BE ESCAPABLE!!! AND WE NEED TO ADD A
     function authorizePayment(
         bytes32 _ref,
         address _dest,
-        uint _amount ) public onlyLiquidPledging returns (uint) {
+        uint _amount
+    ) public onlyLiquidPledging returns (uint)
+    {
         uint idPayment = payments.length;
         payments.length ++;
         payments[idPayment].state = PaymentStatus.Pending;
@@ -147,7 +149,7 @@ contract LPVault is Owned {// TODO NEEDS TO BE ESCAPABLE!!! AND WE NEED TO ADD A
 
         p.dest.transfer(p.amount);  // Transfers ETH denominated in wei
 
-        ConfirmPayment(_idPayment);
+        ConfirmPayment(_idPayment, p.ref);
     }
 
     /// @notice When `autopay` is `false` and after a payment has been authorized
@@ -168,7 +170,7 @@ contract LPVault is Owned {// TODO NEEDS TO BE ESCAPABLE!!! AND WE NEED TO ADD A
 
         liquidPledging.cancelPayment(uint64(p.ref), p.amount);
 
-        CancelPayment(_idPayment);
+        CancelPayment(_idPayment, p.ref);
 
     }
 
@@ -193,9 +195,31 @@ contract LPVault is Owned {// TODO NEEDS TO BE ESCAPABLE!!! AND WE NEED TO ADD A
         return payments.length;
     }
 
+    /// Transfer eth or tokens to the escapeHatchDestination.
+    /// Used as a safety mechanism to prevent the vault from holding too much value
+    /// before being thoroughly battle-tested.
+    /// @param _token to transfer, use 0x0 for ether
+    /// @param _amount to transfer
+    function escapeFunds(address _token, uint _amount) public onlyOwner {
+        /// @dev Logic for ether
+        if (_token == 0x0) {
+            require(this.balance >= _amount);
+            escapeHatchDestination.transfer(_amount);
+            EscapeHatchCalled(_token, _amount);
+            return;
+        }
+        /// @dev Logic for tokens
+        ERC20 token = ERC20(_token);
+        uint balance = token.balanceOf(this);
+        require(balance >= _amount);
+        require(token.transfer(escapeHatchDestination, _amount));
+        EscapeFundsCalled(_token, _amount);
+    }
+
     event AutoPaySet();
-    event ConfirmPayment(uint indexed idPayment);
-    event CancelPayment(uint indexed idPayment);
+    event EscapeFundsCalled(address token, uint amount);
+    event ConfirmPayment(uint indexed idPayment, bytes32 indexed ref);
+    event CancelPayment(uint indexed idPayment, bytes32 indexed ref);
     event AuthorizePayment(
         uint indexed idPayment,
         bytes32 indexed ref,
