@@ -25,8 +25,8 @@ import "giveth-common-contracts/contracts/Escapable.sol";
 ///  the ETH that backs the Pledges, only after `LiquidPledging` authorizes
 ///  payments can Pledges be converted for ETH
 interface LPVault {
-    function authorizePayment(bytes32 _ref, address _dest, uint _amount);
-    function () payable;
+    function authorizePayment(bytes32 _ref, address _dest, uint _amount) public;
+    function () public payable;
 }
 
 /// @dev `LiquidPledgingBase` is the base level contract used to carry out
@@ -127,7 +127,7 @@ contract LiquidPledgingBase is Escapable {
         string url,
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
-    ) returns (uint64 idGiver) {
+    ) public returns (uint64 idGiver) {
 
         require(isValidPlugin(plugin)); // Plugin check
 
@@ -162,7 +162,7 @@ contract LiquidPledgingBase is Escapable {
         address newAddr,
         string newName,
         string newUrl,
-        uint64 newCommitTime)
+        uint64 newCommitTime) public
     {
         PledgeAdmin storage giver = findAdmin(idGiver);
         require(giver.adminType == PledgeAdminType.Giver); // Must be a Giver
@@ -191,7 +191,7 @@ contract LiquidPledgingBase is Escapable {
         string url,
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
-    ) returns (uint64 idDelegate) { 
+    ) public returns (uint64 idDelegate) {
 
         require(isValidPlugin(plugin)); // Plugin check
 
@@ -228,7 +228,8 @@ contract LiquidPledgingBase is Escapable {
         address newAddr,
         string newName,
         string newUrl,
-        uint64 newCommitTime) {
+        uint64 newCommitTime) public
+    {
         PledgeAdmin storage delegate = findAdmin(idDelegate);
         require(delegate.adminType == PledgeAdminType.Delegate);
         require(delegate.addr == msg.sender);// Current addr had to send this tx
@@ -260,7 +261,8 @@ contract LiquidPledgingBase is Escapable {
         uint64 parentProject,
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
-    ) returns (uint64 idProject) {
+    ) public returns (uint64 idProject)
+    {
         require(isValidPlugin(plugin));
 
         if (parentProject != 0) {
@@ -303,7 +305,7 @@ contract LiquidPledgingBase is Escapable {
         address newAddr,
         string newName,
         string newUrl,
-        uint64 newCommitTime)
+        uint64 newCommitTime) public
     {
         PledgeAdmin storage project = findAdmin(idProject);
         require(project.adminType == PledgeAdminType.Project);
@@ -324,7 +326,7 @@ contract LiquidPledgingBase is Escapable {
 
     /// @notice A constant getter that returns the total number of pledges
     /// @return The total number of Pledges in the system
-    function numberOfPledges() constant returns (uint) {
+    function numberOfPledges() public constant returns (uint) {
         return pledges.length - 1;
     }
 
@@ -333,7 +335,7 @@ contract LiquidPledgingBase is Escapable {
     /// @return the amount, owner, the number of delegates (but not the actual
     ///  delegates, the intendedProject (if any), the current commit time and
     ///  the previous pledge this pledge was derived from
-    function getPledge(uint64 idPledge) constant returns(
+    function getPledge(uint64 idPledge) public constant returns(
         uint amount,
         uint64 owner,
         uint64 nDelegates,
@@ -355,7 +357,7 @@ contract LiquidPledgingBase is Escapable {
     /// @notice Getter to find Delegate w/ the Pledge ID & the Delegate index
     /// @param idPledge The id number representing the pledge being queried
     /// @param idxDelegate The index number for the delegate in this Pledge 
-    function getPledgeDelegate(uint64 idPledge, uint idxDelegate) constant returns(
+    function getPledgeDelegate(uint64 idPledge, uint idxDelegate) public constant returns(
         uint64 idDelegate,
         address addr,
         string name
@@ -369,7 +371,7 @@ contract LiquidPledgingBase is Escapable {
 
     /// @notice A constant getter used to check how many total Admins exist
     /// @return The total number of admins (Givers, Delegates and Projects) .
-    function numberOfPledgeAdmins() constant returns(uint) {
+    function numberOfPledgeAdmins() public constant returns(uint) {
         return admins.length - 1;
     }
 
@@ -386,7 +388,7 @@ contract LiquidPledgingBase is Escapable {
     ///  canceled
     /// @return plugin This is Project's liquidPledging plugin allowing for 
     ///  extended functionality
-    function getPledgeAdmin(uint64 idAdmin) constant returns (
+    function getPledgeAdmin(uint64 idAdmin) public constant returns (
         PledgeAdminType adminType,
         address addr,
         string name,
@@ -436,7 +438,7 @@ contract LiquidPledgingBase is Escapable {
         PledgeState state
         ) internal returns (uint64)
     {
-        bytes32 hPledge = sha3(
+        bytes32 hPledge = keccak256(
             owner, delegationChain, intendedProject, commitTime, oldPledge, state);
         uint64 idx = hPledge2idx[hPledge];
         if (idx > 0) return idx;
@@ -450,7 +452,7 @@ contract LiquidPledgingBase is Escapable {
     /// @notice A getter to look up a Admin's details
     /// @param idAdmin The id for the Admin to lookup
     /// @return The PledgeAdmin struct for the specified Admin
-    function findAdmin(uint64 idAdmin) internal returns (PledgeAdmin storage) {
+    function findAdmin(uint64 idAdmin) internal view returns (PledgeAdmin storage) {
         require(idAdmin < admins.length);
         return admins[idAdmin];
     }
@@ -458,7 +460,7 @@ contract LiquidPledgingBase is Escapable {
     /// @notice A getter to look up a Pledge's details
     /// @param idPledge The id for the Pledge to lookup
     /// @return The PledgeA struct for the specified Pledge
-    function findPledge(uint64 idPledge) internal returns (Pledge storage) {
+    function findPledge(uint64 idPledge) internal view returns (Pledge storage) {
         require(idPledge < pledges.length);
         return pledges[idPledge];
     }
@@ -474,7 +476,7 @@ contract LiquidPledgingBase is Escapable {
     ///  `admins` array index `idDelegate` this returns that delegates
     ///  corresponding index in the delegationChain. Otherwise it returns
     ///  the NOTFOUND constant
-    function getDelegateIdx(Pledge p, uint64 idDelegate) internal returns(uint64) {
+    function getDelegateIdx(Pledge p, uint64 idDelegate) internal pure returns(uint64) {
         for (uint i=0; i < p.delegationChain.length; i++) {
             if (p.delegationChain[i] == idDelegate) return uint64(i);
         }
@@ -495,7 +497,7 @@ contract LiquidPledgingBase is Escapable {
     ///  the delegates for a specified pledge
     /// @param p The Pledge being queried
     /// @return The maximum commitTime out of the owner and all the delegates
-    function maxCommitTime(Pledge p) internal returns(uint commitTime) {
+    function maxCommitTime(Pledge p) internal view returns(uint commitTime) {
         PledgeAdmin storage m = findAdmin(p.owner);
         commitTime = m.commitTime; // start with the owner's commitTime
 
@@ -521,7 +523,7 @@ contract LiquidPledgingBase is Escapable {
     /// @notice A getter to find if a specified Project has been canceled
     /// @param projectId The Admin id number used to specify the Project
     /// @return True if the Project has been canceled
-    function isProjectCanceled(uint64 projectId) constant returns (bool) {
+    function isProjectCanceled(uint64 projectId) public constant returns (bool) {
         PledgeAdmin storage m = findAdmin(projectId);
         if (m.adminType == PledgeAdminType.Giver) return false;
         assert(m.adminType == PledgeAdminType.Project);
@@ -569,7 +571,7 @@ contract LiquidPledgingBase is Escapable {
         usePluginWhitelist = useWhitelist;
     }
 
-    function isValidPlugin(address addr) public returns(bool) {
+    function isValidPlugin(address addr) public view returns(bool) {
         if (!usePluginWhitelist || addr == 0x0) return true;
 
         bytes32 contractHash = getCodeHash(addr);
@@ -577,7 +579,7 @@ contract LiquidPledgingBase is Escapable {
         return pluginWhitelist[contractHash];
     }
 
-    function getCodeHash(address addr) public returns(bytes32) {
+    function getCodeHash(address addr) public view returns(bytes32) {
         bytes memory o_code;
         assembly {
             // retrieve the size of the code, this needs assembly

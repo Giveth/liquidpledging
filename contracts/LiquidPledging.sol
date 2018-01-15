@@ -41,7 +41,7 @@ contract LiquidPledging is LiquidPledgingBase {
         address _vault,
         address _escapeHatchCaller,
         address _escapeHatchDestination
-    ) LiquidPledgingBase(_vault, _escapeHatchCaller, _escapeHatchDestination) {
+    ) LiquidPledgingBase(_vault, _escapeHatchCaller, _escapeHatchDestination) public {
 
     }
 
@@ -53,7 +53,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idGiver The id of the Giver donating; if 0, a new id is created
     /// @param idReceiver The Admin receiving the donation; can be any Admin:
     ///  the Giver themselves, another Giver, a Delegate or a Project
-    function donate(uint64 idGiver, uint64 idReceiver) payable {
+    function donate(uint64 idGiver, uint64 idReceiver) public payable {
         if (idGiver == 0) {
 
             // default to a 3 day (259200 seconds) commitTime
@@ -98,7 +98,7 @@ contract LiquidPledging is LiquidPledgingBase {
         uint64 idPledge,
         uint amount,
         uint64 idReceiver
-    ){
+    ) public {
 
         idPledge = normalizePledge(idPledge);
 
@@ -224,7 +224,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  intendedProject
     /// @param idPledge Id of the pledge that is to be redeemed into ether
     /// @param amount Quantity of ether (in wei) to be authorized
-    function withdraw(uint64 idPledge, uint amount) {
+    function withdraw(uint64 idPledge, uint amount) public {
         idPledge = normalizePledge(idPledge); // Updates pledge info 
         Pledge storage p = findPledge(idPledge);
         require(p.pledgeState == PledgeState.Pledged);
@@ -249,7 +249,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  from Paying to Paid
     /// @param idPledge Id of the pledge that is to be withdrawn
     /// @param amount Quantity of ether (in wei) to be withdrawn
-    function confirmPayment(uint64 idPledge, uint amount) onlyVault {
+    function confirmPayment(uint64 idPledge, uint amount) public onlyVault {
         Pledge storage p = findPledge(idPledge);
 
         require(p.pledgeState == PledgeState.Paying);
@@ -270,7 +270,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  from Paying back to Pledged
     /// @param idPledge Id of the pledge that's withdraw is to be canceled
     /// @param amount Quantity of ether (in wei) to be canceled
-    function cancelPayment(uint64 idPledge, uint amount) onlyVault {
+    function cancelPayment(uint64 idPledge, uint amount) public onlyVault {
         Pledge storage p = findPledge(idPledge);
 
         require(p.pledgeState == PledgeState.Paying); //TODO change to revert????????????????????????????
@@ -292,7 +292,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
     /// @notice Changes the `project.canceled` flag to `true`; cannot be undone
     /// @param idProject Id of the project that is to be canceled
-    function cancelProject(uint64 idProject) { 
+    function cancelProject(uint64 idProject) public {
         PledgeAdmin storage project = findAdmin(idProject);
         checkAdminOwner(project);
         project.canceled = true;
@@ -305,7 +305,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idPledge Id of the pledge that is to be canceled
     /// @param amount Quantity of ether (in wei) to be transfered to the 
     ///  `oldPledge`
-    function cancelPledge(uint64 idPledge, uint amount) { 
+    function cancelPledge(uint64 idPledge, uint amount) public {
         idPledge = normalizePledge(idPledge);
 
         Pledge storage p = findPledge(idPledge);
@@ -344,7 +344,7 @@ contract LiquidPledging is LiquidPledgingBase {
         uint64 idSender,
         uint[] pledgesAmounts,
         uint64 idReceiver
-    ) {
+    ) public {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
             uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
             uint amount = pledgesAmounts[i] / D64;
@@ -358,7 +358,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param pledgesAmounts An array of Pledge amounts and the idPledges with 
     ///  which the amounts are associated; these are extrapolated using the D64
     ///  bitmask
-    function mWithdraw(uint[] pledgesAmounts) {
+    function mWithdraw(uint[] pledgesAmounts) public {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
             uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
             uint amount = pledgesAmounts[i] / D64;
@@ -371,7 +371,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  efficiently
     /// @param pledgesAmounts An array of pledge amounts and IDs which are extrapolated
     ///  using the D64 bitmask
-    function mConfirmPayment(uint[] pledgesAmounts) {
+    function mConfirmPayment(uint[] pledgesAmounts) public {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
             uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
             uint amount = pledgesAmounts[i] / D64;
@@ -384,7 +384,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  efficiently
     /// @param pledgesAmounts An array of pledge amounts and IDs which are extrapolated
     ///  using the D64 bitmask
-    function mCancelPayment(uint[] pledgesAmounts) {
+    function mCancelPayment(uint[] pledgesAmounts) public {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
             uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
             uint amount = pledgesAmounts[i] / D64;
@@ -396,7 +396,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @notice `mNormalizePledge` allows for multiple pledges to be
     ///  normalized efficiently
     /// @param pledges An array of pledge IDs
-    function mNormalizePledge(uint64[] pledges) {
+    function mNormalizePledge(uint64[] pledges) public {
         for (uint i = 0; i < pledges.length; i++ ) {
             normalizePledge( pledges[i] );
         }
@@ -601,7 +601,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  plugins, which also need to be predicted by the UI
     /// @param idPledge This is the id of the pledge that will be normalized
     /// @return The normalized Pledge!
-    function normalizePledge(uint64 idPledge) returns(uint64) {
+    function normalizePledge(uint64 idPledge) public returns(uint64) {
 
         Pledge storage p = findPledge(idPledge);
 
@@ -800,7 +800,7 @@ contract LiquidPledging is LiquidPledgingBase {
 /////////////
 
     /// @notice Basic helper function to return the current time
-    function getTime() internal returns (uint) {
+    function getTime() internal view returns (uint) {
         return now;
     }
 
