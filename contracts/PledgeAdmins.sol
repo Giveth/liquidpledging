@@ -3,6 +3,9 @@ pragma solidity ^0.4.18;
 import "./ILiquidPledgingPlugin.sol";
 import "./EternallyPersistentLib.sol";
 
+//18,446,744,070,000,000,000 uint64
+//1,516,144,546,228,000 uint56
+
 library PledgeAdmins {
     using EternallyPersistentLib for EternalStorage;
 
@@ -30,7 +33,7 @@ library PledgeAdmins {
         uint commitTime,
         ILiquidPledgingPlugin plugin
     ) internal returns (uint idGiver) {
-        idGiver = _storage.stgCollectionAddItem(admins);//, idGiver);
+        idGiver = _storage.stgCollectionAddItem(admins);
 
         // Save the fields
         _storage.stgObjectSetUInt(class, idGiver, "adminType", uint(PledgeAdminType.Giver));
@@ -248,7 +251,7 @@ library PledgeAdmins {
     /// @notice A constant getter used to check how many total Admins exist
     /// @return The total number of admins (Givers, Delegates and Projects) .
     function pledgeAdminsCount(EternalStorage _storage) internal constant returns(uint) {
-        return _storage.stgCollectionLength(admins);// - 1;
+        return _storage.stgCollectionLength(admins);
     }
 
     /// @notice A constant getter to check the details of a specified Admin
@@ -270,7 +273,7 @@ library PledgeAdmins {
         string name,
         string url,
         uint64 commitTime,
-        uint parentProject,
+        uint64 parentProject,
         bool canceled,
         address plugin
     )
@@ -284,7 +287,7 @@ library PledgeAdmins {
         // parentProject & canceled only belong to Project admins,
         // so don't waste the gas to fetch the data
         if (adminType == PledgeAdminType.Project) {
-            parentProject = getAdminParentProject(_storage, idAdmin);
+            parentProject = uint64(getAdminParentProject(_storage, idAdmin));
             canceled = getAdminCanceled(_storage, idAdmin);
         }
 
@@ -301,9 +304,6 @@ library PledgeAdmins {
         if (parentProject == 0) return(1);
         return getProjectLevel(_storage, parentProject) + 1;
     }
-
-//18,446,744,070,000,000,000 uint64
-//1,516,144,546,228,000 uint56
 
 ////////
 // Methods to fetch individual attributes of a PledgeAdmin

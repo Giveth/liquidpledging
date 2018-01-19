@@ -34,7 +34,7 @@ contract LiquidPledgingMock is LiquidPledging {
         address _vault,
         address _escapeHatchCaller,
         address _escapeHatchDestination
-    ) LiquidPledging(_storage, _vault, _escapeHatchCaller, _escapeHatchDestination) {
+    ) LiquidPledging(_storage, _vault, _escapeHatchCaller, _escapeHatchDestination) public {
         mock_time = now;
     }
 
@@ -48,7 +48,7 @@ contract LiquidPledgingMock is LiquidPledging {
     ///  the mock_time parameter
     /// @param _t This is the value to which the mocked time
     ///  will be set.
-    function setMockedTime(uint _t) {
+    function setMockedTime(uint _t) public {
         mock_time = _t;
     }
 }
