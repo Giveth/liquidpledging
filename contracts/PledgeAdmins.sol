@@ -1,4 +1,4 @@
-pragma solidity ^0.4.17;
+pragma solidity ^0.4.18;
 
 import "./ILiquidPledgingPlugin.sol";
 import "./EternallyPersistentLib.sol";
@@ -15,33 +15,6 @@ library PledgeAdmins {
 
     enum PledgeAdminType { Giver, Delegate, Project }
 
-    /// @dev This struct defines the details of a `PledgeAdmin` which are
-    ///  commonly referenced by their index in the `admins` array
-    ///  and can own pledges and act as delegates
-    struct PledgeAdmin {
-        PledgeAdminType adminType; // Giver, Delegate or Project
-        address addr; // Account or contract address for admin
-        string name;
-        string url;  // Can be IPFS hash
-        uint64 commitTime;  // In seconds, used for Givers' & Delegates' vetos
-        uint64 parentProject;  // Only for projects
-        bool canceled;      //Always false except for canceled projects
-
-        /// @dev if the plugin is 0x0 then nothing happens, if its an address
-        // than that smart contract is called when appropriate
-        ILiquidPledgingPlugin plugin;
-    }
-
-//    PledgeAdmins[] admins;
-
-//    function PledgeAdmins(address _storage) EternallyPersistent(_storage) public {
-//    function setStorage(address _storage) internal {
-//        require(address(adminStorage == 0x0));
-//        adminStorage = EternallyPersistent(_storage);
-//         TODO maybe make an init method?
-//        admins.length = 1; // we reserve the 0 admin
-//    }
-
     /// @notice Creates a Giver Admin with the `msg.sender` as the Admin address
     /// @param name The name used to identify the Giver
     /// @param url The link to the Giver's profile often an IPFS hash
@@ -57,13 +30,6 @@ library PledgeAdmins {
         uint commitTime,
         ILiquidPledgingPlugin plugin
     ) internal returns (uint idGiver) {
-//        bytes32 idGuardian = bytes32(addrGuardian);
-//
-//        if (guardian_exists(addrGuardian)) {
-//            _storage.stgObjectSetString( "Guardian", idGuardian, "name", name);
-//            return;
-//        }
-
         idGiver = _storage.stgCollectionAddItem(admins);//, idGiver);
 
         // Save the fields
@@ -260,7 +226,7 @@ library PledgeAdmins {
     /// @param projectId The Admin id number used to specify the Project
     /// @return True if the Project has been canceled
     function isProjectCanceled(EternalStorage _storage, uint projectId)
-        public constant returns (bool)
+        internal constant returns (bool)
     {
         require(pledgeAdminsCount(_storage) >= projectId);
 
@@ -281,9 +247,7 @@ library PledgeAdmins {
 
     /// @notice A constant getter used to check how many total Admins exist
     /// @return The total number of admins (Givers, Delegates and Projects) .
-    //TODO I think using 'size' in both Pledges lib & PledgeAdmins lib will cause a conflict since they use the same storage contract
-//    function size(EternalStorage _storage) constant returns(uint) {
-    function pledgeAdminsCount(EternalStorage _storage) public constant returns(uint) {
+    function pledgeAdminsCount(EternalStorage _storage) internal constant returns(uint) {
         return _storage.stgCollectionLength(admins);// - 1;
     }
 
@@ -331,7 +295,7 @@ library PledgeAdmins {
     ///  using a recursive loop
     /// @param idProject The id of the Project being queried
     /// @return The level of authority a specific Project has
-    function getProjectLevel(EternalStorage _storage, uint idProject) public returns(uint) {
+    function getProjectLevel(EternalStorage _storage, uint idProject) internal returns(uint) {
         assert(getAdminType(_storage, idProject) == PledgeAdminType.Project);
         uint parentProject = getAdminParentProject(_storage, idProject);
         if (parentProject == 0) return(1);
@@ -349,7 +313,7 @@ library PledgeAdmins {
     function getAdminType(
         EternalStorage _storage,
         uint idAdmin
-    ) public view returns (PledgeAdminType)
+    ) internal view returns (PledgeAdminType)
     {
         return PledgeAdminType(_storage.stgObjectGetUInt(class, idAdmin, "adminType"));
     }
@@ -358,7 +322,7 @@ library PledgeAdmins {
     function getAdminAddr(
         EternalStorage _storage,
         uint idAdmin
-    ) public view returns (address)
+    ) internal view returns (address)
     {
         return _storage.stgObjectGetAddress(class, idAdmin, "addr");
     }
@@ -376,7 +340,7 @@ library PledgeAdmins {
     function getAdminParentProject(
         EternalStorage _storage,
         uint idAdmin
-    ) public view returns (uint)
+    ) internal view returns (uint)
     {
         return _storage.stgObjectGetUInt(class, idAdmin, "parentProject");
     }
@@ -385,7 +349,7 @@ library PledgeAdmins {
     function getAdminCanceled(
         EternalStorage _storage,
         uint idAdmin
-    ) public view returns (bool)
+    ) internal view returns (bool)
     {
         return _storage.stgObjectGetBoolean(class, idAdmin, "canceled");
     }
@@ -394,7 +358,7 @@ library PledgeAdmins {
     function getAdminPlugin(
         EternalStorage _storage,
         uint idAdmin
-    ) public view returns (address)
+    ) internal view returns (address)
     {
         return _storage.stgObjectGetAddress(class, idAdmin, "plugin");
     }
@@ -403,7 +367,7 @@ library PledgeAdmins {
     function getAdminCommitTime(
         EternalStorage _storage,
         uint idAdmin
-    ) public view returns (uint)
+    ) internal view returns (uint)
     {
         return _storage.stgObjectGetUInt(class, idAdmin, "commitTime");
     }

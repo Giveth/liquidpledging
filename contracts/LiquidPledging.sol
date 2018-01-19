@@ -46,7 +46,6 @@ contract LiquidPledging is LiquidPledgingBase {
     {
     }
 
-    event Name(string name);
     /// @notice This is how value enters the system and how pledges are created;
     ///  the ether is sent to the vault, an pledge for the Giver is created (or
     ///  found), the amount of ETH donated in wei is added to the `amount` in
@@ -66,11 +65,6 @@ contract LiquidPledging is LiquidPledgingBase {
 
         PledgeAdmins.PledgeAdminType adminType = _storage.getAdminType(idGiver);
         require(adminType == PledgeAdmins.PledgeAdminType.Giver);
-
-        Gas(msg.gas);
-        _storage.getAdmin(idGiver);
-        Gas(msg.gas);
-        return;
 
         uint amount = msg.value;
         require(amount > 0);

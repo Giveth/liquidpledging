@@ -6,7 +6,7 @@ library EternallyPersistentLib {
 
     // UInt
 
-    function stgObjectGetUInt(EternalStorage _storage, string class, uint id, string fieldName) public view returns (uint) {
+    function stgObjectGetUInt(EternalStorage _storage, string class, uint id, string fieldName) internal view returns (uint) {
         bytes32 record = keccak256(class, id, fieldName);
         return _storage.getUIntValue(record);
     }
@@ -18,7 +18,7 @@ library EternallyPersistentLib {
 
     // Boolean
 
-    function stgObjectGetBoolean(EternalStorage _storage, string class, uint id, string fieldName) public view returns (bool) {
+    function stgObjectGetBoolean(EternalStorage _storage, string class, uint id, string fieldName) internal view returns (bool) {
         bytes32 record = keccak256(class, id, fieldName);
         return _storage.getBooleanValue(record);
     }
@@ -88,7 +88,7 @@ library EternallyPersistentLib {
 
     // address
 
-    function stgObjectGetAddress(EternalStorage _storage, string class, uint id, string fieldName) public view returns (address) {
+    function stgObjectGetAddress(EternalStorage _storage, string class, uint id, string fieldName) internal view returns (address) {
         bytes32 record = keccak256(class, id, fieldName);
         return _storage.getAddressValue(record);
     }
@@ -100,7 +100,7 @@ library EternallyPersistentLib {
 
     // bytes32
 
-    function stgObjectGetBytes32(EternalStorage _storage, string class, uint id, string fieldName) public view returns (bytes32) {
+    function stgObjectGetBytes32(EternalStorage _storage, string class, uint id, string fieldName) internal view returns (bytes32) {
         bytes32 record = keccak256(class, id, fieldName);
         return _storage.getBytes32Value(record);
     }
@@ -153,11 +153,11 @@ library EternallyPersistentLib {
 //        _storage.setUIntValue(keccak256(idArray, idItem, "_idx"), 0);
 //    }
 
-    function stgCollectionLength(EternalStorage _storage, bytes32 idArray) public view returns (uint) {
+    function stgCollectionLength(EternalStorage _storage, bytes32 idArray) internal view returns (uint) {
         return _storage.getUIntValue(keccak256(idArray, "length"));
     }
 
-    function stgCollectionIdFromIdx(EternalStorage _storage, bytes32 idArray, uint idx) public view returns (bytes32) {
+    function stgCollectionIdFromIdx(EternalStorage _storage, bytes32 idArray, uint idx) internal view returns (bytes32) {
         return _storage.getBytes32Value(keccak256(idArray, idx));
     }
 

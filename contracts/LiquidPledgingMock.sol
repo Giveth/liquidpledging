@@ -30,16 +30,17 @@ contract LiquidPledgingMock is LiquidPledging {
     ///  instance and sets the mocked time to the current blocktime.
     /// @param _vault The vault where ETH backing this pledge is stored    
     function LiquidPledgingMock(
+        address _storage,
         address _vault,
         address _escapeHatchCaller,
         address _escapeHatchDestination
-    ) LiquidPledging(_vault, _escapeHatchCaller, _escapeHatchDestination) {
+    ) LiquidPledging(_storage, _vault, _escapeHatchCaller, _escapeHatchDestination) {
         mock_time = now;
     }
 
     /// @dev `getTime` is a basic getter function for
     ///  the mock_time parameter
-    function getTime() internal returns (uint) {
+    function getTime() internal view returns (uint) {
         return mock_time;
     }
 

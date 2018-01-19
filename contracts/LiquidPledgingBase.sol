@@ -409,11 +409,7 @@ contract LiquidPledgingBase is Escapable {
 
     /// @notice A check to see if the msg.sender is the owner or the
     ///  plugin contract for a specific Admin
-    /// @param m The Admin being checked
-    function checkAdminOwner(PledgeAdmins.PledgeAdmin m) internal constant {
-        require((msg.sender == m.addr) || (msg.sender == address(m.plugin)));
-    }
-
+    /// @param idAdmin The id of the admin being checked
     function checkAdminOwner(uint idAdmin) internal constant {
         require((msg.sender == _storage.getAdminPlugin(idAdmin)) || (msg.sender == _storage.getAdminAddr(idAdmin)));
     }
