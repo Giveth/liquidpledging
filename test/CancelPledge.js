@@ -4,6 +4,9 @@ const TestRPC = require('ethereumjs-testrpc');
 const Web3 = require('web3');
 const chai = require('chai');
 const liquidpledging = require('../index.js');
+const lpData = require('../build/LiquidPledgingMock.sol');
+const EternalStorage = require('../js/eternalStorage');
+const PledgeAdmins = require('../js/pledgeAdmins');
 const assertFail = require('./helpers/assertFail');
 
 const LiquidPledging = liquidpledging.LiquidPledgingMock;
@@ -32,7 +35,7 @@ describe('LiquidPledging cancelPledge normal scenario', function () {
   before(async () => {
     testrpc = TestRPC.server({
       ws: true,
-      gasLimit: 5800000,
+      gasLimit: 6700000,
       total_accounts: 10,
     });
 
@@ -52,14 +55,32 @@ describe('LiquidPledging cancelPledge normal scenario', function () {
 
   it('Should deploy LiquidPledging contract', async () => {
     vault = await Vault.new(web3, accounts[0], accounts[1]);
-    liquidPledging = await LiquidPledging.new(web3, vault.$address, accounts[0], accounts[1], { gas: 5800000 });
+    let storage = await EternalStorage.new(web3, accounts[0], accounts[1]);
+    let admins = await PledgeAdmins.new(web3);
+
+    let bytecode = lpData.LiquidPledgingMockByteCode;
+    bytecode = bytecode.replace(/__contracts\/PledgeAdmins\.sol:PledgeAdm__/g, admins.$address.slice(2)); // solc library
+    bytecode = bytecode.replace(/__:PledgeAdmins_________________________/g, admins.$address.slice(2)); // yarn sol-compile library
+
+    let lp = await new web3.eth.Contract(lpData.LiquidPledgingMockAbi).deploy({
+      arguments: [storage.$address, vault.$address, accounts[0], accounts[0]],
+      data: bytecode,
+    }).send({
+      from: accounts[0],
+      gas: 6700000,
+      gasPrice: 1,
+    });
+
+    liquidPledging = new LiquidPledging(web3, lp._address);
+    await storage.changeOwnership(liquidPledging.$address);
+
     await vault.setLiquidPledging(liquidPledging.$address);
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
   });
 
   it('Should add project and donate ', async () => {
     await liquidPledging.addProject('Project1', 'URLProject1', adminProject1, 0, 0, '0x0', { from: adminProject1 });
-    await liquidPledging.donate(0, 1, { from: giver1, value: '1000', gas: 500000 });
+    await liquidPledging.donate(0, 1, { from: giver1, value: '1000' });
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 2);
@@ -67,12 +88,12 @@ describe('LiquidPledging cancelPledge normal scenario', function () {
 
   it('Should only allow pledge owner to cancel pledge', async () => {
     await assertFail(async () => {
-      await liquidPledging.cancelPledge(2, 1000, { from: giver1, gas: 500000 });
+      await liquidPledging.cancelPledge(2, 1000, { from: giver1 });
     });
   });
 
   it('Should cancel pledge and return to oldPledge', async () => {
-    await liquidPledging.cancelPledge(2, 1000, { from: adminProject1, gas: 500000 });
+    await liquidPledging.cancelPledge(2, 1000, { from: adminProject1 });
 
     const st = await liquidPledgingState.getState();
 
@@ -82,7 +103,7 @@ describe('LiquidPledging cancelPledge normal scenario', function () {
 
   it('Should not allow to cancel pledge if oldPledge === 0', async () => {
     await assertFail(async () => {
-      await liquidPledging.cancelPledge(1, 1000, { from: giver1, gas: 500000 });
+      await liquidPledging.cancelPledge(1, 1000, { from: giver1 });
     });
   })
 });

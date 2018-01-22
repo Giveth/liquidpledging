@@ -1,9 +1,8 @@
 pragma solidity ^0.4.0;
 
-// change to Escapable
-import "node_modules/giveth-common-contracts/contracts/Owned.sol";
+import "node_modules/giveth-common-contracts/contracts/Escapable.sol";
 
-contract EternalStorage is Owned {
+contract EternalStorage is Escapable {
 
     mapping(bytes32 => uint) UIntStorage;
     mapping(bytes32 => int) IntStorage;
@@ -12,6 +11,10 @@ contract EternalStorage is Owned {
     mapping(bytes32 => string) StringStorage;
     mapping(bytes32 => bytes) BytesStorage;
     mapping(bytes32 => bytes32) Bytes32Storage;
+
+    function EternalStorage(address _escapeHatchCaller, address _escapeHatchDestination)
+        Escapable(_escapeHatchCaller, _escapeHatchDestination) public {
+    }
 
     /// UInt Storage
 

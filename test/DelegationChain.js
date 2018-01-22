@@ -4,6 +4,9 @@ const TestRPC = require('ethereumjs-testrpc');
 const Web3 = require('web3');
 const chai = require('chai');
 const liquidpledging = require('../index.js');
+const lpData = require('../build/LiquidPledgingMock.sol');
+const EternalStorage = require('../js/eternalStorage');
+const PledgeAdmins = require('../js/pledgeAdmins');
 
 const LiquidPledging = liquidpledging.LiquidPledgingMock;
 const LiquidPledgingState = liquidpledging.LiquidPledgingState;
@@ -32,16 +35,17 @@ describe('DelegationChain test', function () {
   let delegate3;
   let adminProject1;
 
+  const gasUsage = {};
   before(async () => {
     testrpc = TestRPC.server({
       ws: true,
-      gasLimit: 5800000,
+      gasLimit: 6700000,
       total_accounts: 10,
     });
 
-    testrpc.listen(8546, '127.0.0.1');
+    testrpc.listen(8545, '127.0.0.1');
 
-    web3 = new Web3('ws://localhost:8546');
+    web3 = new Web3('ws://localhost:8545');
     accounts = await web3.eth.getAccounts();
     giver1 = accounts[1];
     delegate1 = accounts[2];
@@ -53,12 +57,31 @@ describe('DelegationChain test', function () {
 
   after((done) => {
     testrpc.close();
+    // console.log(gasUsage);
     done();
   });
 
   it('Should deploy LiquidPledging contract', async () => {
     vault = await Vault.new(web3, accounts[0], accounts[1]);
-    liquidPledging = await LiquidPledging.new(web3, vault.$address, accounts[0], accounts[1], { gas: 5800000 });
+    let storage = await EternalStorage.new(web3, accounts[0], accounts[1]);
+    let admins = await PledgeAdmins.new(web3);
+
+    let bytecode = lpData.LiquidPledgingMockByteCode;
+    bytecode = bytecode.replace(/__contracts\/PledgeAdmins\.sol:PledgeAdm__/g, admins.$address.slice(2)); // solc library
+    bytecode = bytecode.replace(/__:PledgeAdmins_________________________/g, admins.$address.slice(2)); // yarn sol-compile library
+
+    let lp = await new web3.eth.Contract(lpData.LiquidPledgingMockAbi).deploy({
+      arguments: [storage.$address, vault.$address, accounts[0], accounts[0]],
+      data: bytecode,
+    }).send({
+      from: accounts[0],
+      gas: 6700000,
+      gasPrice: 1,
+    });
+
+    liquidPledging = new LiquidPledging(web3, lp._address);
+    await storage.changeOwnership(liquidPledging.$address);
+
     await vault.setLiquidPledging(liquidPledging.$address);
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
   });
@@ -76,11 +99,11 @@ describe('DelegationChain test', function () {
   });
 
   it('Should allow previous delegate to transfer pledge', async () => {
-    await liquidPledging.donate(1, 2, {from: giver1, value: 1000, $extraGas: 50000});
+    await liquidPledging.donate(1, 2, {from: giver1, value: 1000});
     // add delegate2 to chain
-    await liquidPledging.transfer(2, 2, 1000, 3, {from: delegate1, $extraGas: 100000});
+    await liquidPledging.transfer(2, 2, 1000, 3, {from: delegate1});
     // delegate 1 transfer pledge back to self, thus undelegating delegate2
-    await liquidPledging.transfer(2, 3, 1000, 2, {from: delegate1, $extraGas: 100000});
+    await liquidPledging.transfer(2, 3, 1000, 2, {from: delegate1});
 
     const st = await liquidPledgingState.getState();
     assert.equal(st.pledges[2].amount, 1000);
@@ -151,13 +174,13 @@ describe('DelegationChain test', function () {
 
   it('Should not append delegate on veto delegation', async () => {
     // propose the delegation
-    await liquidPledging.transfer(2, 2, 1000, 5, { from: delegate1, $extraGas: 100000 });
+    await liquidPledging.transfer(2, 2, 1000, 5, { from: delegate1 });
 
     const origPledge = await liquidPledging.getPledge(2);
     assert.equal(origPledge.amount, '0');
 
     // veto the delegation
-    await liquidPledging.transfer(1, 5, 1000, 2, { from: giver1, $extraGas: 100000 });
+    await liquidPledging.transfer(1, 5, 1000, 2, { from: giver1 });
 
     const currentPledge = await liquidPledging.getPledge(2);
 

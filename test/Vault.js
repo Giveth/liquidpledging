@@ -4,6 +4,9 @@ const TestRPC = require('ethereumjs-testrpc');
 const Web3 = require('web3');
 const chai = require('chai');
 const liquidpledging = require('../index.js');
+const lpData = require('../build/LiquidPledgingMock.sol');
+const EternalStorage = require('../js/eternalStorage');
+const PledgeAdmins = require('../js/pledgeAdmins');
 const assertFail = require('./helpers/assertFail');
 
 const LiquidPledging = liquidpledging.LiquidPledgingMock;
@@ -29,7 +32,7 @@ describe('Vault test', function () {
   before(async () => {
     testrpc = TestRPC.server({
       ws: true,
-      gasLimit: 6500000,
+      gasLimit: 6700000,
       total_accounts: 10,
     });
 
@@ -51,7 +54,25 @@ describe('Vault test', function () {
 
   it('Should deploy Vault contract', async function () {
     vault = await Vault.new(web3, escapeHatchCaller, escapeHatchDestination, { from: vaultOwner });
-    liquidPledging = await LiquidPledging.new(web3, vault.$address, escapeHatchCaller, escapeHatchDestination, { gas: 6500000 });
+    let storage = await EternalStorage.new(web3, accounts[0], accounts[1]);
+    let admins = await PledgeAdmins.new(web3);
+
+    let bytecode = lpData.LiquidPledgingMockByteCode;
+    bytecode = bytecode.replace(/__contracts\/PledgeAdmins\.sol:PledgeAdm__/g, admins.$address.slice(2)); // solc library
+    bytecode = bytecode.replace(/__:PledgeAdmins_________________________/g, admins.$address.slice(2)); // yarn sol-compile library
+
+    let lp = await new web3.eth.Contract(lpData.LiquidPledgingMockAbi).deploy({
+      arguments: [storage.$address, vault.$address, accounts[0], accounts[0]],
+      data: bytecode,
+    }).send({
+      from: accounts[0],
+      gas: 6700000,
+      gasPrice: 1,
+    });
+
+    liquidPledging = new LiquidPledging(web3, lp._address);
+    await storage.changeOwnership(liquidPledging.$address);
+
     await vault.setLiquidPledging(liquidPledging.$address, { from: vaultOwner });
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
 

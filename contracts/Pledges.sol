@@ -68,7 +68,9 @@ library Pledges {
         if (oldPledge > 0) {
             _storage.stgObjectSetUInt(class, id, "oldPledge", oldPledge);
         }
-        _storage.stgObjectSetUInt(class, id, "state", uint(state));
+        if (state != PledgeState.Pledged) {
+            _storage.stgObjectSetUInt(class, id, "state", uint(state));
+        }
 
         if (delegationChain.length > 0) {
             _storage.setUIntValue(keccak256("delegationChain", id, "length"), delegationChain.length);

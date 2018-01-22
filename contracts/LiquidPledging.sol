@@ -567,21 +567,23 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param _amount The amount of value that will be transfered.
     function doTransfer(uint64 from, uint64 to, uint _amount) internal {
         uint amount = callPlugins(true, from, to, _amount);
-//        uint amount = _amount;
         if (from == to) {
             return;
         }
         if (amount == 0) {
             return;
         }
-        Pledges.Pledge memory nFrom = _storage.findPledge(from);
-        Pledges.Pledge memory nTo = _storage.findPledge(to);
-        require(nFrom.amount >= amount);
-        nFrom.amount -= amount;
-        nTo.amount += amount;
+        Pledges.Pledge memory pFrom = _storage.findPledge(from);
+        Pledges.Pledge memory pTo = _storage.findPledge(to);
+
+        require(pFrom.amount >= amount);
+        pFrom.amount -= amount;
+        _storage.setPledgeAmount(pFrom.id, pFrom.amount);
+        pTo.amount += amount;
+        _storage.setPledgeAmount(pTo.id, pTo.amount);
 
         Transfer(from, to, amount);
-//        callPlugins(false, from, to, amount);
+        callPlugins(false, from, to, amount);
     }
 
     /// @notice Only affects pledges with the Pledged Pledges.PledgeState for 2 things:

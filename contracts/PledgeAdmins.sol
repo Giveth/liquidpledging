@@ -36,7 +36,7 @@ library PledgeAdmins {
         idGiver = _storage.stgCollectionAddItem(admins);
 
         // Save the fields
-        _storage.stgObjectSetUInt(class, idGiver, "adminType", uint(PledgeAdminType.Giver));
+        // don't set adminType to save gas, b/c 0 is Giver
         _storage.stgObjectSetAddress(class, idGiver, "addr", msg.sender);
         _storage.stgObjectSetString(class, idGiver, "name", name);
         _storage.stgObjectSetString(class, idGiver, "url", url);
