@@ -49,11 +49,21 @@ library Pledges {
         uint64 commitTime,
         uint64 oldPledge,
         PledgeState state
-    ) internal returns (uint64)
+    ) internal returns (Pledge)
     {
         bytes32 hPledge = keccak256(owner, delegationChain, intendedProject, commitTime, oldPledge, state);
         uint id = _storage.getUIntValue(hPledge);
-        if (id > 0) return uint64(id);
+        if (id > 0) {
+            return Pledge(
+                id,
+                getPledgeAmount(_storage, id), //TODO don't fetch this here b/c it may not be needed?
+                owner,
+                delegationChain,
+                intendedProject,
+                commitTime,
+                oldPledge,
+                state);
+        }
 
         id = _storage.stgCollectionAddItem(pledges);
         _storage.setUIntValue(hPledge, id);
@@ -81,7 +91,16 @@ library Pledges {
             }
         }
 
-        return uint64(id);
+        return Pledge(
+            id,
+            0,
+            owner,
+            delegationChain,
+            intendedProject,
+            commitTime,
+            oldPledge,
+            state);
+
     }
 
     function findPledge(EternalStorage _storage, uint idPledge) internal view returns(Pledge) {
