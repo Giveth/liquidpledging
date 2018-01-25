@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const TestRPC = require('ethereumjs-testrpc');
+const TestRPC = require("ganache-cli");
 const Web3 = require('web3');
 const chai = require('chai');
 const liquidpledging = require('../index.js');
@@ -52,13 +52,13 @@ describe('Vault test', function () {
   });
 
   it('Should deploy Vault contract', async function () {
-    vault = await LPVault.new(web3, accounts[0], accounts[1]);
+    vault = await LPVault.new(web3, escapeHatchCaller, escapeHatchDestination, {from: vaultOwner});
     const storage = await EternalStorage.new(web3, accounts[0], accounts[1]);
 
     liquidPledging = await LiquidPledging.new(web3, storage.$address, vault.$address, accounts[0], accounts[0], {gas: 6700000})
 
     await storage.changeOwnership(liquidPledging.$address);
-    await vault.setLiquidPledging(liquidPledging.$address);
+    await vault.setLiquidPledging(liquidPledging.$address, {from: vaultOwner});
 
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
 
@@ -78,14 +78,10 @@ describe('Vault test', function () {
 
   it('escapeFunds should fail', async function () {
     // only vaultOwner can escapeFunds
-    await assertFail(async () => {
-      await vault.escapeFunds(0x0, 1000);
-    });
+    await assertFail(vault.escapeFunds(0x0, 1000, {gas: 4000000}));
 
     // can't send more then the balance
-    await assertFail(async () => {
-      await vault.escapeFunds(0x0, 11000, { from: vaultOwner });
-    });
+    await assertFail(vault.escapeFunds(0x0, 11000, { from: vaultOwner, gas: 4000000 }));
   });
 
   it('escapeFunds should send funds to escapeHatchDestination', async function () {
@@ -96,7 +92,7 @@ describe('Vault test', function () {
     const vaultBalance = await web3.eth.getBalance(vault.$address);
     assert.equal(9000, vaultBalance);
 
-    const expected = web3.utils.toBN(preBalance).add(web3.utils.toBN('1000'));
+    const expected = web3.utils.toBN(preBalance).add(web3.utils.toBN('1000')).toString();
     const postBalance = await web3.eth.getBalance(escapeHatchDestination);
 
     assert.equal(expected, postBalance);

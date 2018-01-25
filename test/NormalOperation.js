@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const TestRPC = require('ethereumjs-testrpc');
+const TestRPC = require("ganache-cli");
 const Web3 = require('web3');
 const chai = require('chai');
 const liquidpledging = require('../index.js');
@@ -224,10 +224,10 @@ describe('LiquidPledging test', function () {
     const p = await liquidPledging.getPledge(5);
     assert.equal(utils.fromWei(p.amount), 0.05);
 
-    await assertFail(async () => {
-      await liquidPledging.withdraw(5, utils.toWei('0.01'), { from: adminProject1 });
+    await assertFail(
+      liquidPledging.withdraw(5, utils.toWei('0.01'), { from: adminProject1, gas: 4000000 })
+    );
     });
-  });
   it('Delegate should send part of this ETH to project2', async () => {
     await liquidPledging.transfer(2, 5, utils.toWei('0.03'), 4, {from: delegate1});
     const st = await liquidPledgingState.getState(liquidPledging);
@@ -279,9 +279,9 @@ describe('LiquidPledging test', function () {
     await liquidPledging.cancelProject(4, { from: adminProject2 });
   });
   it('Should not be able to withdraw it', async () => {
-    await assertFail(async () => {
-      await liquidPledging.withdraw(12, utils.toWei('0.005'), { from: giver1 });
-    });
+    await assertFail(
+      liquidPledging.withdraw(12, utils.toWei('0.005'), { from: giver1, gas: 4000000 })
+    );
   });
   it('Should be able to cancel payment', async () => {
     // bug somewhere which will throw invalid op_code if we don't provide gas or extraGas
@@ -306,7 +306,7 @@ describe('LiquidPledging test', function () {
       return '0x' + utils.padLeft(utils.toHex(p.amount).substring(2), 48) + utils.padLeft(utils.toHex(p.id).substring(2), 16);
     });
 
-    await liquidPledging.mWithdraw(encodedPledges, { from: giver1, $extraGas: 500000 });
+    await liquidPledging.mWithdraw(encodedPledges, { from: giver1 });
 
     const initialBalance = await web3.eth.getBalance(giver1);
     await vault.multiConfirm([2, 3, 4, 5, 6]);
@@ -362,8 +362,8 @@ describe('LiquidPledging test', function () {
     await liquidPledging.addProject('ProjectLevel19', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
     await liquidPledging.addProject('ProjectLevel20', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
 
-    assertFail(async () => {
-      await liquidPledging.addProject('ProjectLevel21', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    });
+    assertFail(
+      liquidPledging.addProject('ProjectLevel21', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1, gas: 4000000 })
+    );
   })
 });

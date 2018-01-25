@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const TestRPC = require('ethereumjs-testrpc');
+const TestRPC = require("ganache-cli");
 const Web3 = require('web3');
 const chai = require('chai');
 const liquidpledging = require('../index.js');
@@ -73,9 +73,9 @@ describe('LiquidPledging cancelPledge normal scenario', function () {
   });
 
   it('Should only allow pledge owner to cancel pledge', async () => {
-    await assertFail(async () => {
-      await liquidPledging.cancelPledge(2, 1000, { from: giver1 });
-    });
+    await assertFail(
+      liquidPledging.cancelPledge(2, 1000, { from: giver1, gas: 4000000 })
+    );
   });
 
   it('Should cancel pledge and return to oldPledge', async () => {
@@ -88,9 +88,9 @@ describe('LiquidPledging cancelPledge normal scenario', function () {
   });
 
   it('Should not allow to cancel pledge if oldPledge === 0', async () => {
-    await assertFail(async () => {
-      await liquidPledging.cancelPledge(1, 1000, { from: giver1 });
-    });
+    await assertFail(
+      liquidPledging.cancelPledge(1, 1000, { from: giver1, gas: 4000000 })
+    );
   })
 });
 

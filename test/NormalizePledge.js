@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const TestRPC = require('ethereumjs-testrpc');
+const TestRPC = require("ganache-cli");
 const Web3 = require('web3');
 const chai = require('chai');
 const liquidpledging = require('../index.js');
@@ -10,7 +10,6 @@ const PledgeAdmins = require('../js/pledgeAdmins');
 const LiquidPledging = liquidpledging.LiquidPledgingMock;
 const LiquidPledgingState = liquidpledging.LiquidPledgingState;
 const LPVault = liquidpledging.LPVault;
-const assertFail = require('./helpers/assertFail');
 const assert = chai.assert;
 
 const printState = async (liquidPledgingState) => {
@@ -84,25 +83,25 @@ describe('NormalizePledge test', function () {
 
   it('Should commit pledges if commitTime has passed', async () => {
     // commitTime 259200
-    await liquidPledging.donate(1, 2, {from: giver1, value: 1000, $extraGas: 50000});
+    await liquidPledging.donate(1, 2, {from: giver1, value: 1000});
     // commitTime 86400
-    await liquidPledging.donate(1, 3, {from: giver1, value: 1000, $extraGas: 50000});
+    await liquidPledging.donate(1, 3, {from: giver1, value: 1000});
     // commitTime 0
-    await liquidPledging.donate(6, 3, {from: giver2, value: 1000, $extraGas: 50000});
+    await liquidPledging.donate(6, 3, {from: giver2, value: 1000});
 
     // set the time
     const now = Math.floor(new Date().getTime() / 1000);
     await liquidPledging.setMockedTime(now);
 
     // delegate to project
-    await liquidPledging.transfer(2, 2, 1000, 4, {from: delegate1, $extraGas: 100000});
-    await liquidPledging.transfer(3, 3, 1000, 4, {from: delegate2, $extraGas: 100000});
-    await liquidPledging.transfer(3, 5, 1000, 4, {from: delegate2, $extraGas: 100000});
+    await liquidPledging.transfer(2, 2, 1000, 4, {from: delegate1});
+    await liquidPledging.transfer(3, 3, 1000, 4, {from: delegate2});
+    await liquidPledging.transfer(3, 5, 1000, 4, {from: delegate2});
 
     // advance the time
     await liquidPledging.setMockedTime( now + 100000 );
 
-    await liquidPledging.mNormalizePledge([6, 7, 8], {$extraGas: 100000});
+    await liquidPledging.mNormalizePledge([6, 7, 8]);
 
     const st = await liquidPledgingState.getState();
     assert.equal(st.pledges.length, 11);
@@ -116,13 +115,13 @@ describe('NormalizePledge test', function () {
   });
 
   it('Should transfer pledge to oldestPledgeNotCanceled', async () => {
-    await liquidPledging.transfer(4, 10, 1000, 5, {from: adminProject1, $extraGas: 100000});
+    await liquidPledging.transfer(4, 10, 1000, 5, {from: adminProject1});
 
     // cancel projects
     await liquidPledging.cancelProject(4, {from: adminProject1});
     await liquidPledging.cancelProject(5, {from: adminProject2});
 
-    await liquidPledging.mNormalizePledge([9, 11], {$extraGas: 100000});
+    await liquidPledging.mNormalizePledge([9, 11]);
 
     const st = await liquidPledgingState.getState();
     assert.equal(st.pledges.length, 12);

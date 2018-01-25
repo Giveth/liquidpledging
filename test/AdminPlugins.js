@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const TestRPC = require('ethereumjs-testrpc');
+const TestRPC = require("ganache-cli");
 const Web3 = require('web3');
 const chai = require('chai');
 const liquidpledging = require('../index.js');
@@ -75,21 +75,21 @@ describe('LiquidPledging plugins test', function () {
   });
 
   it('Should fail to create giver with invalid plugin', async function() {
-    await assertFail(async () => {
-      await liquidPledging.addGiver('Giver2', '', 0, vault.$address, { from: giver1 });
-    });
+    await assertFail(
+      liquidPledging.addGiver('Giver2', '', 0, vault.$address, { from: giver1, gas: 4000000 })
+    );
   });
 
   it('Should fail to create delegate with invalid plugin', async function() {
-    await assertFail(async () => {
-      await liquidPledging.addDelegate('delegate1', '', 0, liquidPledging.$address, { from: adminDelegate1});
-    });
+    await assertFail(
+      liquidPledging.addDelegate('delegate1', '', 0, liquidPledging.$address, { from: adminDelegate1, gas: 4000000})
+    );
   });
 
   it('Should fail to create project with invalid plugin', async function() {
-    await assertFail(async () => {
-      await liquidPledging.addProject('Project1', '', giver1, 0, 0, vault.$address, { from: adminProject1});
-    });
+    await assertFail(
+      liquidPledging.addProject('Project1', '', giver1, 0, 0, vault.$address, { from: adminProject1, gas: 4000000})
+    );
   });
 
   it('Should deploy TestSimpleProjectPlugin and add project', async function() {
@@ -114,9 +114,9 @@ describe('LiquidPledging plugins test', function () {
   });
 
   it('Should allow all plugins', async function() {
-    await liquidPledging.useWhitelist(false, { gas: 100000 });
+    await liquidPledging.useWhitelist(false);
 
-    await liquidPledging.addGiver('Giver2', '', 0, vault.$address, { from: giver1, gas: 200000 });
+    await liquidPledging.addGiver('Giver2', '', 0, vault.$address, { from: giver1 });
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 3);
