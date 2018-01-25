@@ -34,7 +34,7 @@ contract LiquidPledgingPlugins is Owned {
     }
 
     function addValidPlugins(bytes32[] contractHashes) external onlyOwner {
-        for (var i = 0; i < contractHashes.length; i++) {
+        for (uint8 i = 0; i < contractHashes.length; i++) {
             addValidPlugin(contractHashes[i]);
         }
     }
