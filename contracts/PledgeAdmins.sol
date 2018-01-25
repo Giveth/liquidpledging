@@ -1,22 +1,68 @@
 pragma solidity ^0.4.18;
 
+/*
+    Copyright 2017, Jordi Baylina, RJ Ewing
+    Contributors: Adrià Massanet <adria@codecontext.io>, Griff Green,
+                  Arthur Lunn
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 import "./ILiquidPledgingPlugin.sol";
 import "./EternallyPersistentLib.sol";
+import "./LiquidPledgingStorage.sol";
+import "./LiquidPledgingPlugins.sol";
 
-//18,446,744,070,000,000,000 uint64
-//1,516,144,546,228,000 uint56
-
-library PledgeAdmins {
+contract PledgeAdmins is LiquidPledgingStorage, LiquidPledgingPlugins {
     using EternallyPersistentLib for EternalStorage;
+
+    // Limits inserted to prevent large loops that could prevent canceling
+    uint constant MAX_SUBPROJECT_LEVEL = 20;
+    uint constant MAX_INTERPROJECT_LEVEL = 20;
+
+    // Constants used when dealing with storage/retrieval of PledgeAdmins
+    string constant PLEDGE_ADMIN = "PledgeAdmin";
+    bytes32 constant PLEDGE_ADMINS_ARRAY = keccak256("pledgeAdmins");
 
     //TODO we can pack some of these struct values, which should save space. TEST THIS
     //TODO making functions public may lower deployment cost, but increase gas / tx costs. TEST THIS
     //TODO is it cheaper to issue a storage check before updating? where should this be done? EternalStorage?
 
-    string constant class = "PledgeAdmins";
-    bytes32 constant admins = keccak256("pledgeAdmins");
-
     enum PledgeAdminType { Giver, Delegate, Project }
+
+    // Events
+    event GiverAdded(uint indexed idGiver);
+    event GiverUpdated(uint indexed idGiver);
+    event DelegateAdded(uint indexed idDelegate);
+    event DelegateUpdated(uint indexed idDelegate);
+    event ProjectAdded(uint indexed idProject);
+    event ProjectUpdated(uint indexed idProject);
+
+
+///////////////
+// Constructor
+///////////////
+
+    function PledgeAdmins(address _storage)
+      LiquidPledgingStorage(_storage)
+      LiquidPledgingPlugins() public
+    {
+    }
+
+////////////////////
+// Public functions
+////////////////////
 
     /// @notice Creates a Giver Admin with the `msg.sender` as the Admin address
     /// @param name The name used to identify the Giver
@@ -27,26 +73,26 @@ library PledgeAdmins {
     ///  extended functionality
     /// @return idGiver The id number used to reference this Admin
     function addGiver(
-        EternalStorage _storage,
         string name,
         string url,
         uint commitTime,
         ILiquidPledgingPlugin plugin
-    ) internal returns (uint idGiver) {
-        idGiver = _storage.stgCollectionAddItem(admins);
+    ) public returns (uint idGiver)
+    {
+        require(isValidPlugin(plugin)); // Plugin check
+
+        idGiver = _storage.stgCollectionAddItem(PLEDGE_ADMINS_ARRAY);
 
         // Save the fields
         // don't set adminType to save gas, b/c 0 is Giver
-        _storage.stgObjectSetAddress(class, idGiver, "addr", msg.sender);
-        _storage.stgObjectSetString(class, idGiver, "name", name);
-        _storage.stgObjectSetString(class, idGiver, "url", url);
-        _storage.stgObjectSetUInt(class, idGiver, "commitTime", commitTime);
-        _storage.stgObjectSetAddress(class, idGiver, "plugin", address(plugin));
+        _storage.stgObjectSetAddress(PLEDGE_ADMIN, idGiver, "addr", msg.sender);
+        _storage.stgObjectSetString(PLEDGE_ADMIN, idGiver, "name", name);
+        _storage.stgObjectSetString(PLEDGE_ADMIN, idGiver, "url", url);
+        _storage.stgObjectSetUInt(PLEDGE_ADMIN, idGiver, "commitTime", commitTime);
+        _storage.stgObjectSetAddress(PLEDGE_ADMIN, idGiver, "plugin", address(plugin));
 
         GiverAdded(idGiver);
     }
-
-    event GiverAdded(uint indexed idGiver);
 
     /// @notice Updates a Giver's info to change the address, name, url, or
     ///  commitTime, it cannot be used to change a plugin, and it must be called
@@ -58,7 +104,6 @@ library PledgeAdmins {
     /// @param newCommitTime Sets the length of time in seconds the Giver has to
     ///   veto when the Giver's delegates Pledge funds to a project
     function updateGiver(
-        EternalStorage _storage,
         uint idGiver,
         address newAddr,
         string newName,
@@ -66,19 +111,17 @@ library PledgeAdmins {
         uint64 newCommitTime
     ) public
     {
-        require(getAdminType(_storage, idGiver) == PledgeAdminType.Giver); // Must be a Giver
-        require(getAdminAddr(_storage, idGiver) == msg.sender); // Current addr had to send this tx
+        require(getAdminType(idGiver) == PledgeAdminType.Giver); // Must be a Giver
+        require(getAdminAddr(idGiver) == msg.sender); // Current addr had to send this tx
 
         // Save the fields
-        _storage.stgObjectSetAddress(class, idGiver, "addr", newAddr);
-        _storage.stgObjectSetString(class, idGiver, "name", newName);
-        _storage.stgObjectSetString(class, idGiver, "url", newUrl);
-        _storage.stgObjectSetUInt(class, idGiver, "commitTime", newCommitTime);
+        _storage.stgObjectSetAddress(PLEDGE_ADMIN, idGiver, "addr", newAddr);
+        _storage.stgObjectSetString(PLEDGE_ADMIN, idGiver, "name", newName);
+        _storage.stgObjectSetString(PLEDGE_ADMIN, idGiver, "url", newUrl);
+        _storage.stgObjectSetUInt(PLEDGE_ADMIN, idGiver, "commitTime", newCommitTime);
 
         GiverUpdated(idGiver);
     }
-
-    event GiverUpdated(uint indexed idGiver);
 
     /// @notice Creates a Delegate Admin with the `msg.sender` as the Admin addr
     /// @param name The name used to identify the Delegate
@@ -89,28 +132,28 @@ library PledgeAdmins {
     /// @param plugin This is Delegate's liquid pledge plugin allowing for
     ///  extended functionality
     /// @return idxDelegate The id number used to reference this Delegate within
-    ///  the admins array
+    ///  the PLEDGE_ADMIN array
     function addDelegate(
-        EternalStorage _storage,
         string name,
         string url,
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
-    ) internal returns (uint idDelegate) {
-        idDelegate = _storage.stgCollectionAddItem(admins);//, idDelegate);
+    ) public returns (uint idDelegate) 
+    {
+        require(isValidPlugin(plugin)); // Plugin check
+
+        idDelegate = _storage.stgCollectionAddItem(PLEDGE_ADMINS_ARRAY);
 
         // Save the fields
-        _storage.stgObjectSetUInt(class, idDelegate, "adminType", uint(PledgeAdminType.Delegate));
-        _storage.stgObjectSetAddress(class, idDelegate, "addr", msg.sender);
-        _storage.stgObjectSetString(class, idDelegate, "name", name);
-        _storage.stgObjectSetString(class, idDelegate, "url", url);
-        _storage.stgObjectSetUInt(class, idDelegate, "commitTime", commitTime);
-        _storage.stgObjectSetAddress(class, idDelegate, "plugin", address(plugin));
+        _storage.stgObjectSetUInt(PLEDGE_ADMIN, idDelegate, "adminType", uint(PledgeAdminType.Delegate));
+        _storage.stgObjectSetAddress(PLEDGE_ADMIN, idDelegate, "addr", msg.sender);
+        _storage.stgObjectSetString(PLEDGE_ADMIN, idDelegate, "name", name);
+        _storage.stgObjectSetString(PLEDGE_ADMIN, idDelegate, "url", url);
+        _storage.stgObjectSetUInt(PLEDGE_ADMIN, idDelegate, "commitTime", commitTime);
+        _storage.stgObjectSetAddress(PLEDGE_ADMIN, idDelegate, "plugin", address(plugin));
 
         DelegateAdded(idDelegate);
     }
-
-    event DelegateAdded(uint indexed idDelegate);
 
     /// @notice Updates a Delegate's info to change the address, name, url, or
     ///  commitTime, it cannot be used to change a plugin, and it must be called
@@ -124,7 +167,6 @@ library PledgeAdmins {
     ///  the time allowed to veto any event must be greater than or equal to
     ///  this time.
     function updateDelegate(
-        EternalStorage _storage,
         uint idDelegate,
         address newAddr,
         string newName,
@@ -132,19 +174,17 @@ library PledgeAdmins {
         uint64 newCommitTime
     ) public
     {
-        require(getAdminType(_storage, idDelegate) == PledgeAdminType.Delegate);
-        require(getAdminAddr(_storage, idDelegate) == msg.sender); // Current addr had to send this tx
+        require(getAdminType(idDelegate) == PledgeAdminType.Delegate);
+        require(getAdminAddr(idDelegate) == msg.sender); // Current addr had to send this tx
 
         // Save the fields
-        _storage.stgObjectSetAddress(class, idDelegate, "addr", newAddr);
-        _storage.stgObjectSetString(class, idDelegate, "name", newName);
-        _storage.stgObjectSetString(class, idDelegate, "url", newUrl);
-        _storage.stgObjectSetUInt(class, idDelegate, "commitTime", newCommitTime);
+        _storage.stgObjectSetAddress(PLEDGE_ADMIN, idDelegate, "addr", newAddr);
+        _storage.stgObjectSetString(PLEDGE_ADMIN, idDelegate, "name", newName);
+        _storage.stgObjectSetString(PLEDGE_ADMIN, idDelegate, "url", newUrl);
+        _storage.stgObjectSetUInt(PLEDGE_ADMIN, idDelegate, "commitTime", newCommitTime);
 
         DelegateUpdated(idDelegate);
     }
-
-    event DelegateUpdated(uint indexed idDelegate);
 
     /// @notice Creates a Project Admin with the `msg.sender` as the Admin addr
     /// @param name The name used to identify the Project
@@ -159,33 +199,36 @@ library PledgeAdmins {
     ///  extended functionality
     /// @return idProject The id number used to reference this Admin
     function addProject(
-        EternalStorage _storage,
         string name,
         string url,
         address projectAdmin,
         uint64 parentProject,
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
-    ) internal returns (uint idProject) {
-        idProject = _storage.stgCollectionAddItem(admins);//, idProject);
+    ) public returns (uint idProject) 
+    {
+        require(isValidPlugin(plugin));
+
+        if (parentProject != 0) {
+            // getProjectLevel will check that parentProject has a `Project` adminType
+            require(getProjectLevel(parentProject) < MAX_SUBPROJECT_LEVEL);
+        }
+
+        idProject = _storage.stgCollectionAddItem(PLEDGE_ADMINS_ARRAY);//, idProject);
 
         // Save the fields
-        _storage.stgObjectSetUInt(class, idProject, "adminType", uint(PledgeAdminType.Project));
-        _storage.stgObjectSetAddress(class, idProject, "addr", projectAdmin);
-        _storage.stgObjectSetString(class, idProject, "name", name);
-        _storage.stgObjectSetString(class, idProject, "url", url);
+        _storage.stgObjectSetUInt(PLEDGE_ADMIN, idProject, "adminType", uint(PledgeAdminType.Project));
+        _storage.stgObjectSetAddress(PLEDGE_ADMIN, idProject, "addr", projectAdmin);
+        _storage.stgObjectSetString(PLEDGE_ADMIN, idProject, "name", name);
+        _storage.stgObjectSetString(PLEDGE_ADMIN, idProject, "url", url);
 
-        // NOTICE: we do not verify that the parentProject has a `Project` adminType
-        // this is expected to be done by the calling method
-        _storage.stgObjectSetUInt(class, idProject, "parentProject", parentProject);
+        _storage.stgObjectSetUInt(PLEDGE_ADMIN, idProject, "parentProject", parentProject);
 
-        _storage.stgObjectSetUInt(class, idProject, "commitTime", commitTime);
-        _storage.stgObjectSetAddress(class, idProject, "plugin", address(plugin));
+        _storage.stgObjectSetUInt(PLEDGE_ADMIN, idProject, "commitTime", commitTime);
+        _storage.stgObjectSetAddress(PLEDGE_ADMIN, idProject, "plugin", address(plugin));
 
         ProjectAdded(idProject);
     }
-
-    event ProjectAdded(uint indexed idProject);
 
     /// @notice Updates a Project's info to change the address, name, url, or
     ///  commitTime, it cannot be used to change a plugin or a parentProject,
@@ -198,7 +241,6 @@ library PledgeAdmins {
     ///  to veto when the Project delegates to a Delegate and they pledge those
     ///  funds to a project
     function updateProject(
-        EternalStorage _storage,
         uint idProject,
         address newAddr,
         string newName,
@@ -206,52 +248,27 @@ library PledgeAdmins {
         uint64 newCommitTime
     ) public
     {
-        require(getAdminType(_storage, idProject) == PledgeAdminType.Project);
-        require(getAdminAddr(_storage, idProject) == msg.sender); // Current addr had to send this tx
+        require(getAdminType(idProject) == PledgeAdminType.Project);
+        require(getAdminAddr(idProject) == msg.sender); // Current addr had to send this tx
 
         // Save the fields
-        _storage.stgObjectSetAddress(class, idProject, "addr", newAddr);
-        _storage.stgObjectSetString(class, idProject, "name", newName);
-        _storage.stgObjectSetString(class, idProject, "url", newUrl);
-        _storage.stgObjectSetUInt(class, idProject, "commitTime", newCommitTime);
+        _storage.stgObjectSetAddress(PLEDGE_ADMIN, idProject, "addr", newAddr);
+        _storage.stgObjectSetString(PLEDGE_ADMIN, idProject, "name", newName);
+        _storage.stgObjectSetString(PLEDGE_ADMIN, idProject, "url", newUrl);
+        _storage.stgObjectSetUInt(PLEDGE_ADMIN, idProject, "commitTime", newCommitTime);
 
         ProjectUpdated(idProject);
     }
 
-    event ProjectUpdated(uint indexed idAdmin);
 
-    function cancelProject(EternalStorage _storage, uint idProject) internal {
-        _storage.stgObjectSetBoolean(class, idProject, "canceled", true);
-        CancelProject(idProject);
-    }
-
-    /// @notice A getter to find if a specified Project has been canceled
-    /// @param projectId The Admin id number used to specify the Project
-    /// @return True if the Project has been canceled
-    function isProjectCanceled(EternalStorage _storage, uint projectId)
-        internal constant returns (bool)
-    {
-        require(pledgeAdminsCount(_storage) >= projectId);
-
-        PledgeAdminType adminType = getAdminType(_storage, projectId);
-
-        if (adminType == PledgeAdminType.Giver) return false;
-        assert(adminType == PledgeAdminType.Project);
-
-        if (getAdminCanceled(_storage, projectId)) return true;
-
-        uint parentProject = getAdminParentProject(_storage, projectId);
-        if (parentProject == 0) return false;
-
-        return isProjectCanceled(_storage, parentProject);
-    }
-
-    event CancelProject(uint indexed idProject);
+/////////////////////////////
+// Public constant functions
+/////////////////////////////
 
     /// @notice A constant getter used to check how many total Admins exist
     /// @return The total number of admins (Givers, Delegates and Projects) .
-    function pledgeAdminsCount(EternalStorage _storage) internal constant returns(uint) {
-        return _storage.stgCollectionLength(admins);
+    function numberOfPledgeAdmins() public constant returns(uint) {
+        return _storage.stgCollectionLength(PLEDGE_ADMINS_ARRAY);
     }
 
     /// @notice A constant getter to check the details of a specified Admin
@@ -267,7 +284,7 @@ library PledgeAdmins {
     ///  canceled
     /// @return plugin This is Project's liquidPledging plugin allowing for
     ///  extended functionality
-    function getAdmin(EternalStorage _storage, uint idAdmin) internal view returns (
+    function getPledgeAdmin(uint idAdmin) public view returns (
         PledgeAdminType adminType,
         address addr,
         string name,
@@ -276,100 +293,119 @@ library PledgeAdmins {
         uint64 parentProject,
         bool canceled,
         address plugin
-    )
-    {
-        adminType = getAdminType(_storage, idAdmin);
-        addr = getAdminAddr(_storage, idAdmin);
-        name = getAdminName(_storage, idAdmin);
-        url = _storage.stgObjectGetString(class, idAdmin, "url");
-        commitTime = uint64(getAdminCommitTime(_storage, idAdmin));
+    ) {
+        adminType = getAdminType(idAdmin);
+        addr = getAdminAddr(idAdmin);
+        name = getAdminName(idAdmin);
+        url = _storage.stgObjectGetString(PLEDGE_ADMIN, idAdmin, "url");
+        commitTime = uint64(getAdminCommitTime(idAdmin));
 
         // parentProject & canceled only belong to Project admins,
         // so don't waste the gas to fetch the data
         if (adminType == PledgeAdminType.Project) {
-            parentProject = uint64(getAdminParentProject(_storage, idAdmin));
-            canceled = getAdminCanceled(_storage, idAdmin);
+            parentProject = uint64(getAdminParentProject(idAdmin));
+            canceled = getAdminCanceled(idAdmin);
         }
 
-        plugin = getAdminPlugin(_storage, idAdmin);
+        plugin = getAdminPlugin(idAdmin);
+    }
+
+
+///////////////////
+// Internal methods
+///////////////////
+
+    /// @notice A getter to find if a specified Project has been canceled
+    /// @param projectId The Admin id number used to specify the Project
+    /// @return True if the Project has been canceled
+    function isProjectCanceled(uint projectId)
+        internal constant returns (bool)
+    {
+        require(numberOfPledgeAdmins() >= projectId);
+
+        PledgeAdminType adminType = getAdminType(projectId);
+
+        if (adminType == PledgeAdminType.Giver) {
+            return false;
+        }
+        assert(adminType == PledgeAdminType.Project);
+
+        if (getAdminCanceled(projectId)) {
+            return true;
+        }
+
+        uint parentProject = getAdminParentProject(projectId);
+        if (parentProject == 0) {
+            return false;
+        }
+
+        return isProjectCanceled(parentProject);
     }
 
     /// @notice Find the level of authority a specific Project has
     ///  using a recursive loop
     /// @param idProject The id of the Project being queried
     /// @return The level of authority a specific Project has
-    function getProjectLevel(EternalStorage _storage, uint idProject) internal returns(uint) {
-        assert(getAdminType(_storage, idProject) == PledgeAdminType.Project);
-        uint parentProject = getAdminParentProject(_storage, idProject);
-        if (parentProject == 0) return(1);
-        return getProjectLevel(_storage, parentProject) + 1;
+    function getProjectLevel(uint idProject) internal returns(uint) {
+        assert(getAdminType(idProject) == PledgeAdminType.Project);
+        uint parentProject = getAdminParentProject(idProject);
+        if (parentProject == 0) {
+            return(1);
+        }
+        return getProjectLevel(parentProject) + 1;
     }
 
-////////
-// Methods to fetch individual attributes of a PledgeAdmin
-///////
 
-    // costs ~10k gas
+//////////////////////////////////////////////////////
+// Getters for individual attributes of a PledgeAdmin
+//////////////////////////////////////////////////////
+
     function getAdminType(
-        EternalStorage _storage,
         uint idAdmin
     ) internal view returns (PledgeAdminType)
     {
-        return PledgeAdminType(_storage.stgObjectGetUInt(class, idAdmin, "adminType"));
+        return PledgeAdminType(_storage.stgObjectGetUInt(PLEDGE_ADMIN, idAdmin, "adminType"));
     }
 
-    // costs ~10k gas
     function getAdminAddr(
-        EternalStorage _storage,
         uint idAdmin
     ) internal view returns (address)
     {
-        return _storage.stgObjectGetAddress(class, idAdmin, "addr");
+        return _storage.stgObjectGetAddress(PLEDGE_ADMIN, idAdmin, "addr");
     }
 
-    // costs ~8k gas
     function getAdminName(
-        EternalStorage _storage,
         uint idAdmin
     ) internal view returns (string)
     {
-        return _storage.stgObjectGetString(class, idAdmin, "name");
+        return _storage.stgObjectGetString(PLEDGE_ADMIN, idAdmin, "name");
     }
 
-    // costs ~10k gas
     function getAdminParentProject(
-        EternalStorage _storage,
         uint idAdmin
     ) internal view returns (uint)
     {
-        return _storage.stgObjectGetUInt(class, idAdmin, "parentProject");
+        return _storage.stgObjectGetUInt(PLEDGE_ADMIN, idAdmin, "parentProject");
     }
 
-    // costs ~10k gas
     function getAdminCanceled(
-        EternalStorage _storage,
         uint idAdmin
     ) internal view returns (bool)
     {
-        return _storage.stgObjectGetBoolean(class, idAdmin, "canceled");
+        return _storage.stgObjectGetBoolean(PLEDGE_ADMIN, idAdmin, "canceled");
     }
 
-    // costs ~10k gas
     function getAdminPlugin(
-        EternalStorage _storage,
         uint idAdmin
     ) internal view returns (address)
     {
-        return _storage.stgObjectGetAddress(class, idAdmin, "plugin");
+        return _storage.stgObjectGetAddress(PLEDGE_ADMIN, idAdmin, "plugin");
     }
 
-    // costs ~10k gas
     function getAdminCommitTime(
-        EternalStorage _storage,
         uint idAdmin
     ) internal view returns (uint)
     {
-        return _storage.stgObjectGetUInt(class, idAdmin, "commitTime");
+        return _storage.stgObjectGetUInt(PLEDGE_ADMIN, idAdmin, "commitTime");
     }
-
 }

@@ -4,7 +4,6 @@ const TestRPC = require('ethereumjs-testrpc');
 const Web3 = require('web3');
 const chai = require('chai');
 const liquidpledging = require('../index.js');
-const lpData = require('../build/LiquidPledgingMock.sol');
 const EternalStorage = require('../js/eternalStorage');
 const PledgeAdmins = require('../js/pledgeAdmins');
 const assertFail = require('./helpers/assertFail');
@@ -14,7 +13,7 @@ const LiquidPledgingState = liquidpledging.LiquidPledgingState;
 const simpleProjectPluginFactoryAbi = require('../build/TestSimpleProjectPluginFactory.sol').TestSimpleProjectPluginFactoryAbi;
 const simpleProjectPluginFactoryByteCode = require('../build/TestSimpleProjectPluginFactory.sol').TestSimpleProjectPluginFactoryByteCode;
 const simpleProjectPluginRuntimeByteCode = require('../build/TestSimpleProjectPluginFactory.sol').TestSimpleProjectPluginRuntimeByteCode;
-const Vault = liquidpledging.LPVault;
+const LPVault = liquidpledging.LPVault;
 const assert = chai.assert;
 
 const printState = async (liquidPledgingState) => {
@@ -57,27 +56,14 @@ describe('LiquidPledging plugins test', function () {
   });
 
   it('Should deploy LiquidPledging contract', async function() {
-    vault = await Vault.new(web3, accounts[0], accounts[1]);
-    let storage = await EternalStorage.new(web3, accounts[0], accounts[1]);
-    let admins = await PledgeAdmins.new(web3);
+    vault = await LPVault.new(web3, accounts[0], accounts[1]);
+    const storage = await EternalStorage.new(web3, accounts[0], accounts[1]);
 
-    let bytecode = lpData.LiquidPledgingMockByteCode;
-    bytecode = bytecode.replace(/__contracts\/PledgeAdmins\.sol:PledgeAdm__/g, admins.$address.slice(2)); // solc library
-    bytecode = bytecode.replace(/__:PledgeAdmins_________________________/g, admins.$address.slice(2)); // yarn sol-compile library
+    liquidPledging = await LiquidPledging.new(web3, storage.$address, vault.$address, accounts[0], accounts[0], {gas: 6700000})
 
-    let lp = await new web3.eth.Contract(lpData.LiquidPledgingMockAbi).deploy({
-      arguments: [storage.$address, vault.$address, accounts[0], accounts[0]],
-      data: bytecode,
-    }).send({
-      from: accounts[0],
-      gas: 6700000,
-      gasPrice: 1,
-    });
-
-    liquidPledging = new LiquidPledging(web3, lp._address);
     await storage.changeOwnership(liquidPledging.$address);
-
     await vault.setLiquidPledging(liquidPledging.$address);
+
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
   });
 

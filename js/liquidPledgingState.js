@@ -33,7 +33,7 @@ class LiquidPledgingState {
       const promises = [];
       for (let i = 0; i < res.nDelegates; i += 1) {
         promises.push(
-          this.$lp.getPledgeDelegate(idPledge, i)
+          this.$lp.getDelegate(idPledge, i)
           .then(r => ({
             id: r.idDelegate,
             addr: r.addr,

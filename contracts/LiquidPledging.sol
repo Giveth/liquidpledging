@@ -63,14 +63,14 @@ contract LiquidPledging is LiquidPledgingBase {
 
         checkAdminOwner(idGiver);
 
-        PledgeAdmins.PledgeAdminType adminType = _storage.getAdminType(idGiver);
-        require(adminType == PledgeAdmins.PledgeAdminType.Giver);
+        PledgeAdminType adminType = getAdminType(idGiver);
+        require(adminType == PledgeAdminType.Giver);
 
         uint amount = msg.value;
         require(amount > 0);
         vault.transfer(amount); // Sends the `msg.value` (in wei) to the `vault`
 
-        Pledges.Pledge memory p = _storage.findOrCreatePledge(
+        Pledges.Pledge memory p = findOrCreatePledge(
             idGiver,
             new uint64[](0), // Creates empty array for delegationChain
             0,
@@ -81,7 +81,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
 
         p.amount += amount;
-        _storage.setPledgeAmount(p.id, p.amount);
+        setPledgeAmount(p.id, p.amount);
 
         Transfer(0, p.id, amount); // An event
 
@@ -102,24 +102,25 @@ contract LiquidPledging is LiquidPledgingBase {
         uint64 idPledge,
         uint amount,
         uint64 idReceiver
-    ) public {
+    ) public 
+    {
         checkAdminOwner(idSender);
 
         idPledge = normalizePledge(idPledge);
 
-        Pledges.Pledge memory p = _storage.findPledge(idPledge);
-        PledgeAdmins.PledgeAdminType receiverAdminType = _storage.getAdminType(idReceiver);
+        Pledges.Pledge memory p = findPledge(idPledge);
+        PledgeAdminType receiverAdminType = getAdminType(idReceiver);
 
         require(p.pledgeState == Pledges.PledgeState.Pledged);
 
         // If the sender is the owner of the Pledge
         if (p.owner == idSender) {
 
-            if (receiverAdminType == PledgeAdmins.PledgeAdminType.Giver) {
+            if (receiverAdminType == PledgeAdminType.Giver) {
                 transferOwnershipToGiver(p, amount, idReceiver);
-            } else if (receiverAdminType == PledgeAdmins.PledgeAdminType.Project) {
+            } else if (receiverAdminType == PledgeAdminType.Project) {
                 transferOwnershipToProject(p, amount, idReceiver);
-            } else if (receiverAdminType == PledgeAdmins.PledgeAdminType.Delegate) {
+            } else if (receiverAdminType == PledgeAdminType.Delegate) {
 
                 uint recieverDIdx = getDelegateIdx(p, idReceiver);
                 if (p.intendedProject > 0 && recieverDIdx != NOTFOUND) {
@@ -128,7 +129,7 @@ contract LiquidPledging is LiquidPledgingBase {
                     // intendedProject by the owner
 
                     if (recieverDIdx == p.delegationChain.length - 1) {
-                        Pledges.Pledge memory toPledge = _storage.findOrCreatePledge(
+                        Pledges.Pledge memory toPledge = findOrCreatePledge(
                             p.owner,
                             p.delegationChain,
                             0,
@@ -163,7 +164,7 @@ contract LiquidPledging is LiquidPledgingBase {
         if (senderDIdx != NOTFOUND) {
 
             // And the receiver is another Giver
-            if (receiverAdminType == PledgeAdmins.PledgeAdminType.Giver) {
+            if (receiverAdminType == PledgeAdminType.Giver) {
                 // Only transfer to the Giver who owns the pldege
                 assert(p.owner == idReceiver);
                 undelegate(p, amount, p.delegationChain.length);
@@ -171,7 +172,7 @@ contract LiquidPledging is LiquidPledgingBase {
             }
 
             // And the receiver is another Delegate
-            if (receiverAdminType == PledgeAdmins.PledgeAdminType.Delegate) {
+            if (receiverAdminType == PledgeAdminType.Delegate) {
                 uint receiverDIdx = getDelegateIdx(p, idReceiver);
 
                 // And not in the delegationChain
@@ -209,7 +210,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
             // And the receiver is a Project, all the delegates after the sender
             //  are removed and the amount is pre-committed to the project
-            if (receiverAdminType == PledgeAdmins.PledgeAdminType.Project) {
+            if (receiverAdminType == PledgeAdminType.Project) {
                 p = undelegate(
                     p,
                     amount,
@@ -229,11 +230,11 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param amount Quantity of ether (in wei) to be authorized
     function withdraw(uint64 idPledge, uint amount) public {
         idPledge = normalizePledge(idPledge); // Updates pledge info 
-        Pledges.Pledge memory p = _storage.findPledge(idPledge);
+        Pledges.Pledge memory p = findPledge(idPledge);
         require(p.pledgeState == Pledges.PledgeState.Pledged);
         checkAdminOwner(p.owner);
 
-        Pledges.Pledge memory newPledge = _storage.findOrCreatePledge(
+        Pledges.Pledge memory newPledge = findOrCreatePledge(
             p.owner,
             p.delegationChain,
             0,
@@ -244,7 +245,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         doTransfer(p, newPledge, amount);
 
-        vault.authorizePayment(bytes32(newPledge.id), _storage.getAdminAddr(p.owner), amount);
+        vault.authorizePayment(bytes32(newPledge.id), getAdminAddr(p.owner), amount);
     }
 
     /// @notice `onlyVault` Confirms a withdraw request changing the Pledges.PledgeState
@@ -253,11 +254,11 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param amount Quantity of ether (in wei) to be withdrawn
     function confirmPayment(uint64 idPledge, uint amount) public onlyVault {
         //TODO don't fetch entire pledge
-        Pledges.Pledge memory p = _storage.findPledge(idPledge);
+        Pledges.Pledge memory p = findPledge(idPledge);
 
         require(p.pledgeState == Pledges.PledgeState.Paying);
 
-        Pledges.Pledge memory newPledge = _storage.findOrCreatePledge(
+        Pledges.Pledge memory newPledge = findOrCreatePledge(
             p.owner,
             p.delegationChain,
             0,
@@ -274,12 +275,12 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idPledge Id of the pledge that's withdraw is to be canceled
     /// @param amount Quantity of ether (in wei) to be canceled
     function cancelPayment(uint64 idPledge, uint amount) public onlyVault {
-        Pledges.Pledge memory p = _storage.findPledge(idPledge);
+        Pledges.Pledge memory p = findPledge(idPledge);
 
         require(p.pledgeState == Pledges.PledgeState.Paying);
 
         // When a payment is canceled, never is assigned to a project.
-        Pledges.Pledge memory oldPledge = _storage.findOrCreatePledge(
+        Pledges.Pledge memory oldPledge = findOrCreatePledge(
             p.owner,
             p.delegationChain,
             0,
@@ -297,7 +298,9 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idProject Id of the project that is to be canceled
     function cancelProject(uint64 idProject) public {
         checkAdminOwner(idProject);
-        _storage.cancelProject(idProject);
+
+        _storage.stgObjectSetBoolean(PLEDGE_ADMIN, idProject, "canceled", true);
+        CancelProject(idProject);
     }
 
     /// @notice Transfers `amount` in `idPledge` back to the `oldPledge` that
@@ -309,13 +312,13 @@ contract LiquidPledging is LiquidPledgingBase {
         //TODO fetch idPledge? OR return Pledge from this call?
         idPledge = normalizePledge(idPledge);
 
-        Pledges.Pledge memory p = _storage.findPledge(idPledge);
+        Pledges.Pledge memory p = findPledge(idPledge);
         require(p.oldPledge != 0);
 
         checkAdminOwner(p.owner);
 
         uint64 oldPledgeId = getOldestPledgeNotCanceled(p.oldPledge);
-        Pledges.Pledge memory oldPledge = _storage.findPledge(oldPledgeId);
+        Pledges.Pledge memory oldPledge = findPledge(oldPledgeId);
         doTransfer(p, oldPledge, amount);
     }
 
@@ -345,7 +348,8 @@ contract LiquidPledging is LiquidPledgingBase {
         uint64 idSender,
         uint[] pledgesAmounts,
         uint64 idReceiver
-    ) public {
+    ) public 
+    {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
             uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
             uint amount = pledgesAmounts[i] / D64;
@@ -417,13 +421,14 @@ contract LiquidPledging is LiquidPledgingBase {
         Pledges.Pledge p,
         uint amount,
         uint64 idReceiver
-    ) internal {
+    ) internal 
+    {
         // Ensure that the pledge is not already at max pledge depth
         // and the project has not been canceled
-        require(_storage.getPledgeLevel(p.oldPledge) < MAX_INTERPROJECT_LEVEL);
-        require(!_storage.isProjectCanceled(idReceiver));
+        require(getPledgeLevel(p.oldPledge) < MAX_INTERPROJECT_LEVEL);
+        require(!isProjectCanceled(idReceiver));
 
-        Pledges.Pledge memory oldPledge = _storage.findOrCreatePledge(
+        Pledges.Pledge memory oldPledge = findOrCreatePledge(
             p.owner,
             p.delegationChain,
             0,
@@ -431,7 +436,7 @@ contract LiquidPledging is LiquidPledgingBase {
             p.oldPledge,
             Pledges.PledgeState.Pledged
         );
-        Pledges.Pledge memory toPledge = _storage.findOrCreatePledge(
+        Pledges.Pledge memory toPledge = findOrCreatePledge(
             idReceiver,                     // Set the new owner
             new uint64[](0),                // clear the delegation chain
             0,
@@ -453,8 +458,9 @@ contract LiquidPledging is LiquidPledgingBase {
         Pledges.Pledge p,
         uint amount,
         uint64 idReceiver
-    ) internal {
-        Pledges.Pledge memory toPledge = _storage.findOrCreatePledge(
+    ) internal 
+    {
+        Pledges.Pledge memory toPledge = findOrCreatePledge(
             idReceiver,
             new uint64[](0),
             0,
@@ -474,8 +480,8 @@ contract LiquidPledging is LiquidPledgingBase {
         Pledges.Pledge p,
         uint amount,
         uint64 idReceiver
-    ) internal {
-
+    ) internal 
+    {
         require(p.delegationChain.length < MAX_DELEGATES);
         uint64[] memory newDelegationChain = new uint64[](
             p.delegationChain.length + 1
@@ -487,7 +493,7 @@ contract LiquidPledging is LiquidPledgingBase {
         // Make the last item in the array the idReceiver
         newDelegationChain[p.delegationChain.length] = idReceiver;
 
-        Pledges.Pledge memory toPledge = _storage.findOrCreatePledge(
+        Pledges.Pledge memory toPledge = findOrCreatePledge(
             p.owner,
             newDelegationChain,
             0,
@@ -514,10 +520,10 @@ contract LiquidPledging is LiquidPledgingBase {
             p.delegationChain.length - q
         );
 
-        for (uint i=0; i<p.delegationChain.length - q; i++) {
+        for (uint i = 0; i < p.delegationChain.length - q; i++) {
             newDelegationChain[i] = p.delegationChain[i];
         }
-        Pledges.Pledge memory toPledge = _storage.findOrCreatePledge(
+        Pledges.Pledge memory toPledge = findOrCreatePledge(
             p.owner,
             newDelegationChain,
             0,
@@ -541,11 +547,12 @@ contract LiquidPledging is LiquidPledgingBase {
         Pledges.Pledge p,
         uint amount,
         uint64 idReceiver
-    ) internal {
-        require(_storage.getPledgeLevel(p.oldPledge) < MAX_INTERPROJECT_LEVEL);
-        require(!_storage.isProjectCanceled(idReceiver));
+    ) internal 
+    {
+        require(getPledgeLevel(p.oldPledge) < MAX_INTERPROJECT_LEVEL);
+        require(!isProjectCanceled(idReceiver));
 
-        Pledges.Pledge memory toPledge = _storage.findOrCreatePledge(
+        Pledges.Pledge memory toPledge = findOrCreatePledge(
             p.owner,
             p.delegationChain,
             idReceiver,
@@ -572,9 +579,9 @@ contract LiquidPledging is LiquidPledgingBase {
 
         require(pFrom.amount >= amount);
         pFrom.amount -= amount;
-        _storage.setPledgeAmount(pFrom.id, pFrom.amount);
+        setPledgeAmount(pFrom.id, pFrom.amount);
         pTo.amount += amount;
-        _storage.setPledgeAmount(pTo.id, pTo.amount);
+        setPledgeAmount(pTo.id, pTo.amount);
 
         Transfer(pFrom.id, pTo.id, amount);
         callPlugins(false, pFrom, pTo, amount);
@@ -598,7 +605,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idPledge This is the id of the pledge that will be normalized
     /// @return The normalized Pledge!
     function normalizePledge(uint64 idPledge) public returns(uint64) {
-        Pledges.Pledge memory p = _storage.findPledge(idPledge);
+        Pledges.Pledge memory p = findPledge(idPledge);
         return uint64(normalizePledge(p).id);
     }
 
@@ -612,7 +619,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         // First send to a project if it's proposed and committed
         if ((p.intendedProject > 0) && ( getTime() > p.commitTime)) {
-            Pledges.Pledge memory oldPledge = _storage.findOrCreatePledge(
+            Pledges.Pledge memory oldPledge = findOrCreatePledge(
                 p.owner,
                 p.delegationChain,
                 0,
@@ -620,7 +627,7 @@ contract LiquidPledging is LiquidPledgingBase {
                 p.oldPledge,
                 Pledges.PledgeState.Pledged
             );
-            Pledges.Pledge memory toPledge = _storage.findOrCreatePledge(
+            Pledges.Pledge memory toPledge = findOrCreatePledge(
                 p.intendedProject,
                 new uint64[](0),
                 0,
@@ -634,7 +641,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         uint64 oldestPledgeId = getOldestPledgeNotCanceled(uint64(p.id));
         if (p.id != oldestPledgeId) {
-            toPledge = _storage.findPledge(oldestPledgeId);
+            toPledge = findPledge(oldestPledgeId);
             doTransfer(p, toPledge, p.amount);
             p = toPledge;
         }
@@ -671,7 +678,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         uint newAmount;
         allowedAmount = amount;
-        address plugin = _storage.getAdminPlugin(adminId); // this takes ~10000 gas
+        address plugin = getAdminPlugin(adminId);
 
         // Checks admin has a plugin assigned and a non-zero amount is requested
         if (plugin != 0 && allowedAmount > 0) {
@@ -723,7 +730,7 @@ contract LiquidPledging is LiquidPledgingBase {
         allowedAmount = amount;
 
         // TODO I think we can remove these check b/c the admins array only grows, thus if adminId is out of index, it will just return 0x0 & skip the plugin call
-//        uint adminsSize = _storage.pledgeAdminsCount();
+//        uint adminsSize = pledgeAdminsCount();
 //        require(adminsSize >= p.owner);
 
         // Always call the plugin on the owner
@@ -810,7 +817,7 @@ contract LiquidPledging is LiquidPledgingBase {
         return now;
     }
 
-    // Event Delcerations
+    // Event Declarations
     event Transfer(uint indexed from, uint indexed to, uint amount);
     event CancelProject(uint indexed idProject);
 
