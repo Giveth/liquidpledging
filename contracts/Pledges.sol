@@ -173,6 +173,90 @@ contract Pledges is LiquidPledgingStorage {
             state);
     }
 
+    function getData(uint idPledge) internal returns(bytes) {
+        // generate the record ids
+        bytes32 a = keccak256(PLEDGE, idPledge, "amount");
+        bytes32 o = keccak256(PLEDGE, idPledge, "owner");
+        bytes32 i = keccak256(PLEDGE, idPledge, "intendedPledge");
+        bytes32 c = keccak256(PLEDGE, idPledge, "commitTime");
+        bytes32 op = keccak256(PLEDGE, idPledge, "oldPledge");
+        bytes32 s = keccak256(PLEDGE, idPledge, "state");
+
+        // 6 calls * 36 bytes each (4 bytes sig, 32 bytes record hash) + 32 bytes for bytes array offset + 
+        // 32 bytes for bytes array length + 4 bytes for multiCall sig
+        bytes memory d = new bytes(6 * 36 + 32 + 32 + 4); 
+        bytes4 sig = bytes4(keccak256("multiCall(bytes)"));
+        bytes4 getUIntSig = bytes4(keccak256("getUIntValue(bytes32)"));
+
+        assembly {
+            // note the first 32 bytes is the array length, 
+            // thus we start storing memory values w/ a 32 byte offset
+            mstore(add(d, 32), sig)
+            mstore(add(d, 36), 32) // bytes array data offset
+            mstore(add(d, 68), 216) // length of bytes array 6 * 36
+            mstore(add(d, 100), getUIntSig)
+            mstore(add(d, 104), a)
+            mstore(add(d, 136), getUIntSig)
+            mstore(add(d, 140), o)
+            mstore(add(d, 172), getUIntSig)
+            mstore(add(d, 176), i)
+            mstore(add(d, 208), getUIntSig)
+            mstore(add(d, 212), c)
+            mstore(add(d, 244), getUIntSig)
+            mstore(add(d, 248), op)
+            mstore(add(d, 280), getUIntSig)
+            mstore(add(d, 284), s)
+        }
+
+        return d;
+    }
+
+    event Val(uint val);
+    event Data(bytes d);
+    function findPledgeMulti(uint idPledge) internal view returns(Pledge) {
+        require(idPledge <= numberOfPledges());
+
+        // build the calldata
+        bytes memory d = getData(idPledge);
+        address target = address(_storage);
+
+        uint64 amount;
+        uint64 owner;
+        uint64 intendedProject;
+        uint64 commitTime;
+        uint64 oldPledge;
+        PledgeState state;
+        uint64[] memory delegates = getPledgeDelegates(idPledge);
+
+        assembly {
+            // 284 is the total memory footprint of d. 216 + 32 + 32 + 4
+            let result := call(sub(gas, 10000), target, 0, add(d, 32), 284, 0, 0)
+
+            // return data is a bytesarray with 1 32 byte response per call in the same order as called
+            let size := returndatasize
+            let ptr := mload(0x40)
+            returndatacopy(ptr, 0, size)
+
+            amount := mload(add(ptr, 64))
+            owner := mload(add(ptr, 96))
+            intendedProject := mload(add(ptr, 128))
+            commitTime := mload(add(ptr, 160))
+            oldPledge := mload(add(ptr, 192))
+            state := mload(add(ptr, 224))
+        } 
+
+        return Pledge(
+            idPledge,
+            amount,
+            owner,
+            delegates,
+            intendedProject,
+            commitTime,
+            oldPledge,
+            state
+        );
+    }
+
     /// @param idPledge the id of the pledge to load from storage
     /// @return The Pledge
     function findPledge(uint idPledge) internal view returns(Pledge) {
