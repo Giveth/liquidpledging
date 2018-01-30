@@ -173,11 +173,11 @@ contract Pledges is LiquidPledgingStorage {
             state);
     }
 
-    function getData(uint idPledge) internal returns(bytes) {
+    function getData(uint idPledge) internal view returns(bytes) {
         // generate the record ids
         bytes32 a = keccak256(PLEDGE, idPledge, "amount");
         bytes32 o = keccak256(PLEDGE, idPledge, "owner");
-        bytes32 i = keccak256(PLEDGE, idPledge, "intendedPledge");
+        bytes32 i = keccak256(PLEDGE, idPledge, "intendedProject");
         bytes32 c = keccak256(PLEDGE, idPledge, "commitTime");
         bytes32 op = keccak256(PLEDGE, idPledge, "oldPledge");
         bytes32 s = keccak256(PLEDGE, idPledge, "state");
@@ -211,13 +211,12 @@ contract Pledges is LiquidPledgingStorage {
         return d;
     }
 
-    event Val(uint val);
-    event Data(bytes d);
-    function findPledgeMulti(uint idPledge) internal view returns(Pledge) {
+    function findPledge(uint idPledge) internal view returns(Pledge) {
         require(idPledge <= numberOfPledges());
 
         // build the calldata
         bytes memory d = getData(idPledge);
+
         address target = address(_storage);
 
         uint64 amount;
@@ -229,7 +228,7 @@ contract Pledges is LiquidPledgingStorage {
         uint64[] memory delegates = getPledgeDelegates(idPledge);
 
         assembly {
-            // 284 is the total memory footprint of d. 216 + 32 + 32 + 4
+            // 284 is the total memory footprint of d. 6 calls @ 26 bytes each + 32 + 32 + 4
             let result := call(sub(gas, 10000), target, 0, add(d, 32), 284, 0, 0)
 
             // return data is a bytesarray with 1 32 byte response per call in the same order as called
@@ -259,28 +258,28 @@ contract Pledges is LiquidPledgingStorage {
 
     /// @param idPledge the id of the pledge to load from storage
     /// @return The Pledge
-    function findPledge(uint idPledge) internal view returns(Pledge) {
-        require(idPledge <= numberOfPledges());
+    // function findPledge(uint idPledge) internal view returns(Pledge) {
+    //     require(idPledge <= numberOfPledges());
 
-        uint amount = getPledgeAmount(idPledge);
-        uint owner = getPledgeOwner(idPledge);
-        uint intendedProject = getPledgeIntendedProject(idPledge);
-        uint commitTime = getPledgeCommitTime(idPledge);
-        uint oldPledge = getPledgeOldPledge(idPledge);
-        PledgeState state = getPledgeState(idPledge);
-        uint64[] memory delegates = getPledgeDelegates(idPledge);
+    //     uint amount = getPledgeAmount(idPledge);
+    //     uint owner = getPledgeOwner(idPledge);
+    //     uint intendedProject = getPledgeIntendedProject(idPledge);
+    //     uint commitTime = getPledgeCommitTime(idPledge);
+    //     uint oldPledge = getPledgeOldPledge(idPledge);
+    //     PledgeState state = getPledgeState(idPledge);
+    //     uint64[] memory delegates = getPledgeDelegates(idPledge);
 
-        return Pledge(
-            idPledge,
-            amount,
-            uint64(owner),
-            delegates,
-            uint64(intendedProject),
-            uint64(commitTime),
-            uint64(oldPledge),
-            state
-        );
-    }
+    //     return Pledge(
+    //         idPledge,
+    //         amount,
+    //         uint64(owner),
+    //         delegates,
+    //         uint64(intendedProject),
+    //         uint64(commitTime),
+    //         uint64(oldPledge),
+    //         state
+    //     );
+    // }
 
     /// @notice A getter that searches the delegationChain for the level of
     ///  authority a specific delegate has within a Pledge
