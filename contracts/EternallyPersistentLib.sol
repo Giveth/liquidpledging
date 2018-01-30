@@ -31,50 +31,36 @@ library EternallyPersistentLib {
 
     // string
 
+    // note, this still seems to need a bit of work. The previous implementation was limited to 288 bytes for the string.
+    // This implementation seems to have issues when called w/ other functions. And throws utf errors.
+    // by directly setting string memory s; s := add(ptr, x20) w/o allocating the string works great except for when calling this
+    // function alongside another function like getPledgeAdmin. It will log data correctly, but won't return the correct values 
     function stgObjectGetString(EternalStorage _storage, string class, uint id, string fieldName) internal view returns (string) {
         bytes32 record = keccak256(class, id, fieldName);
-        //Function signature
-        bytes4 sig = bytes4(keccak256("getStringValue(bytes32)"));
-        string memory s;
+        bytes4 sig = 0xa209a29c; // bytes4(keccak256("getStringValue(bytes32)"));
+        uint size;
+        uint ptr;
 
         assembly {
-            let x := mload(0x40)   //Find empty storage location using "free memory pointer"
-            mstore(x, sig) //Place signature at beginning of empty storage
-            mstore(add(x, 0x04), record) //Place first argument directly next to signature
+            log0(0x40, 32)
+            ptr := mload(0x40)   //Find empty storage location using "free memory pointer"
+            mstore(ptr, sig) //Place signature at beginning of empty storage
+            mstore(add(ptr, 0x04), record) //Place first argument directly next to signature
+            log0(0x40, 32)
 
-            let success := call(//This is the critical change (Pop the top stack value)
-            5000, //5k gas
-            _storage, //To addr
-            0, //No value
-            x, //Inputs are stored at location x
-            0x24, //Inputs are 36 byes long
-            x, //Store output over input (saves space)
-            0x80) //Outputs are 32 bytes long
+            let result := staticcall(sub(gas, 10000), _storage, ptr, 0x24, 0, 0)
 
-            let strL := mload(add(x, 0x20))   // Load the length of the string
+            size := returndatasize
+            returndatacopy(ptr, 0, size) // overwrite ptr to save a bit of gas
 
-            jumpi(ask_more, gt(strL, 64))
-
-            mstore(0x40, add(x, add(strL, 0x40)))
-
-            s := add(x, 0x20)
-
-            ask_more :
-            mstore(x, sig) //Place signature at beginning of empty storage
-            mstore(add(x, 0x04), record) //Place first argument directly next to signature
-
-            success := call(//This is the critical change (Pop the top stack value)
-            5000, //5k gas
-            _storage, //To addr
-            0, //No value
-            x, //Inputs are stored at location x
-            0x24, //Inputs are 36 byes long
-            x, //Store output over input (saves space)
-            add(0x40, strL)) //Outputs are 32 bytes long
-
-            mstore(0x40, add(x, add(strL, 0x40)))
-            s := add(x, 0x20)
+            // revert instead of invalid() bc if the underlying call failed with invalid() it already wasted gas.
+            // if the call returned error data, forward it
+            switch result case 0 { revert(ptr, size) }
+            default { }
         }
+
+        string memory s = new string(size);
+        assembly { s := add(ptr, 0x20 )}
 
         return s;
     }
