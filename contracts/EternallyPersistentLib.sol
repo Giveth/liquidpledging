@@ -31,36 +31,32 @@ library EternallyPersistentLib {
 
     // string
 
-    // note, this still seems to need a bit of work. The previous implementation was limited to 288 bytes for the string.
-    // This implementation seems to have issues when called w/ other functions. And throws utf errors.
-    // by directly setting string memory s; s := add(ptr, x20) w/o allocating the string works great except for when calling this
-    // function alongside another function like getPledgeAdmin. It will log data correctly, but won't return the correct values 
     function stgObjectGetString(EternalStorage _storage, string class, uint id, string fieldName) internal view returns (string) {
         bytes32 record = keccak256(class, id, fieldName);
         bytes4 sig = 0xa209a29c; // bytes4(keccak256("getStringValue(bytes32)"));
-        uint size;
+        uint len;
         uint ptr;
 
         assembly {
-            log0(0x40, 32)
             ptr := mload(0x40)   //Find empty storage location using "free memory pointer"
             mstore(ptr, sig) //Place signature at beginning of empty storage
             mstore(add(ptr, 0x04), record) //Place first argument directly next to signature
-            log0(0x40, 32)
 
             let result := staticcall(sub(gas, 10000), _storage, ptr, 0x24, 0, 0)
 
-            size := returndatasize
+            let size := returndatasize
             returndatacopy(ptr, 0, size) // overwrite ptr to save a bit of gas
 
             // revert instead of invalid() bc if the underlying call failed with invalid() it already wasted gas.
             // if the call returned error data, forward it
             switch result case 0 { revert(ptr, size) }
-            default { }
+            default { 
+                len := mload(add(ptr, 0x20)) // get the len of the string
+            }
         }
 
-        string memory s = new string(size);
-        assembly { s := add(ptr, 0x20 )}
+        string memory s = new string(len);
+        assembly { s := add(ptr, 0x20) }
 
         return s;
     }
