@@ -33,47 +33,27 @@ library EternallyPersistentLib {
 
     function stgObjectGetString(EternalStorage _storage, string class, uint id, string fieldName) internal view returns (string) {
         bytes32 record = keccak256(class, id, fieldName);
-        //Function signature
-        bytes4 sig = bytes4(keccak256("getStringValue(bytes32)"));
+        bytes4 sig = 0xa209a29c; // bytes4(keccak256("getStringValue(bytes32)"));
         string memory s;
 
         assembly {
-            let x := mload(0x40)   //Find empty storage location using "free memory pointer"
-            mstore(x, sig) //Place signature at beginning of empty storage
-            mstore(add(x, 0x04), record) //Place first argument directly next to signature
+            let ptr := mload(0x40)   //Find empty storage location using "free memory pointer"
+            mstore(ptr, sig) //Place signature at beginning of empty storage
+            mstore(add(ptr, 0x04), record) //Place first argument directly next to signature
 
-            let success := call(//This is the critical change (Pop the top stack value)
-            5000, //5k gas
-            _storage, //To addr
-            0, //No value
-            x, //Inputs are stored at location x
-            0x24, //Inputs are 36 byes long
-            x, //Store output over input (saves space)
-            0x80) //Outputs are 32 bytes long
+            let result := staticcall(sub(gas, 10000), _storage, ptr, 0x24, 0, 0)
 
-            let strL := mload(add(x, 0x20))   // Load the length of the string
+            let size := returndatasize
+            returndatacopy(ptr, 0, size) // overwrite ptr to save a bit of gas
 
-            jumpi(ask_more, gt(strL, 64))
-
-            mstore(0x40, add(x, add(strL, 0x40)))
-
-            s := add(x, 0x20)
-
-            ask_more :
-            mstore(x, sig) //Place signature at beginning of empty storage
-            mstore(add(x, 0x04), record) //Place first argument directly next to signature
-
-            success := call(//This is the critical change (Pop the top stack value)
-            5000, //5k gas
-            _storage, //To addr
-            0, //No value
-            x, //Inputs are stored at location x
-            0x24, //Inputs are 36 byes long
-            x, //Store output over input (saves space)
-            add(0x40, strL)) //Outputs are 32 bytes long
-
-            mstore(0x40, add(x, add(strL, 0x40)))
-            s := add(x, 0x20)
+            // revert instead of invalid() bc if the underlying call failed with invalid() it already wasted gas.
+            // if the call returned error data, forward it
+            switch result case 0 { revert(ptr, size) }
+            default { 
+                mstore(0x40, add(ptr, size)) // update free mem location
+                // We need to skip the first 32 bytes which contains the start offset of the returned byte array
+                s := add(ptr, 0x20) // set the string
+            }
         }
 
         return s;
@@ -111,13 +91,7 @@ library EternallyPersistentLib {
     // Array
 
     function stgCollectionAddItem(EternalStorage _storage, bytes32 idArray) internal returns (uint) {
-        uint length = _storage.getUIntValue(keccak256(idArray, "length"));
-
-        // Increment the size of the array
-        length++;
-        _storage.setUIntValue(keccak256(idArray, "length"), length);
-
-        return length;
+        return _storage.incrementUIntValue(keccak256(idArray, "length"));
     }
 
     function stgCollectionLength(EternalStorage _storage, bytes32 idArray) internal view returns (uint) {

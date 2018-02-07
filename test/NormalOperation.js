@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const TestRPC = require("ganache-cli");
+const TestRPC = require('ganache-cli');
 const Web3 = require('web3');
 const chai = require('chai');
 const liquidpledging = require('../index.js');
@@ -341,26 +341,11 @@ describe('LiquidPledging test', function () {
   it('should throw if projectLevel > 20', async () => {
     let nAdmins = await liquidPledging.numberOfPledgeAdmins();
 
-    await liquidPledging.addProject('ProjectLevel1', '', adminProject1, 0, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel2', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel3', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel4', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel5', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel6', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel7', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel8', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel9', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel10', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel11', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel12', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel13', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel14', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel15', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel16', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel17', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel18', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel19', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
-    await liquidPledging.addProject('ProjectLevel20', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
+    await liquidPledging.addProject('ProjectLevel0', '', adminProject1, 0, 86400, 0, { from: adminProject1 });
+
+    for (let i = 2; i <= 20; i++) {
+      await liquidPledging.addProject(`ProjectLevel${i}`, '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1 });
+    }
 
     assertFail(
       liquidPledging.addProject('ProjectLevel21', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1, gas: 4000000 })

@@ -97,7 +97,7 @@ contract LiquidPledgingBase is LiquidPledgingStorage, PledgeAdmins, Pledges, Esc
     ///  plugin contract for a specific Admin
     /// @param idAdmin The id of the admin being checked
     function checkAdminOwner(uint idAdmin) internal constant {
-        require(msg.sender == getAdminPlugin(idAdmin) || msg.sender == getAdminAddr(idAdmin));
+        require(msg.sender == getAdminAddr(idAdmin) || msg.sender == getAdminPlugin(idAdmin));
     }
 
     /// @notice A getter to find the longest commitTime out of the owner and all

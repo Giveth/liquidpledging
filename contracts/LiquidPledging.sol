@@ -21,7 +21,7 @@ pragma solidity ^0.4.11;
 
 import "./LiquidPledgingBase.sol";
 
-/// @dev `LiquidPleding` allows for liquid pledging through the use of
+/// @dev `LiquidPledging` allows for liquid pledging through the use of
 ///  internal id structures and delegate chaining. All basic operations for
 ///  handling liquid pledging are supplied as well as plugin features
 ///  to allow for expanded functionality.
@@ -106,9 +106,8 @@ contract LiquidPledging is LiquidPledgingBase {
     {
         checkAdminOwner(idSender);
 
-        idPledge = normalizePledge(idPledge);
+        Pledges.Pledge memory p = normalizePledge(idPledge);
 
-        Pledges.Pledge memory p = findPledge(idPledge);
         PledgeAdminType receiverAdminType = getAdminType(idReceiver);
 
         require(p.pledgeState == Pledges.PledgeState.Pledged);
@@ -229,8 +228,8 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idPledge Id of the pledge that is to be redeemed into ether
     /// @param amount Quantity of ether (in wei) to be authorized
     function withdraw(uint64 idPledge, uint amount) public {
-        idPledge = normalizePledge(idPledge); // Updates pledge info 
-        Pledges.Pledge memory p = findPledge(idPledge);
+        Pledges.Pledge memory p = normalizePledge(idPledge); // Updates pledge info 
+        //  = findPledge(idPledge);
         require(p.pledgeState == Pledges.PledgeState.Pledged);
         checkAdminOwner(p.owner);
 
@@ -289,7 +288,7 @@ contract LiquidPledging is LiquidPledgingBase {
             Pledges.PledgeState.Pledged
         );
 
-        oldPledge = normalizePledge(oldPledge);
+        oldPledge = _normalizePledge(oldPledge);
 
         doTransfer(p, oldPledge, amount);
     }
@@ -310,9 +309,10 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  `oldPledge`
     function cancelPledge(uint64 idPledge, uint amount) public {
         //TODO fetch idPledge? OR return Pledge from this call?
-        idPledge = normalizePledge(idPledge);
+        // idPledge = normalizePledge(idPledge);
 
-        Pledges.Pledge memory p = findPledge(idPledge);
+        // Pledges.Pledge memory p = findPledge(idPledge);
+        Pledges.Pledge memory p = normalizePledge(idPledge);
         require(p.oldPledge != 0);
 
         checkAdminOwner(p.owner);
@@ -604,12 +604,12 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  plugins, which also need to be predicted by the UI
     /// @param idPledge This is the id of the pledge that will be normalized
     /// @return The normalized Pledge!
-    function normalizePledge(uint64 idPledge) public returns(uint64) {
+    function normalizePledge(uint64 idPledge) public returns(Pledges.Pledge) {
         Pledges.Pledge memory p = findPledge(idPledge);
-        return uint64(normalizePledge(p).id);
+        return _normalizePledge(p);
     }
 
-    function normalizePledge(Pledges.Pledge p) internal returns(Pledges.Pledge) {
+    function _normalizePledge(Pledges.Pledge p) internal returns(Pledges.Pledge) {
 
         // Check to make sure this pledge hasn't already been used 
         // or is in the process of being used

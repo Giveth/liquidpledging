@@ -26,6 +26,10 @@ contract EternalStorage is Escapable {
         UIntStorage[record] = value;
     }
 
+    function incrementUIntValue(bytes32 record) public returns (uint) {
+        return UIntStorage[record] += 1;
+    }
+
     /// Int Storage
 
     function getIntValue(bytes32 record) public view returns (int) {
@@ -34,6 +38,10 @@ contract EternalStorage is Escapable {
 
     function setIntValue(bytes32 record, int value) public onlyOwner {
         IntStorage[record] = value;
+    }
+
+    function incrementIntValue(bytes32 record) public returns (int) {
+        return IntStorage[record] += int(1);
     }
 
     /// Address Storage
