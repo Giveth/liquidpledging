@@ -20,15 +20,15 @@ pragma solidity ^0.4.11;
 */
 
 import "./ILiquidPledgingPlugin.sol";
-import "giveth-common-contracts/contracts/Escapable.sol";
+// import "giveth-common-contracts/contracts/Escapable.sol";
+import "./EscapableApp.sol";
 import "./PledgeAdmins.sol";
 import "./Pledges.sol";
-import "./LiquidPledgingStorage.sol";
 
 /// @dev This is an interface for `LPVault` which serves as a secure storage for
 ///  the ETH that backs the Pledges, only after `LiquidPledging` authorizes
 ///  payments can Pledges be converted for ETH
-interface LPVault {
+interface ILPVault {
     function authorizePayment(bytes32 _ref, address _dest, uint _amount) public;
     function () public payable;
 }
@@ -36,11 +36,10 @@ interface LPVault {
 /// @dev `LiquidPledgingBase` is the base level contract used to carry out
 ///  liquidPledging's most basic functions, mostly handling and searching the
 ///  data structures
-contract LiquidPledgingBase is LiquidPledgingStorage, PledgeAdmins, Pledges, Escapable {
+contract LiquidPledgingBase is PledgeAdmins, Pledges, EscapableApp {
 
-    LPVault public vault;
+    ILPVault public vault;
     
-
 /////////////
 // Modifiers
 /////////////
@@ -57,20 +56,30 @@ contract LiquidPledgingBase is LiquidPledgingStorage, PledgeAdmins, Pledges, Esc
 // Constructor
 ///////////////
 
-    /// @notice The Constructor creates `LiquidPledgingBase` on the blockchain
-    /// @param _vault The vault where the ETH backing the pledges is stored
-    function LiquidPledgingBase(
-        address _storage,
-        address _vault,
-        address _escapeHatchCaller,
-        address _escapeHatchDestination
-    ) LiquidPledgingStorage(_storage)
-      PledgeAdmins(_storage)
-      Pledges(_storage)
-      Escapable(_escapeHatchCaller, _escapeHatchDestination) public 
+    function LiquidPledgingBase() 
+        PledgeAdmins()
+        Pledges() public
     {
-        vault = LPVault(_vault); // Assigns the specified vault
     }
+
+    function initialize(address _escapeHatchDestination) onlyInit external {
+        require(false); // overload the EscapableApp
+    }
+
+    /// @param _vault The vault where the ETH backing the pledges is stored
+    /// @param _escapeHatchDestination The address of a safe location (usu a
+    ///  Multisig) to send the ether held in this contract; if a neutral address
+    ///  is required, the WHG Multisig is an option:
+    ///  0x8Ff920020c8AD673661c8117f2855C384758C572 
+    function initialize(address _vault, address _escapeHatchDestination) onlyInit external {
+        initialized();
+        require(_escapeHatchDestination != 0x0);
+        require(_vault != 0x0);
+
+        escapeHatchDestination = _escapeHatchDestination;
+        vault = ILPVault(_vault);
+    }
+
 
 /////////////////////////////
 // Public constant functions
@@ -79,14 +88,16 @@ contract LiquidPledgingBase is LiquidPledgingStorage, PledgeAdmins, Pledges, Esc
     /// @notice Getter to find Delegate w/ the Pledge ID & the Delegate index
     /// @param idPledge The id number representing the pledge being queried
     /// @param idxDelegate The index number for the delegate in this Pledge 
-    function getDelegate(uint idPledge, uint idxDelegate) public view returns(
-        uint idDelegate,
+    function getPledgeDelegate(uint64 idPledge, uint64 idxDelegate) public view returns(
+        uint64 idDelegate,
         address addr,
         string name
     ) {
-        idDelegate = getPledgeDelegate(idPledge, idxDelegate);
-        addr = getAdminAddr(idDelegate);
-        name = getAdminName(idDelegate);
+        Pledge storage p = _findPledge(idPledge);
+        idDelegate = p.delegationChain[idxDelegate - 1];
+        PledgeAdmin storage delegate = _findAdmin(idDelegate);
+        addr = delegate.addr;
+        name = delegate.name;
     }
 
 ////////////////////
@@ -95,28 +106,25 @@ contract LiquidPledgingBase is LiquidPledgingStorage, PledgeAdmins, Pledges, Esc
 
     /// @notice A check to see if the msg.sender is the owner or the
     ///  plugin contract for a specific Admin
-    /// @param idAdmin The id of the admin being checked
-    function checkAdminOwner(uint idAdmin) internal constant {
-        require(msg.sender == getAdminAddr(idAdmin) || msg.sender == getAdminPlugin(idAdmin));
-    }
+    /// @param a The admin being checked
+    // function _checkAdminOwner(PledgeAdmin a) internal constant {
+        // require(msg.sender == a.addr || msg.sender == address(a.plugin));
+    // }
 
     /// @notice A getter to find the longest commitTime out of the owner and all
     ///  the delegates for a specified pledge
     /// @param p The Pledge being queried
     /// @return The maximum commitTime out of the owner and all the delegates
-    function maxCommitTime(Pledge p) internal view returns(uint commitTime) {
-        uint adminsSize = numberOfPledgeAdmins();
-        require(adminsSize >= p.owner);
-
-        commitTime = getAdminCommitTime(p.owner); // start with the owner's commitTime
+    function _maxCommitTime(Pledge p) internal view returns(uint64 commitTime) {
+        PledgeAdmin storage a = _findAdmin(p.owner);
+        commitTime = a.commitTime; // start with the owner's commitTime
 
         for (uint i = 0; i < p.delegationChain.length; i++) {
-            require(adminsSize >= p.delegationChain[i]);
-            uint delegateCommitTime = getAdminCommitTime(p.delegationChain[i]);
+            a = _findAdmin(p.delegationChain[i]);
 
             // If a delegate's commitTime is longer, make it the new commitTime
-            if (delegateCommitTime > commitTime) {
-                commitTime = delegateCommitTime;
+            if (a.commitTime > commitTime) {
+                commitTime = a.commitTime;
             }
         }
     }
@@ -124,7 +132,7 @@ contract LiquidPledgingBase is LiquidPledgingStorage, PledgeAdmins, Pledges, Esc
     /// @notice A getter to find the oldest pledge that hasn't been canceled
     /// @param idPledge The starting place to lookup the pledges 
     /// @return The oldest idPledge that hasn't been canceled (DUH!)
-    function getOldestPledgeNotCanceled(
+    function _getOldestPledgeNotCanceled(
         uint64 idPledge
     ) internal view returns(uint64)
     {
@@ -132,19 +140,18 @@ contract LiquidPledgingBase is LiquidPledgingStorage, PledgeAdmins, Pledges, Esc
             return 0;
         }
 
-        uint owner = getPledgeOwner(idPledge);
-
-        PledgeAdminType adminType = getAdminType(owner);
-        if (adminType == PledgeAdminType.Giver) { 
-            return idPledge;
-        }
-        assert(adminType == PledgeAdminType.Project);
-
-        if (!isProjectCanceled(owner)) {
+        Pledge storage p = _findPledge(idPledge);
+        PledgeAdmin storage admin = _findAdmin(p.owner);
+        
+        if (admin.adminType == PledgeAdminType.Giver) {
             return idPledge;
         }
 
-        uint64 oldPledge = uint64(getPledgeOldPledge(idPledge));
-        return getOldestPledgeNotCanceled(oldPledge);
+        assert(admin.adminType == PledgeAdminType.Project);
+        if (!_isProjectCanceled(p.owner)) {
+            return idPledge;
+        }
+
+        return _getOldestPledgeNotCanceled(p.oldPledge);
     }
 }

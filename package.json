@@ -42,13 +42,14 @@
     "eslint-plugin-react": "^7.1.0",
     "ganache-cli": "^7.0.0-beta.0",
     "lerna": "^2.2.0",
-    "random-bytes": "^1.0.0",
     "mocha": "^3.5.0",
-    "solcpiler": "0.0.10",
+    "random-bytes": "^1.0.0",
+    "solcpiler": "^0.0.15",
     "web3": "1.0.0-beta.24"
   },
   "homepage": "https://github.com/Giveth/liquidpledging#readme",
   "dependencies": {
+    "@aragon/os": "3.0.1",
     "async": "^2.4.0",
     "chai": "^4.1.0",
     "eth-contract-class": "0.0.6",

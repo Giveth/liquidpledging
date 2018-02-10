@@ -19,11 +19,9 @@ pragma solidity ^0.4.18;
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import "./EternallyPersistentLib.sol";
-import "./LiquidPledgingStorage.sol";
+import "@aragon/os/contracts/apps/AragonApp.sol";
 
-contract Pledges is LiquidPledgingStorage {
-    using EternallyPersistentLib for EternalStorage;
+contract Pledges is AragonApp {
 
     // Limits inserted to prevent large loops that could prevent canceling
     uint constant MAX_DELEGATES = 10;
@@ -31,14 +29,10 @@ contract Pledges is LiquidPledgingStorage {
     // a constant for when a delegate is requested that is not in the system
     uint64 constant  NOTFOUND = 0xFFFFFFFFFFFFFFFF;
 
-    // Constants used when dealing with storage/retrieval of Pledges
-    string constant PLEDGE = "Pledge";
-    bytes32 constant PLEDGES_ARRAY = keccak256("pledges");
-    
     enum PledgeState { Pledged, Paying, Paid }
 
     struct Pledge {
-        uint id; // the id of this Pledge
+        // uint id; // the id of this Pledge
         uint amount;
         uint64 owner; // PledgeAdmin
         uint64[] delegationChain; // List of delegates in order of authority
@@ -48,13 +42,17 @@ contract Pledges is LiquidPledgingStorage {
         PledgeState pledgeState; //  Pledged, Paying, Paid
     }
 
+    Pledge[] pledges;
+    /// @dev this mapping allows you to search for a specific pledge's 
+    ///  index number by the hash of that pledge
+    mapping (bytes32 => uint64) hPledge2idx;
+
 ///////////////
 // Constructor
 ///////////////
 
-    function Pledges(address _storage)
-      LiquidPledgingStorage(_storage) public
-    {
+    function Pledges() public {
+        pledges.length = 1; // we reserve the 0 pledge
     }
 
 
@@ -65,7 +63,7 @@ contract Pledges is LiquidPledgingStorage {
     /// @notice A constant getter that returns the total number of pledges
     /// @return The total number of Pledges in the system
     function numberOfPledges() public view returns (uint) {
-        return _storage.stgCollectionLength(PLEDGES_ARRAY);
+        return pledges.length - 1;
     }
 
     /// @notice A getter that returns the details of the specified pledge
@@ -82,10 +80,10 @@ contract Pledges is LiquidPledgingStorage {
         uint64 oldPledge,
         PledgeState pledgeState
     ) {
-        Pledge memory p = findPledge(idPledge);
+        Pledge memory p = _findPledge(idPledge);
         amount = p.amount;
         owner = p.owner;
-        nDelegates = uint64(getPledgeDelegateCount(idPledge));
+        nDelegates = uint64(p.delegationChain.length);
         intendedProject = p.intendedProject;
         commitTime = p.commitTime;
         oldPledge = p.oldPledge;
@@ -113,89 +111,42 @@ contract Pledges is LiquidPledgingStorage {
     ///  will revert back to it's previous state
     /// @param state The pledge state: Pledged, Paying, or state
     /// @return The hPledge2idx index number
-    function findOrCreatePledge(
+    function _findOrCreatePledge(
         uint64 owner,
         uint64[] delegationChain,
         uint64 intendedProject,
         uint64 commitTime,
         uint64 oldPledge,
         PledgeState state
-    ) internal returns (Pledge)
+    ) internal returns (uint64)
     {
         bytes32 hPledge = keccak256(owner, delegationChain, intendedProject, commitTime, oldPledge, state);
-        uint id = _storage.getUIntValue(hPledge);
+        uint64 id = hPledge2idx[hPledge];
         if (id > 0) {
-            return Pledge(
-                id,
-                getPledgeAmount(id), //TODO don't fetch this here b/c it may not be needed?
+            return id;
+        }
+
+        id = uint64(pledges.length);
+        hPledge2idx[hPledge] = id;
+        pledges.push(
+            Pledge(
+                0,
                 owner,
                 delegationChain,
                 intendedProject,
                 commitTime,
                 oldPledge,
-                state);
-        }
-
-        id = _storage.stgCollectionAddItem(PLEDGES_ARRAY);
-        _storage.setUIntValue(hPledge, id);
-
-        _storage.stgObjectSetUInt(PLEDGE, id, "owner", owner);
-        if (intendedProject > 0) {
-            _storage.stgObjectSetUInt(PLEDGE, id, "intendedProject", intendedProject);
-        }
-        if (commitTime > 0) {
-            _storage.stgObjectSetUInt(PLEDGE, id, "commitTime", commitTime);
-        }
-        if (oldPledge > 0) {
-            _storage.stgObjectSetUInt(PLEDGE, id, "oldPledge", oldPledge);
-        }
-        if (state != PledgeState.Pledged) {
-            _storage.stgObjectSetUInt(PLEDGE, id, "state", uint(state));
-        }
-
-        if (delegationChain.length > 0) {
-            _storage.setUIntValue(keccak256("delegationChain", id, "length"), delegationChain.length);
-
-            // TODO pack these? possibly add array method to EternalStorage in anticipation of the new solidity abi encoder
-            for (uint i = 0; i < delegationChain.length; i++) {
-                _storage.setUIntValue(keccak256("delegationChain", id, i), delegationChain[i]);
-            }
-        }
-
-        return Pledge(
-            id,
-            0,
-            owner,
-            delegationChain,
-            intendedProject,
-            commitTime,
-            oldPledge,
-            state);
+                state
+            )
+        );
+        return id;
     }
 
     /// @param idPledge the id of the pledge to load from storage
     /// @return The Pledge
-    function findPledge(uint idPledge) internal view returns(Pledge) {
-        require(idPledge <= numberOfPledges());
-
-        uint amount = getPledgeAmount(idPledge);
-        uint owner = getPledgeOwner(idPledge);
-        uint intendedProject = getPledgeIntendedProject(idPledge);
-        uint commitTime = getPledgeCommitTime(idPledge);
-        uint oldPledge = getPledgeOldPledge(idPledge);
-        PledgeState state = getPledgeState(idPledge);
-        uint64[] memory delegates = getPledgeDelegates(idPledge);
-
-        return Pledge(
-            idPledge,
-            amount,
-            uint64(owner),
-            delegates,
-            uint64(intendedProject),
-            uint64(commitTime),
-            uint64(oldPledge),
-            state
-        );
+    function _findPledge(uint64 idPledge) internal view returns(Pledge storage) {
+        require(idPledge < pledges.length);
+        return pledges[idPledge];
     }
 
     /// @notice A getter that searches the delegationChain for the level of
@@ -206,7 +157,7 @@ contract Pledges is LiquidPledgingStorage {
     ///  `admins` array index `idDelegate` this returns that delegates
     ///  corresponding index in the delegationChain. Otherwise it returns
     ///  the NOTFOUND constant
-    function getDelegateIdx(Pledge p, uint64 idDelegate) internal pure returns(uint64) {
+    function _getDelegateIdx(Pledge p, uint64 idDelegate) internal pure returns(uint64) {
         for (uint i = 0; i < p.delegationChain.length; i++) {
             if (p.delegationChain[i] == idDelegate) {
                 return uint64(i);
@@ -217,64 +168,13 @@ contract Pledges is LiquidPledgingStorage {
 
     /// @notice A getter to find how many old "parent" pledges a specific Pledge
     ///  had using a self-referential loop
-    /// @param idOldPledge The Pledge being queried
+    /// @param p The Pledge being queried
     /// @return The number of old "parent" pledges a specific Pledge had
-    function getPledgeLevel(uint idOldPledge) internal view returns(uint) {
-        if (idOldPledge == 0) {
+    function _getPledgeLevel(Pledge p) internal view returns(uint) {
+        if (p.oldPledge == 0) {
             return 0;
         }
-        idOldPledge = _storage.stgObjectGetUInt(PLEDGE, idOldPledge, "oldPledge");
-        return getPledgeLevel(idOldPledge) + 1; // a loop lookup
-    }
-
-
-//////////////////////////////////////////////////////
-// Getters for individual attributes of a PledgeAdmin
-//////////////////////////////////////////////////////
-
-    function getPledgeOwner(uint idPledge) internal view returns(uint) {
-        return _storage.stgObjectGetUInt(PLEDGE, idPledge, "owner");
-    }
-
-    function getPledgeDelegate(uint idPledge, uint index) internal view returns(uint) {
-        return _storage.getUIntValue(keccak256("delegationChain", idPledge, index));
-    }
-
-    function getPledgeOldPledge(uint idPledge) internal view returns(uint) {
-        return _storage.stgObjectGetUInt(PLEDGE, idPledge, "oldPledge");
-    }
-
-    function getPledgeAmount(uint idPledge) internal view returns(uint) {
-        return _storage.stgObjectGetUInt(PLEDGE, idPledge, "amount");
-    }
-
-    function getPledgeIntendedProject(uint idPledge) internal view returns(uint) {
-        return _storage.stgObjectGetUInt(PLEDGE, idPledge, "intendedProject");
-    }
-
-    function getPledgeCommitTime(uint idPledge) internal view returns(uint) {
-        return _storage.stgObjectGetUInt(PLEDGE, idPledge, "commitTime");
-    }
-
-    function getPledgeState(uint idPledge) internal view returns(PledgeState) {
-        return PledgeState(_storage.stgObjectGetUInt(PLEDGE, idPledge, "state"));
-    }
-
-    function getPledgeDelegates(uint idPledge) internal view returns(uint64[]) {
-        //TODO pack/unpack chain
-        uint length = getPledgeDelegateCount(idPledge);
-        uint64[] memory delegates = new uint64[](length);
-        for (uint i = 0; i < length; i++) {
-            delegates[i] = uint64(getPledgeDelegate(idPledge, i));
-        }
-        return delegates;
-    }
-
-    function getPledgeDelegateCount(uint idPledge) internal view returns(uint) {
-        return _storage.getUIntValue(keccak256("delegationChain", idPledge, "length"));
-    }
-
-    function setPledgeAmount(uint idPledge, uint amount) internal {
-        _storage.stgObjectSetUInt(PLEDGE, idPledge, "amount", amount);
+        Pledge storage oldP = _findPledge(p.oldPledge);
+        return _getPledgeLevel(oldP) + 1; // a loop lookup
     }
 }

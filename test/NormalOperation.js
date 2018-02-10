@@ -3,15 +3,12 @@
 const TestRPC = require('ganache-cli');
 const Web3 = require('web3');
 const chai = require('chai');
-const liquidpledging = require('../index.js');
-const EternalStorage = require('../js/eternalStorage');
 const assertFail = require('./helpers/assertFail');
+const contracts = require("../build/contracts.js");
 
 const { utils } = Web3;
 
-const LiquidPledging = liquidpledging.LiquidPledgingMock;
-const LPVault = liquidpledging.LPVault;
-const LiquidPledgingState = liquidpledging.LiquidPledgingState;
+const LiquidPledgingState = require('../index').LiquidPledgingState;
 const assert = chai.assert;
 
 
@@ -36,6 +33,7 @@ describe('LiquidPledging test', function () {
   let adminProject2a;
   let adminProject3;
   let delegate2;
+  let escapeHatchDestination;
   before(async () => {
     testrpc = TestRPC.server({
       ws: true,
@@ -55,6 +53,7 @@ describe('LiquidPledging test', function () {
     delegate2 = accounts[6];
     giver2 = accounts[7];
     adminProject3 = accounts[8];
+    escapeHatchDestination = accounts[9];
   });
 
   after((done) => {
@@ -63,13 +62,21 @@ describe('LiquidPledging test', function () {
   });
 
   it('Should deploy LiquidPledging contract', async () => {
-    vault = await LPVault.new(web3, accounts[0], accounts[1]);
-    const storage = await EternalStorage.new(web3, accounts[0], accounts[1]);
+    const baseVault = await contracts.LPVault.new(web3);
+    const baseLP = await contracts.LiquidPledgingMock.new(web3);
+    lpFactory = await contracts.LPFactory.new(web3, baseVault.$address, baseLP.$address);
 
-    liquidPledging = await LiquidPledging.new(web3, storage.$address, vault.$address, accounts[0], accounts[0], {gas: 6700000})
+    const r = await lpFactory.newLP(accounts[0], escapeHatchDestination);
 
-    await storage.changeOwnership(liquidPledging.$address);
-    await vault.setLiquidPledging(liquidPledging.$address);
+    const vaultAddress = r.events.DeployVault.returnValues.vault;
+    vault = new contracts.LPVault(web3, vaultAddress);
+
+    const lpAddress = r.events.DeployLiquidPledging.returnValues.liquidPledging;
+    lp = new contracts.LiquidPledgingMock(web3, lpAddress);
+
+    // setup permissions
+    // const kernel = new contracts.Kernel(web3, await vault.kernel());
+    // const acl = new contracts.ACL(web3, await kernel.acl());
 
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
   });

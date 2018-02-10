@@ -28,13 +28,7 @@ contract LiquidPledgingMock is LiquidPledging {
 
     /// @dev `LiquidPledgingMock` creates a standard `LiquidPledging`
     ///  instance and sets the mocked time to the current blocktime.
-    /// @param _vault The vault where ETH backing this pledge is stored    
-    function LiquidPledgingMock(
-        address _storage,
-        address _vault,
-        address _escapeHatchCaller,
-        address _escapeHatchDestination
-    ) LiquidPledging(_storage, _vault, _escapeHatchCaller, _escapeHatchDestination) public {
+    function LiquidPledgingMock() LiquidPledging() public {
         mock_time = now;
     }
 

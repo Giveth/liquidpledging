@@ -19,31 +19,33 @@ pragma solidity ^0.4.18;
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-import "giveth-common-contracts/contracts/Owned.sol";
+import "@aragon/os/contracts/apps/AragonApp.sol";
 
 /// NOTICE: This contract is not using EternalStorage. This is done to save gas. The pluginWhitelist
 /// should be fairly small, and would be trivial and relatively cheap to re-add all valid plugins
 /// when the LiquidPledging contract is upgraded
-contract LiquidPledgingPlugins is Owned {
+contract LiquidPledgingPlugins is AragonApp {
+
+    bytes32 constant public PLUGIN_MANAGER_ROLE = keccak256("PLUGIN_MANAGER_ROLE");
 
     mapping (bytes32 => bool) pluginWhitelist;
     bool public whitelistDisabled = false;
 
-    function addValidPlugin(bytes32 contractHash) public onlyOwner {
+    function addValidPlugin(bytes32 contractHash) auth(PLUGIN_MANAGER_ROLE) public {
         pluginWhitelist[contractHash] = true;
     }
 
-    function addValidPlugins(bytes32[] contractHashes) external onlyOwner {
+    function addValidPlugins(bytes32[] contractHashes) external auth(PLUGIN_MANAGER_ROLE) {
         for (uint8 i = 0; i < contractHashes.length; i++) {
             addValidPlugin(contractHashes[i]);
         }
     }
 
-    function removeValidPlugin(bytes32 contractHash) external onlyOwner {
+    function removeValidPlugin(bytes32 contractHash) external auth(PLUGIN_MANAGER_ROLE) {
         pluginWhitelist[contractHash] = false;
     }
 
-    function useWhitelist(bool useWhitelist) external onlyOwner {
+    function useWhitelist(bool useWhitelist) external auth(PLUGIN_MANAGER_ROLE) {
         whitelistDisabled = !useWhitelist;
     }
 
