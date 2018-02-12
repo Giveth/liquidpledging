@@ -3,13 +3,9 @@
 const TestRPC = require("ganache-cli");
 const Web3 = require('web3');
 const chai = require('chai');
-const liquidpledging = require('../index.js');
-const EternalStorage = require('../js/eternalStorage');
-const PledgeAdmins = require('../js/pledgeAdmins');
+const contracts = require("../build/contracts.js");
+const LiquidPledgingState = require('../index').LiquidPledgingState;
 
-const LiquidPledging = liquidpledging.LiquidPledgingMock;
-const LiquidPledgingState = liquidpledging.LiquidPledgingState;
-const LPVault = liquidpledging.LPVault;
 const assertFail = require('./helpers/assertFail');
 const assert = chai.assert;
 
@@ -20,7 +16,7 @@ const printState = async (liquidPledgingState) => {
 
 describe('DelegationChain test', function () {
   this.timeout(0);
-  
+
   let testrpc;
   let web3;
   let accounts;
@@ -38,7 +34,8 @@ describe('DelegationChain test', function () {
   before(async () => {
     testrpc = TestRPC.server({
       ws: true,
-      gasLimit: 6700000, total_accounts: 10,
+      gasLimit: 6700000,
+      total_accounts: 10,
     });
 
     testrpc.listen(8545, '127.0.0.1');
@@ -55,18 +52,21 @@ describe('DelegationChain test', function () {
 
   after((done) => {
     testrpc.close();
-    // console.log(gasUsage);
     done();
   });
 
   it('Should deploy LiquidPledging contract', async () => {
-    vault = await LPVault.new(web3, accounts[0], accounts[1]);
-    const storage = await EternalStorage.new(web3, accounts[0], accounts[1]);
+    const baseVault = await contracts.LPVault.new(web3);
+    const baseLP = await contracts.LiquidPledgingMock.new(web3);
+    lpFactory = await contracts.LPFactory.new(web3, baseVault.$address, baseLP.$address);
 
-    liquidPledging = await LiquidPledging.new(web3, storage.$address, vault.$address, accounts[0], accounts[0], {gas: 6700000})
+    const r = await lpFactory.newLP(accounts[0], accounts[0]);
 
-    await storage.changeOwnership(liquidPledging.$address);
-    await vault.setLiquidPledging(liquidPledging.$address);
+    const vaultAddress = r.events.DeployVault.returnValues.vault;
+    vault = new contracts.LPVault(web3, vaultAddress);
+
+    const lpAddress = r.events.DeployLiquidPledging.returnValues.liquidPledging;
+    liquidPledging = new contracts.LiquidPledgingMock(web3, lpAddress);
 
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
   });
@@ -84,11 +84,11 @@ describe('DelegationChain test', function () {
   });
 
   it('Should allow previous delegate to transfer pledge', async () => {
-    await liquidPledging.donate(1, 2, {from: giver1, value: 1000});
+    await liquidPledging.donate(1, 2, { from: giver1, value: 1000 });
     // add delegate2 to chain
-    await liquidPledging.transfer(2, 2, 1000, 3, {from: delegate1});
+    await liquidPledging.transfer(2, 2, 1000, 3, { from: delegate1 });
     // delegate 1 transfer pledge back to self, thus undelegating delegate2
-    await liquidPledging.transfer(2, 3, 1000, 2, {from: delegate1});
+    await liquidPledging.transfer(2, 3, 1000, 2, { from: delegate1, $extraGas: 200000 });
 
     const st = await liquidPledgingState.getState();
     assert.equal(st.pledges[2].amount, 1000);
@@ -97,11 +97,11 @@ describe('DelegationChain test', function () {
 
   it('Should allow any delegate in chain to transfer pledge and undelegate all delegates occurring later in chain', async () => {
     // add delegate2 to chain
-    await liquidPledging.transfer(2, 2, 1000, 3, {from: delegate1});
+    await liquidPledging.transfer(2, 2, 1000, 3, { from: delegate1, $extraGas: 200000 });
     // add delegate3 to chain
-    await liquidPledging.transfer(3, 3, 1000, 4, {from: delegate2});
+    await liquidPledging.transfer(3, 3, 1000, 4, { from: delegate2, $extraGas: 200000 });
     // delegate 1 transfer pledge to project1. should also undelegate all delegates occurring later in chain
-    await liquidPledging.transfer(2, 4, 1000, 5, {from: delegate1});
+    await liquidPledging.transfer(2, 4, 1000, 5, { from: delegate1, $extraGas: 200000 });
 
     const st = await liquidPledgingState.getState();
     assert.equal(st.pledges[5].amount, 1000);
@@ -113,15 +113,15 @@ describe('DelegationChain test', function () {
   });
 
   it('Should throw if delegate2 is not in delegationChain', async () => {
-    await assertFail(liquidPledging.transfer(3, 5, 1000, 1, {from: delegate2, gas: 4000000}));
+    await assertFail(liquidPledging.transfer(3, 5, 1000, 1, { from: delegate2, gas: 4000000 }));
   });
 
   it('Delegate1 should not be able to transfer to another giver', async () => {
-    await assertFail(liquidPledging.transfer(2, 5, 1000, 6, {from: delegate1, gas: 4000000}));
+    await assertFail(liquidPledging.transfer(2, 5, 1000, 6, { from: delegate1, gas: 4000000 }));
   });
 
   it('Delegate1 should be able to transfer pledge back to owner', async () => {
-    await liquidPledging.transfer(2, 5, 1000, 1, {from: delegate1});
+    await liquidPledging.transfer(2, 5, 1000, 1, { from: delegate1, $extraGas: 200000 });
     const st = await liquidPledgingState.getState();
     assert.equal(st.pledges[1].amount, 1000);
     assert.equal(st.pledges[1].delegates.length, 0);
@@ -130,11 +130,11 @@ describe('DelegationChain test', function () {
 
   it('Delegate1 should be able to change delegation', async () => {
     // add delegate1 to chain
-    await liquidPledging.transfer(1, 1, 1000, 2, {from: giver1});
+    await liquidPledging.transfer(1, 1, 1000, 2, { from: giver1, $extraGas: 200000 });
     // delegate1 add delegate2 to chain
-    await liquidPledging.transfer(2, 2, 1000, 3, {from: delegate1});
+    await liquidPledging.transfer(2, 2, 1000, 3, { from: delegate1, $extraGas: 200000 });
     // delegate1 remove delegate2 and add delegate3 to chain
-    await liquidPledging.transfer(2, 3, 1000, 4, {from: delegate1});
+    await liquidPledging.transfer(2, 3, 1000, 4, { from: delegate1, $extraGas: 200000 });
 
     const st = await liquidPledgingState.getState();
     assert.equal(st.pledges[1].amount, 0);
@@ -146,9 +146,9 @@ describe('DelegationChain test', function () {
 
   it('delegate in chain should be able to delegate to previous delegate, thus undelegating themselves and any delegate after the previous delegate', async () => {
     // add delegate2 to chain
-    await liquidPledging.transfer(4, 6, 1000, 3, {from: delegate3});
+    await liquidPledging.transfer(4, 6, 1000, 3, { from: delegate3 });
     // delegate2 transfer back to delegate1, thus undelegating delegate2 & delegate3
-    await liquidPledging.transfer(3, 7, 1000, 2, {from: delegate2});
+    await liquidPledging.transfer(3, 7, 1000, 2, { from: delegate2, $extraGas: 200000 });
 
     const st = await liquidPledgingState.getState();
     assert.equal(st.pledges[7].amount, 0);
@@ -159,13 +159,13 @@ describe('DelegationChain test', function () {
 
   it('Should not append delegate on veto delegation', async () => {
     // propose the delegation
-    await liquidPledging.transfer(2, 2, 1000, 5, { from: delegate1 });
+    await liquidPledging.transfer(2, 2, 1000, 5, { from: delegate1, $extraGas: 200000 });
 
     const origPledge = await liquidPledging.getPledge(2);
     assert.equal(origPledge.amount, '0');
 
     // veto the delegation
-    await liquidPledging.transfer(1, 5, 1000, 2, { from: giver1 });
+    await liquidPledging.transfer(1, 5, 1000, 2, { from: giver1, $extraGas: 200000 });
 
     const currentPledge = await liquidPledging.getPledge(2);
 
@@ -175,11 +175,11 @@ describe('DelegationChain test', function () {
 
   it('Pledge should have longest commitTime in delegation chain', async () => {
     // delegate1 add delegate2 to chain
-    await liquidPledging.transfer(2, 2, 1000, 3, {from: delegate1});
+    await liquidPledging.transfer(2, 2, 1000, 3, { from: delegate1, $extraGas: 200000 });
 
     // set the time
     const now = Math.floor(new Date().getTime() / 1000);
-    await liquidPledging.setMockedTime(now);
+    await liquidPledging.setMockedTime(now, { $extraGas: 200000 });
 
     // propose project delegation
     await liquidPledging.transfer(3, 3, 1000, 5, { from: delegate2 });
@@ -190,21 +190,21 @@ describe('DelegationChain test', function () {
 
   it('delegation chain should remain the same when owner veto\'s delegation', async () => {
     // owner veto delegation to project1
-    await liquidPledging.transfer(1, 8, 1000, 3, { from: giver1 });
+    await liquidPledging.transfer(1, 8, 1000, 3, { from: giver1, $extraGas: 200000 });
 
     const st = await liquidPledgingState.getState();
-    assert.equal(st.pledges[ 8 ].amount, 0);
-    assert.equal(st.pledges[ 3 ].amount, 1000);
-    assert.equal(st.pledges[ 3 ].delegates.length, 2);
-    assert.equal(st.pledges[ 3 ].delegates[ 0 ].id, 2);
-    assert.equal(st.pledges[ 3 ].delegates[ 1 ].id, 3);
+    assert.equal(st.pledges[8].amount, 0);
+    assert.equal(st.pledges[3].amount, 1000);
+    assert.equal(st.pledges[3].delegates.length, 2);
+    assert.equal(st.pledges[3].delegates[0].id, 2);
+    assert.equal(st.pledges[3].delegates[1].id, 3);
   });
 
   it('delegation chain should remain the same upto delegate of reciever when owner veto\'s delegation', async () => {
     // propose project1 delegation
-    await liquidPledging.transfer(3, 3, 1000, 5, { from: delegate2 });
+    await liquidPledging.transfer(3, 3, 1000, 5, { from: delegate2, $extraGas: 200000 });
     // owner veto delegation to project1 and remove delegate2
-    await liquidPledging.transfer(1, 8, 1000, 2, { from: giver1 });
+    await liquidPledging.transfer(1, 8, 1000, 2, { from: giver1, $extraGas: 200000 });
 
     const pledge = await liquidPledging.getPledge(2);
     assert.equal(pledge.amount, 1000);
@@ -214,7 +214,7 @@ describe('DelegationChain test', function () {
     // propose project1 delegation
     await liquidPledging.transfer(2, 2, 1000, 5, { from: delegate1 });
     // owner veto delegation to project1 and assign new delgate
-    await liquidPledging.transfer(1, 9, 1000, 3, { from: giver1 });
+    await liquidPledging.transfer(1, 9, 1000, 3, { from: giver1, $extraGas: 200000 });
 
     const pledge = await liquidPledging.getPledge(10);
     assert.equal(pledge.amount, 1000);

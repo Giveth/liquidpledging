@@ -56,13 +56,7 @@ contract LiquidPledgingBase is PledgeAdmins, Pledges, EscapableApp {
 // Constructor
 ///////////////
 
-    function LiquidPledgingBase() 
-        PledgeAdmins()
-        Pledges() public
-    {
-    }
-
-    function initialize(address _escapeHatchDestination) onlyInit external {
+    function initialize(address _escapeHatchDestination) onlyInit public {
         require(false); // overload the EscapableApp
     }
 
@@ -71,13 +65,14 @@ contract LiquidPledgingBase is PledgeAdmins, Pledges, EscapableApp {
     ///  Multisig) to send the ether held in this contract; if a neutral address
     ///  is required, the WHG Multisig is an option:
     ///  0x8Ff920020c8AD673661c8117f2855C384758C572 
-    function initialize(address _vault, address _escapeHatchDestination) onlyInit external {
-        initialized();
-        require(_escapeHatchDestination != 0x0);
+    function initialize(address _vault, address _escapeHatchDestination) onlyInit public {
+        super.initialize(_escapeHatchDestination);
         require(_vault != 0x0);
 
-        escapeHatchDestination = _escapeHatchDestination;
         vault = ILPVault(_vault);
+
+        admins.length = 1; // we reserve the 0 admin
+        pledges.length = 1; // we reserve the 0 pledge
     }
 
 

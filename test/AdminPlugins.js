@@ -3,17 +3,13 @@
 const TestRPC = require("ganache-cli");
 const Web3 = require('web3');
 const chai = require('chai');
-const liquidpledging = require('../index.js');
-const EternalStorage = require('../js/eternalStorage');
-const PledgeAdmins = require('../js/pledgeAdmins');
 const assertFail = require('./helpers/assertFail');
+const contracts = require("../build/contracts.js");
+const LiquidPledgingState = require('../index').LiquidPledgingState;
 
-const LiquidPledging = liquidpledging.LiquidPledgingMock;
-const LiquidPledgingState = liquidpledging.LiquidPledgingState;
 const simpleProjectPluginFactoryAbi = require('../build/TestSimpleProjectPluginFactory.sol').TestSimpleProjectPluginFactoryAbi;
 const simpleProjectPluginFactoryByteCode = require('../build/TestSimpleProjectPluginFactory.sol').TestSimpleProjectPluginFactoryByteCode;
 const simpleProjectPluginRuntimeByteCode = require('../build/TestSimpleProjectPluginFactory.sol').TestSimpleProjectPluginRuntimeByteCode;
-const LPVault = liquidpledging.LPVault;
 const assert = chai.assert;
 
 const printState = async (liquidPledgingState) => {
@@ -45,9 +41,9 @@ describe('LiquidPledging plugins test', function () {
 
     web3 = new Web3('ws://localhost:8546');
     accounts = await web3.eth.getAccounts();
-    giver1 = accounts[ 1 ];
-    adminProject1 = accounts[ 2 ];
-    adminDelegate1 = accounts[ 3 ];
+    giver1 = accounts[1];
+    adminProject1 = accounts[2];
+    adminDelegate1 = accounts[3];
   });
 
   after((done) => {
@@ -55,47 +51,51 @@ describe('LiquidPledging plugins test', function () {
     done();
   });
 
-  it('Should deploy LiquidPledging contract', async function() {
-    vault = await LPVault.new(web3, accounts[0], accounts[1]);
-    const storage = await EternalStorage.new(web3, accounts[0], accounts[1]);
+  it('Should deploy LiquidPledging contract', async function () {
+    const baseVault = await contracts.LPVault.new(web3);
+    const baseLP = await contracts.LiquidPledgingMock.new(web3);
+    lpFactory = await contracts.LPFactory.new(web3, baseVault.$address, baseLP.$address);
 
-    liquidPledging = await LiquidPledging.new(web3, storage.$address, vault.$address, accounts[0], accounts[0], {gas: 6700000})
+    const r = await lpFactory.newLP(accounts[0], accounts[0]);
 
-    await storage.changeOwnership(liquidPledging.$address);
-    await vault.setLiquidPledging(liquidPledging.$address);
+    const vaultAddress = r.events.DeployVault.returnValues.vault;
+    vault = new contracts.LPVault(web3, vaultAddress);
+
+    const lpAddress = r.events.DeployLiquidPledging.returnValues.liquidPledging;
+    liquidPledging = new contracts.LiquidPledgingMock(web3, lpAddress);
 
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
   });
 
-  it('Should create create giver with no plugin', async function() {
+  it('Should create create giver with no plugin', async function () {
     await liquidPledging.addGiver('Giver1', '', 0, '0x0', { from: adminProject1 });
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 1);
   });
 
-  it('Should fail to create giver with invalid plugin', async function() {
+  it('Should fail to create giver with invalid plugin', async function () {
     await assertFail(
       liquidPledging.addGiver('Giver2', '', 0, vault.$address, { from: giver1, gas: 4000000 })
     );
   });
 
-  it('Should fail to create delegate with invalid plugin', async function() {
+  it('Should fail to create delegate with invalid plugin', async function () {
     await assertFail(
-      liquidPledging.addDelegate('delegate1', '', 0, liquidPledging.$address, { from: adminDelegate1, gas: 4000000})
+      liquidPledging.addDelegate('delegate1', '', 0, liquidPledging.$address, { from: adminDelegate1, gas: 4000000 })
     );
   });
 
-  it('Should fail to create project with invalid plugin', async function() {
+  it('Should fail to create project with invalid plugin', async function () {
     await assertFail(
-      liquidPledging.addProject('Project1', '', giver1, 0, 0, vault.$address, { from: adminProject1, gas: 4000000})
+      liquidPledging.addProject('Project1', '', giver1, 0, 0, vault.$address, { from: adminProject1, gas: 4000000 })
     );
   });
 
-  it('Should deploy TestSimpleProjectPlugin and add project', async function() {
+  it('Should deploy TestSimpleProjectPlugin and add project', async function () {
     // add plugin as valid plugin
     const codeHash = web3.utils.soliditySha3(simpleProjectPluginRuntimeByteCode);
-    await liquidPledging.addValidPlugin(codeHash);
+    await liquidPledging.addValidPlugin(codeHash, { $extraGas: 200000 });
 
     // deploy new plugin
     const factoryContract = await new web3.eth.Contract(simpleProjectPluginFactoryAbi)
@@ -113,8 +113,8 @@ describe('LiquidPledging plugins test', function () {
     assert.equal(nAdmins, 2);
   });
 
-  it('Should allow all plugins', async function() {
-    await liquidPledging.useWhitelist(false);
+  it('Should allow all plugins', async function () {
+    await liquidPledging.useWhitelist(false, { $extraGas: 200000 });
 
     await liquidPledging.addGiver('Giver2', '', 0, vault.$address, { from: giver1 });
 

@@ -28,19 +28,6 @@ import "./LiquidPledgingBase.sol";
 contract LiquidPledging is LiquidPledgingBase {
 
 
-//////
-// Constructor
-//////
-
-    /// @notice Basic constructor for LiquidPleding, also calls the
-    ///  LiquidPledgingBase contract
-    /// @dev This constructor  also calls the constructor 
-    ///  for `LiquidPledgingBase`
-    function LiquidPledging()
-        LiquidPledgingBase() public
-    {
-    }
-
     /// @notice This is how value enters the system and how pledges are created;
     ///  the ether is sent to the vault, an pledge for the Giver is created (or
     ///  found), the amount of ETH donated in wei is added to the `amount` in
@@ -49,7 +36,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idGiver The id of the Giver donating; if 0, a new id is created
     /// @param idReceiver The Admin receiving the donation; can be any Admin:
     ///  the Giver themselves, another Giver, a Delegate or a Project
-    function donate(uint64 idGiver, uint64 idReceiver) authP(PLEDGE_ADMIN_ROLE, arr(uint(idGiver)))
+    function donate(uint64 idGiver, uint64 idReceiver)
         public payable 
     {
         // TODO: maybe need a separate role here to allow giver creation
@@ -59,12 +46,15 @@ contract LiquidPledging is LiquidPledgingBase {
         }
 
         PledgeAdmins.PledgeAdmin storage sender = _findAdmin(idGiver);
-        // _checkAdminOwner(sender);
         require(sender.adminType == PledgeAdminType.Giver);
+        require(canPerform(msg.sender, PLEDGE_ADMIN_ROLE, arr(uint(idGiver))));
 
         uint amount = msg.value;
         require(amount > 0);
-        vault.transfer(amount); // Sends the `msg.value` (in wei) to the `vault`
+        // Sends the `msg.value` (in wei) to the `vault`
+        // b/c the vault is a proxy, send & transfer will fail since they only provide 2300
+        // gas, and the delegateProxy will sub(gas, 10000) before even making the call
+        require(vault.call.value(amount).gas(16000)());
 
         uint64 idPledge = _findOrCreatePledge(
             idGiver,
@@ -223,14 +213,14 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  intendedProject
     /// @param idPledge Id of the pledge that is to be redeemed into ether
     /// @param amount Quantity of ether (in wei) to be authorized
-    function withdraw(uint64 idPledge, uint amount) authP(PLEDGE_ADMIN_ROLE, arr(uint(idPledge), amount)) public {
+    function withdraw(uint64 idPledge, uint amount) public {
         idPledge = normalizePledge(idPledge); // Updates pledge info 
 
         Pledges.Pledge storage p = _findPledge(idPledge);
         require(p.pledgeState == PledgeState.Pledged);
 
         PledgeAdmins.PledgeAdmin storage owner = _findAdmin(p.owner);
-        // _checkAdminOwner(owner);
+        require(canPerform(msg.sender, PLEDGE_ADMIN_ROLE, arr(uint(p.owner))));
 
         uint64 idNewPledge = _findOrCreatePledge(
             p.owner,
@@ -307,12 +297,13 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idPledge Id of the pledge that is to be canceled
     /// @param amount Quantity of ether (in wei) to be transfered to the 
     ///  `oldPledge`
-    function cancelPledge(uint64 idPledge, uint amount) authP(PLEDGE_ADMIN_ROLE, arr(uint(idPledge))) public {
+    function cancelPledge(uint64 idPledge, uint amount) public {//authP(PLEDGE_ADMIN_ROLE, arr(uint(idPledge))) public {
         idPledge = normalizePledge(idPledge);
 
         Pledges.Pledge storage p = _findPledge(idPledge);
         require(p.oldPledge != 0);
 
+        require(canPerform(msg.sender, PLEDGE_ADMIN_ROLE, arr(uint(p.owner))));
         // PledgeAdmins.PledgeAdmin storage a = _findAdmin(p.owner);
         // _checkAdminOwner(a);
 
@@ -809,6 +800,10 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @notice Basic helper function to return the current time
     function _getTime() internal view returns (uint) {
         return now;
+    }
+
+    function getTime() public view returns(uint) {
+        return _getTime();
     }
 
     // Event Declarations

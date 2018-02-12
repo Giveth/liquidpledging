@@ -29,7 +29,7 @@ import "@aragon/os/contracts/apps/AragonApp.sol";
 ///  not blacklisted
 contract EscapableApp is AragonApp {
     // warning whoever has this role can move all funds to the `escapeHatchDestination`
-    bytes32 constant public ESCAPE_HATCH_CALLER_ROLE = bytes32(1);
+    bytes32 constant public ESCAPE_HATCH_CALLER_ROLE = keccak256("ESCAPE_HATCH_CALLER_ROLE");
 
     address public escapeHatchDestination;
     mapping (address=>bool) private escapeBlacklist; // Token contract addresses
@@ -38,7 +38,7 @@ contract EscapableApp is AragonApp {
     ///  Multisig) to send the ether held in this contract; if a neutral address
     ///  is required, the WHG Multisig is an option:
     ///  0x8Ff920020c8AD673661c8117f2855C384758C572 
-    function initialize(address _escapeHatchDestination) onlyInit external {
+    function initialize(address _escapeHatchDestination) onlyInit public {
         initialized();
         require(_escapeHatchDestination != 0x0);
 

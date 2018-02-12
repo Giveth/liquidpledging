@@ -40,10 +40,10 @@ contract ILiquidPledging {
 ///  contract that holds funds for the liquid pledging system.
 contract LPVault is EscapableApp {
 
-    bytes32 constant public CONFIRM_PAYMENT_ROLE = bytes32(1);
-    bytes32 constant public CANCEL_PAYMENT_ROLE = bytes32(2);
-    bytes32 constant public AUTHORIZE_PAYMENT_ROLE = bytes32(3);
-    bytes32 constant public SET_AUTOPAY_ROLE = bytes32(4);
+    bytes32 constant public CONFIRM_PAYMENT_ROLE = keccak256("CONFIRM_PAYMENT_ROLE");
+    bytes32 constant public CANCEL_PAYMENT_ROLE = keccak256("CANCEL_PAYMENT_ROLE");
+    bytes32 constant public AUTHORIZE_PAYMENT_ROLE = keccak256("AUTHORIZE_PAYMENT_ROLE");
+    bytes32 constant public SET_AUTOPAY_ROLE = keccak256("SET_AUTOPAY_ROLE");
 
     event AutoPaySet(bool autoPay);
     event EscapeFundsCalled(address token, uint amount);
@@ -85,7 +85,7 @@ contract LPVault is EscapableApp {
         _;
     }
 
-    function initialize(address _escapeHatchDestination) onlyInit external {
+    function initialize(address _escapeHatchDestination) onlyInit public {
         require(false); // overload the EscapableApp
     }
 
@@ -95,11 +95,9 @@ contract LPVault is EscapableApp {
     ///  is required, the WHG Multisig is an option:
     ///  0x8Ff920020c8AD673661c8117f2855C384758C572 
     function initialize(address _liquidPledging, address _escapeHatchDestination) onlyInit external {
-        initialized();
-        require(_escapeHatchDestination != 0x0);
-        require(_liquidPledging != 0x0);
+        super.initialize(_escapeHatchDestination);
 
-        escapeHatchDestination = _escapeHatchDestination;
+        require(_liquidPledging != 0x0);
         liquidPledging = ILiquidPledging(_liquidPledging);
     }
 

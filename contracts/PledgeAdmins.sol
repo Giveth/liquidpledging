@@ -61,16 +61,6 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
 
     PledgeAdmin[] admins; //The list of pledgeAdmins 0 means there is no admin
 
-
-///////////////
-// Constructor
-///////////////
-
-    function PledgeAdmins()
-      LiquidPledgingPlugins() public
-    {
-    }
-
 ////////////////////
 // Public functions
 ////////////////////
@@ -258,7 +248,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
                 plugin)
         );
 
-        _grantPledgeAdminPermission(msg.sender, idProject);
+        _grantPledgeAdminPermission(projectAdmin, idProject);
         if (address(plugin) != 0) {
             _grantPledgeAdminPermission(address(plugin), idProject);
         }

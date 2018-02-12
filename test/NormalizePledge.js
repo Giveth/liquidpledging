@@ -3,13 +3,9 @@
 const TestRPC = require("ganache-cli");
 const Web3 = require('web3');
 const chai = require('chai');
-const liquidpledging = require('../index.js');
-const EternalStorage = require('../js/eternalStorage');
-const PledgeAdmins = require('../js/pledgeAdmins');
+const contracts = require("../build/contracts.js");
+const LiquidPledgingState = require('../index').LiquidPledgingState;
 
-const LiquidPledging = liquidpledging.LiquidPledgingMock;
-const LiquidPledgingState = liquidpledging.LiquidPledgingState;
-const LPVault = liquidpledging.LPVault;
 const assert = chai.assert;
 
 const printState = async (liquidPledgingState) => {
@@ -19,7 +15,7 @@ const printState = async (liquidPledgingState) => {
 
 describe('NormalizePledge test', function () {
   this.timeout(0);
-  
+
   let testrpc;
   let web3;
   let accounts;
@@ -58,13 +54,17 @@ describe('NormalizePledge test', function () {
   });
 
   it('Should deploy LiquidPledging contract', async () => {
-    vault = await LPVault.new(web3, accounts[0], accounts[1]);
-    const storage = await EternalStorage.new(web3, accounts[0], accounts[1]);
+    const baseVault = await contracts.LPVault.new(web3);
+    const baseLP = await contracts.LiquidPledgingMock.new(web3);
+    lpFactory = await contracts.LPFactory.new(web3, baseVault.$address, baseLP.$address);
 
-    liquidPledging = await LiquidPledging.new(web3, storage.$address, vault.$address, accounts[0], accounts[0], {gas: 6700000})
+    const r = await lpFactory.newLP(accounts[0], accounts[0]);
 
-    await storage.changeOwnership(liquidPledging.$address);
-    await vault.setLiquidPledging(liquidPledging.$address);
+    const vaultAddress = r.events.DeployVault.returnValues.vault;
+    vault = new contracts.LPVault(web3, vaultAddress);
+
+    const lpAddress = r.events.DeployLiquidPledging.returnValues.liquidPledging;
+    liquidPledging = new contracts.LiquidPledgingMock(web3, lpAddress);
 
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
   });
@@ -83,25 +83,25 @@ describe('NormalizePledge test', function () {
 
   it('Should commit pledges if commitTime has passed', async () => {
     // commitTime 259200
-    await liquidPledging.donate(1, 2, {from: giver1, value: 1000});
+    await liquidPledging.donate(1, 2, { from: giver1, value: 1000 });
     // commitTime 86400
-    await liquidPledging.donate(1, 3, {from: giver1, value: 1000});
+    await liquidPledging.donate(1, 3, { from: giver1, value: 1000 });
     // commitTime 0
-    await liquidPledging.donate(6, 3, {from: giver2, value: 1000});
+    await liquidPledging.donate(6, 3, { from: giver2, value: 1000 });
 
     // set the time
     const now = Math.floor(new Date().getTime() / 1000);
-    await liquidPledging.setMockedTime(now);
+    await liquidPledging.setMockedTime(now, { $extraGas: 200000 });
 
     // delegate to project
-    await liquidPledging.transfer(2, 2, 1000, 4, {from: delegate1});
-    await liquidPledging.transfer(3, 3, 1000, 4, {from: delegate2});
-    await liquidPledging.transfer(3, 5, 1000, 4, {from: delegate2});
+    await liquidPledging.transfer(2, 2, 1000, 4, { from: delegate1 });
+    await liquidPledging.transfer(3, 3, 1000, 4, { from: delegate2 });
+    await liquidPledging.transfer(3, 5, 1000, 4, { from: delegate2 });
 
     // advance the time
-    await liquidPledging.setMockedTime( now + 100000 );
+    await liquidPledging.setMockedTime(now + 100000, { $extraGas: 200000 });
 
-    await liquidPledging.mNormalizePledge([6, 7, 8]);
+    await liquidPledging.mNormalizePledge([6, 7, 8], { $extraGas: 200000 });
 
     const st = await liquidPledgingState.getState();
     assert.equal(st.pledges.length, 11);
@@ -115,13 +115,13 @@ describe('NormalizePledge test', function () {
   });
 
   it('Should transfer pledge to oldestPledgeNotCanceled', async () => {
-    await liquidPledging.transfer(4, 10, 1000, 5, {from: adminProject1});
+    await liquidPledging.transfer(4, 10, 1000, 5, { from: adminProject1, $extraGas: 200000 });
 
     // cancel projects
-    await liquidPledging.cancelProject(4, {from: adminProject1});
-    await liquidPledging.cancelProject(5, {from: adminProject2});
+    await liquidPledging.cancelProject(4, { from: adminProject1, $extraGas: 200000 });
+    await liquidPledging.cancelProject(5, { from: adminProject2, $extraGas: 200000 });
 
-    await liquidPledging.mNormalizePledge([9, 11]);
+    await liquidPledging.mNormalizePledge([9, 11], { $extraGas: 200000 });
 
     const st = await liquidPledgingState.getState();
     assert.equal(st.pledges.length, 12);

@@ -28,13 +28,14 @@ contract LiquidPledgingMock is LiquidPledging {
 
     /// @dev `LiquidPledgingMock` creates a standard `LiquidPledging`
     ///  instance and sets the mocked time to the current blocktime.
-    function LiquidPledgingMock() LiquidPledging() public {
+    function initialize(address _vault, address _escapeHatchDestination) onlyInit public {
+        super.initialize(_vault, _escapeHatchDestination);
         mock_time = now;
     }
 
     /// @dev `getTime` is a basic getter function for
     ///  the mock_time parameter
-    function getTime() internal view returns (uint) {
+    function _getTime() internal view returns (uint) {
         return mock_time;
     }
 

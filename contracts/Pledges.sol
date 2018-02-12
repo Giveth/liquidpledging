@@ -47,14 +47,6 @@ contract Pledges is AragonApp {
     ///  index number by the hash of that pledge
     mapping (bytes32 => uint64) hPledge2idx;
 
-///////////////
-// Constructor
-///////////////
-
-    function Pledges() public {
-        pledges.length = 1; // we reserve the 0 pledge
-    }
-
 
 /////////////////////////////
 // Public constant functions

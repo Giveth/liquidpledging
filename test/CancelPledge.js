@@ -3,14 +3,10 @@
 const TestRPC = require("ganache-cli");
 const Web3 = require('web3');
 const chai = require('chai');
-const liquidpledging = require('../index.js');
-const EternalStorage = require('../js/eternalStorage');
-const PledgeAdmins = require('../js/pledgeAdmins');
 const assertFail = require('./helpers/assertFail');
+const contracts = require("../build/contracts.js");
+const LiquidPledgingState = require('../index').LiquidPledgingState;
 
-const LiquidPledging = liquidpledging.LiquidPledgingMock;
-const LiquidPledgingState = liquidpledging.LiquidPledgingState;
-const LPVault = liquidpledging.LPVault;
 const assert = chai.assert;
 
 const printState = async (liquidPledgingState) => {
@@ -53,13 +49,17 @@ describe('LiquidPledging cancelPledge normal scenario', function () {
   });
 
   it('Should deploy LiquidPledging contract', async () => {
-    vault = await LPVault.new(web3, accounts[0], accounts[1]);
-    const storage = await EternalStorage.new(web3, accounts[0], accounts[1]);
+    const baseVault = await contracts.LPVault.new(web3);
+    const baseLP = await contracts.LiquidPledgingMock.new(web3);
+    lpFactory = await contracts.LPFactory.new(web3, baseVault.$address, baseLP.$address);
 
-    liquidPledging = await LiquidPledging.new(web3, storage.$address, vault.$address, accounts[0], accounts[0], {gas: 6700000})
+    const r = await lpFactory.newLP(accounts[0], accounts[0]);
 
-    await storage.changeOwnership(liquidPledging.$address);
-    await vault.setLiquidPledging(liquidPledging.$address);
+    const vaultAddress = r.events.DeployVault.returnValues.vault;
+    vault = new contracts.LPVault(web3, vaultAddress);
+
+    const lpAddress = r.events.DeployLiquidPledging.returnValues.liquidPledging;
+    liquidPledging = new contracts.LiquidPledgingMock(web3, lpAddress);
 
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
   });
@@ -79,7 +79,7 @@ describe('LiquidPledging cancelPledge normal scenario', function () {
   });
 
   it('Should cancel pledge and return to oldPledge', async () => {
-    await liquidPledging.cancelPledge(2, 1000, { from: adminProject1 });
+    await liquidPledging.cancelPledge(2, 1000, { from: adminProject1, $extraGas: 200000 });
 
     const st = await liquidPledgingState.getState();
 
