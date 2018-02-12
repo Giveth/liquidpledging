@@ -1,4 +1,4 @@
-exports.LiquidPledging = require('./lib/liquidPledging.js');
-exports.LiquidPledgingMock = require('./lib/liquidPledgingMock.js');
+const contracts = require('./build/contracts');
+exports.LiquidPledging = contracts.LiquidPledging;
 exports.LiquidPledgingState = require('./lib/liquidPledgingState.js');
-exports.LPVault = require('./lib/vault.js');
+exports.LPVault = contracts.LPVault;

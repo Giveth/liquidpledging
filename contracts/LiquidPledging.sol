@@ -27,7 +27,6 @@ import "./LiquidPledgingBase.sol";
 ///  to allow for expanded functionality.
 contract LiquidPledging is LiquidPledgingBase {
 
-
     /// @notice This is how value enters the system and how pledges are created;
     ///  the ether is sent to the vault, an pledge for the Giver is created (or
     ///  found), the amount of ETH donated in wei is added to the `amount` in
@@ -39,7 +38,6 @@ contract LiquidPledging is LiquidPledgingBase {
     function donate(uint64 idGiver, uint64 idReceiver)
         public payable 
     {
-        // TODO: maybe need a separate role here to allow giver creation
         if (idGiver == 0) {
             // default to a 3 day (259200 seconds) commitTime
             idGiver = uint64(addGiver("", "", 259200, ILiquidPledgingPlugin(0x0)));
@@ -93,9 +91,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         Pledges.Pledge storage p = _findPledge(idPledge);
         PledgeAdmins.PledgeAdmin storage receiver = _findAdmin(idReceiver);
-        // PledgeAdmins.PledgeAdmin storage sender = _findAdmin(idSender);
 
-        // _checkAdminOwner(sender);
         require(p.pledgeState == PledgeState.Pledged);
 
         // If the sender is the owner of the Pledge
@@ -128,7 +124,7 @@ contract LiquidPledging is LiquidPledgingBase {
                 } else {
                     // owner is not vetoing an intendedProject and is transferring the pledge to a delegate,
                     // so we want to reset the delegationChain
-                    idPledge  = _undelegate(
+                    idPledge = _undelegate(
                         idPledge,
                         amount,
                         p.delegationChain.length
@@ -241,7 +237,6 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idPledge Id of the pledge that is to be withdrawn
     /// @param amount Quantity of ether (in wei) to be withdrawn
     function confirmPayment(uint64 idPledge, uint amount) public onlyVault {
-        //TODO don't fetch entire pledge
         Pledges.Pledge storage p = _findPledge(idPledge);
 
         require(p.pledgeState == Pledges.PledgeState.Paying);
@@ -297,15 +292,13 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idPledge Id of the pledge that is to be canceled
     /// @param amount Quantity of ether (in wei) to be transfered to the 
     ///  `oldPledge`
-    function cancelPledge(uint64 idPledge, uint amount) public {//authP(PLEDGE_ADMIN_ROLE, arr(uint(idPledge))) public {
+    function cancelPledge(uint64 idPledge, uint amount) public {
         idPledge = normalizePledge(idPledge);
 
         Pledges.Pledge storage p = _findPledge(idPledge);
         require(p.oldPledge != 0);
 
         require(canPerform(msg.sender, PLEDGE_ADMIN_ROLE, arr(uint(p.owner))));
-        // PledgeAdmins.PledgeAdmin storage a = _findAdmin(p.owner);
-        // _checkAdminOwner(a);
 
         uint64 oldPledge = _getOldestPledgeNotCanceled(p.oldPledge);
         _doTransfer(idPledge, oldPledge, amount);
@@ -396,192 +389,6 @@ contract LiquidPledging is LiquidPledgingBase {
         }
     }
 
-////////
-// Private methods
-///////
-
-    /// @notice `transferOwnershipToProject` allows for the transfer of
-    ///  ownership to the project, but it can also be called by a project
-    ///  to un-delegate everyone by setting one's own id for the idReceiver
-    /// @param idPledge the id of the pledge to be transfered.
-    /// @param amount Quantity of value that's being transfered
-    /// @param idReceiver The new owner of the project (or self to un-delegate)
-    function _transferOwnershipToProject(
-        uint64 idPledge,
-        uint amount,
-        uint64 idReceiver
-    ) internal 
-    {
-        Pledges.Pledge storage p = _findPledge(idPledge);
-
-        // Ensure that the pledge is not already at max pledge depth
-        // and the project has not been canceled
-        require(_getPledgeLevel(p) < MAX_INTERPROJECT_LEVEL);
-        require(!_isProjectCanceled(idReceiver));
-
-        uint64 oldPledge = _findOrCreatePledge(
-            p.owner,
-            p.delegationChain,
-            0,
-            0,
-            p.oldPledge,
-            Pledges.PledgeState.Pledged
-        );
-        uint64 toPledge = _findOrCreatePledge(
-            idReceiver,                     // Set the new owner
-            new uint64[](0),                // clear the delegation chain
-            0,
-            0,
-            uint64(oldPledge),
-            Pledges.PledgeState.Pledged
-        );
-        _doTransfer(idPledge, toPledge, amount);
-    }   
-
-
-    /// @notice `transferOwnershipToGiver` allows for the transfer of
-    ///  value back to the Giver, value is placed in a pledged state
-    ///  without being attached to a project, delegation chain, or time line.
-    /// @param idPledge the id of the pledge to be transfered.
-    /// @param amount Quantity of value that's being transfered
-    /// @param idReceiver The new owner of the pledge
-    function _transferOwnershipToGiver(
-        uint64 idPledge,
-        uint amount,
-        uint64 idReceiver
-    ) internal 
-    {
-        uint64 toPledge = _findOrCreatePledge(
-            idReceiver,
-            new uint64[](0),
-            0,
-            0,
-            0,
-            Pledges.PledgeState.Pledged
-        );
-        _doTransfer(idPledge, toPledge, amount);
-    }
-
-    /// @notice `appendDelegate` allows for a delegate to be added onto the
-    ///  end of the delegate chain for a given Pledge.
-    /// @param idPledge the id of the pledge thats delegate chain will be modified.
-    /// @param amount Quantity of value that's being chained.
-    /// @param idReceiver The delegate to be added at the end of the chain
-    function _appendDelegate(
-        uint64 idPledge,
-        uint amount,
-        uint64 idReceiver
-    ) internal 
-    {
-        Pledges.Pledge storage p = _findPledge(idPledge);
-
-        require(p.delegationChain.length < MAX_DELEGATES);
-        uint64[] memory newDelegationChain = new uint64[](
-            p.delegationChain.length + 1
-        );
-        for (uint i = 0; i < p.delegationChain.length; i++) {
-            newDelegationChain[i] = p.delegationChain[i];
-        }
-
-        // Make the last item in the array the idReceiver
-        newDelegationChain[p.delegationChain.length] = idReceiver;
-
-        uint64 toPledge = _findOrCreatePledge(
-            p.owner,
-            newDelegationChain,
-            0,
-            0,
-            p.oldPledge,
-            Pledges.PledgeState.Pledged
-        );
-        _doTransfer(idPledge, toPledge, amount);
-    }
-
-    /// @notice `appendDelegate` allows for a delegate to be added onto the
-    ///  end of the delegate chain for a given Pledge.
-    /// @param idPledge the id of the pledge thats delegate chain will be modified.
-    /// @param amount Quantity of value that's shifted from delegates.
-    /// @param q Number (or depth) of delegates to remove
-    /// @return toPledge The id for the pledge being adjusted or created
-    function _undelegate(
-        uint64 idPledge,
-        uint amount,
-        uint q
-    ) internal returns (uint64 toPledge)
-    {
-        Pledges.Pledge storage p = _findPledge(idPledge);
-        uint64[] memory newDelegationChain = new uint64[](
-            p.delegationChain.length - q
-        );
-
-        for (uint i = 0; i < p.delegationChain.length - q; i++) {
-            newDelegationChain[i] = p.delegationChain[i];
-        }
-        toPledge = _findOrCreatePledge(
-            p.owner,
-            newDelegationChain,
-            0,
-            0,
-            p.oldPledge,
-            Pledges.PledgeState.Pledged
-        );
-        _doTransfer(idPledge, toPledge, amount);
-    }
-
-    /// @notice `proposeAssignProject` proposes the assignment of a pledge
-    ///  to a specific project.
-    /// @dev This function should potentially be named more specifically.
-    /// @param idPledge the id of the pledge that will be assigned.
-    /// @param amount Quantity of value this pledge leader would be assigned.
-    /// @param idReceiver The project this pledge will potentially 
-    ///  be assigned to.
-    function _proposeAssignProject(
-        uint64 idPledge,
-        uint amount,
-        uint64 idReceiver
-    ) internal 
-    {
-        Pledges.Pledge storage p = _findPledge(idPledge);
-
-        require(_getPledgeLevel(p) < MAX_INTERPROJECT_LEVEL);
-        require(!_isProjectCanceled(idReceiver));
-
-        uint64 toPledge = _findOrCreatePledge(
-            p.owner,
-            p.delegationChain,
-            idReceiver,
-            uint64(_getTime() + _maxCommitTime(p)),
-            p.oldPledge,
-            Pledges.PledgeState.Pledged
-        );
-        _doTransfer(idPledge, toPledge, amount);
-    }
-
-    /// @notice `doTransfer` is designed to allow for pledge amounts to be 
-    ///  shifted around internally.
-    /// @param from This is the id of the pledge from which value will be transfered.
-    /// @param to This is the id of the pledge that value will be transfered to.
-    /// @param _amount The amount of value that will be transfered.
-    function _doTransfer(uint64 from, uint64 to, uint _amount) internal {
-        uint amount = _callPlugins(true, from, to, _amount);
-        if (from == to) {
-            return;
-        }
-        if (amount == 0) {
-            return;
-        }
-
-        Pledges.Pledge storage pFrom = _findPledge(from);
-        Pledges.Pledge storage pTo = _findPledge(to);
-
-        require(pFrom.amount >= amount);
-        pFrom.amount -= amount;
-        pTo.amount += amount;
-
-        Transfer(from, to, amount);
-        _callPlugins(false, from, to, amount);
-    }
-
     /// @notice Only affects pledges with the Pledged Pledges.PledgeState for 2 things:
     ///   #1: Checks if the pledge should be committed. This means that
     ///       if the pledge has an intendedProject and it is past the
@@ -638,176 +445,4 @@ contract LiquidPledging is LiquidPledgingBase {
 
         return toPledge;
     }
-
-/////////////
-// Plugins
-/////////////
-
-    /// @notice `callPlugin` is used to trigger the general functions in the
-    ///  plugin for any actions needed before and after a transfer happens.
-    ///  Specifically what this does in relation to the plugin is something
-    ///  that largely depends on the functions of that plugin. This function
-    ///  is generally called in pairs, once before, and once after a transfer.
-    /// @param before This toggle determines whether the plugin call is occurring
-    ///  before or after a transfer.
-    /// @param adminId This should be the Id of the *trusted* individual
-    ///  who has control over this plugin.
-    /// @param fromPledge This is the Id from which value is being transfered.
-    /// @param toPledge This is the Id that value is being transfered to.
-    /// @param context The situation that is triggering the plugin. See plugin
-    ///  for a full description of contexts.
-    /// @param amount The amount of value that is being transfered.
-    function _callPlugin(
-        bool before,
-        uint64 adminId,
-        uint64 fromPledge,
-        uint64 toPledge,
-        uint64 context,
-        uint amount
-    ) internal returns (uint allowedAmount) {
-
-        uint newAmount;
-        allowedAmount = amount;
-        PledgeAdmins.PledgeAdmin storage admin = _findAdmin(adminId);
-
-        // Checks admin has a plugin assigned and a non-zero amount is requested
-        if (address(admin.plugin) != 0 && allowedAmount > 0) {
-            // There are two seperate functions called in the plugin.
-            // One is called before the transfer and one after
-            if (before) {
-                newAmount = admin.plugin.beforeTransfer(
-                    adminId,
-                    fromPledge,
-                    toPledge,
-                    context,
-                    amount
-                );
-                require(newAmount <= allowedAmount);
-                allowedAmount = newAmount;
-            } else {
-                admin.plugin.afterTransfer(
-                    adminId,
-                    fromPledge,
-                    toPledge,
-                    context,
-                    amount
-                );
-            }
-        }
-    }
-
-    /// @notice `callPluginsPledge` is used to apply plugin calls to
-    ///  the delegate chain and the intended project if there is one.
-    ///  It does so in either a transferring or receiving context based
-    ///  on the `p` and  `fromPledge` parameters.
-    /// @param before This toggle determines whether the plugin call is occuring
-    ///  before or after a transfer.
-    /// @param idPledge This is the id of the pledge on which this plugin
-    ///  is being called.
-    /// @param fromPledge This is the Id from which value is being transfered.
-    /// @param toPledge This is the Id that value is being transfered to.
-    /// @param amount The amount of value that is being transfered.
-    function _callPluginsPledge(
-        bool before,
-        uint64 idPledge,
-        uint64 fromPledge,
-        uint64 toPledge,
-        uint amount
-    ) internal returns (uint allowedAmount) {
-        // Determine if callPlugin is being applied in a receiving
-        // or transferring context
-        uint64 offset = idPledge == fromPledge ? 0 : 256;
-        allowedAmount = amount;
-        Pledges.Pledge storage p = _findPledge(idPledge);
-
-        // Always call the plugin on the owner
-        allowedAmount = _callPlugin(
-            before,
-            p.owner,
-            fromPledge,
-            toPledge,
-            offset,
-            allowedAmount
-        );
-
-        // Apply call plugin to all delegates
-        for (uint64 i = 0; i < p.delegationChain.length; i++) {
-            allowedAmount = _callPlugin(
-                before,
-                p.delegationChain[i],
-                fromPledge,
-                toPledge,
-                offset + i + 1,
-                allowedAmount
-            );
-        }
-
-        // If there is an intended project also call the plugin in
-        // either a transferring or receiving context based on offset
-        // on the intended project
-        if (p.intendedProject > 0) {
-            allowedAmount = _callPlugin(
-                before,
-                p.intendedProject,
-                fromPledge,
-                toPledge,
-                offset + 255,
-                allowedAmount
-            );
-        }
-    }
-
-
-    /// @notice `callPlugins` calls `callPluginsPledge` once for the transfer
-    ///  context and once for the receiving context. The aggregated 
-    ///  allowed amount is then returned.
-    /// @param before This toggle determines whether the plugin call is occurring
-    ///  before or after a transfer.
-    /// @param fromPledge This is the Id from which value is being transferred.
-    /// @param toPledge This is the Id that value is being transferred to.
-    /// @param amount The amount of value that is being transferred.
-    function _callPlugins(
-        bool before,
-        uint64 fromPledge,
-        uint64 toPledge,
-        uint amount
-    ) internal returns (uint allowedAmount) {
-        allowedAmount = amount;
-
-        // Call the pledges plugins in the transfer context
-        allowedAmount = _callPluginsPledge(
-            before,
-            fromPledge,
-            fromPledge,
-            toPledge,
-            allowedAmount
-        );
-
-        // Call the pledges plugins in the receive context
-        allowedAmount = _callPluginsPledge(
-            before,
-            toPledge,
-            fromPledge,
-            toPledge,
-            allowedAmount
-        );
-    }
-
-/////////////
-// Test functions
-/////////////
-
-    /// @notice Basic helper function to return the current time
-    function _getTime() internal view returns (uint) {
-        return now;
-    }
-
-    function getTime() public view returns(uint) {
-        return _getTime();
-    }
-
-    // Event Declarations
-    event Transfer(uint indexed from, uint indexed to, uint amount);
-    event CancelProject(uint indexed idProject);
-
 }

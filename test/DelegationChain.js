@@ -33,14 +33,13 @@ describe('DelegationChain test', function () {
   const gasUsage = {};
   before(async () => {
     testrpc = TestRPC.server({
-      ws: true,
       gasLimit: 6700000,
       total_accounts: 10,
     });
 
     testrpc.listen(8545, '127.0.0.1');
 
-    web3 = new Web3('ws://localhost:8545');
+    web3 = new Web3('http://localhost:8545');
     accounts = await web3.eth.getAccounts();
     giver1 = accounts[1];
     delegate1 = accounts[2];
