@@ -18,8 +18,6 @@ pragma solidity ^0.4.18;
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-
-import "./ILiquidPledgingPlugin.sol";
 import "./LiquidPledgingPlugins.sol";
 import "@aragon/os/contracts/apps/AragonApp.sol";
 import "@aragon/os/contracts/acl/ACL.sol";
@@ -32,25 +30,6 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     uint constant MAX_SUBPROJECT_LEVEL = 20;
     uint constant MAX_INTERPROJECT_LEVEL = 20;
 
-    enum PledgeAdminType { Giver, Delegate, Project }
-
-    /// @dev This struct defines the details of a `PledgeAdmin` which are 
-    ///  commonly referenced by their index in the `admins` array
-    ///  and can own pledges and act as delegates
-    struct PledgeAdmin { 
-        PledgeAdminType adminType; // Giver, Delegate or Project
-        address addr; // Account or contract address for admin
-        string name;
-        string url;  // Can be IPFS hash
-        uint64 commitTime;  // In seconds, used for Givers' & Delegates' vetos
-        uint64 parentProject;  // Only for projects
-        bool canceled;      //Always false except for canceled projects
-
-        /// @dev if the plugin is 0x0 then nothing happens, if its an address
-        // than that smart contract is called when appropriate
-        ILiquidPledgingPlugin plugin; 
-    }
-
     // Events
     event GiverAdded(uint64 indexed idGiver);
     event GiverUpdated(uint64 indexed idGiver);
@@ -58,8 +37,6 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     event DelegateUpdated(uint64 indexed idDelegate);
     event ProjectAdded(uint64 indexed idProject);
     event ProjectUpdated(uint64 indexed idProject);
-
-    PledgeAdmin[] admins; //The list of pledgeAdmins 0 means there is no admin
 
 ////////////////////
 // Public functions
@@ -105,13 +82,13 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         admins.push(
             PledgeAdmin(
                 PledgeAdminType.Giver,
-                addr, // TODO: is this needed?
-                name,
-                url,
+                addr, // TODO: is this needed? Yes, until aragon has an easy way to see who has permissions
                 commitTime,
                 0,
                 false,
-                plugin)
+                plugin,
+                name,
+                url)
         );
 
         _grantPledgeAdminPermission(msg.sender, idGiver);
@@ -175,12 +152,12 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
             PledgeAdmin(
                 PledgeAdminType.Delegate,
                 msg.sender,
-                name,
-                url,
                 commitTime,
                 0,
                 false,
-                plugin)
+                plugin,
+                name,
+                url)
         );
 
         _grantPledgeAdminPermission(msg.sender, idDelegate);
@@ -257,12 +234,12 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
             PledgeAdmin(
                 PledgeAdminType.Project,
                 projectAdmin,
-                name,
-                url,
                 commitTime,
                 parentProject,
                 false,
-                plugin)
+                plugin,
+                name,
+                url)
         );
 
         _grantPledgeAdminPermission(projectAdmin, idProject);
@@ -294,7 +271,6 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         PledgeAdmin storage project = _findAdmin(idProject);
 
         require(project.adminType == PledgeAdminType.Project);
-        // require(project.addr == msg.sender);
 
         project.addr = newAddr;
         project.name = newName;
@@ -397,8 +373,8 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
             return(1);
         }
 
-        PledgeAdmin storage parentA = _findAdmin(a.parentProject);
-        return _getProjectLevel(parentA) + 1;
+        PledgeAdmin storage parent = _findAdmin(a.parentProject);
+        return _getProjectLevel(parent) + 1;
     }
 
     function _grantPledgeAdminPermission(address _who, uint64 idPledge) internal {

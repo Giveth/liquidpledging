@@ -20,33 +20,15 @@ pragma solidity ^0.4.18;
 */
 
 import "@aragon/os/contracts/apps/AragonApp.sol";
+import "./LiquidPledgingStorage.sol";
 
-contract Pledges is AragonApp {
+contract Pledges is LiquidPledgingStorage, AragonApp {
 
     // Limits inserted to prevent large loops that could prevent canceling
     uint constant MAX_DELEGATES = 10;
 
     // a constant for when a delegate is requested that is not in the system
     uint64 constant  NOTFOUND = 0xFFFFFFFFFFFFFFFF;
-
-    enum PledgeState { Pledged, Paying, Paid }
-
-    struct Pledge {
-        // uint id; // the id of this Pledge
-        uint amount;
-        uint64 owner; // PledgeAdmin
-        uint64[] delegationChain; // List of delegates in order of authority
-        uint64 intendedProject; // Used when delegates are sending to projects
-        uint64 commitTime;  // When the intendedProject will become the owner
-        uint64 oldPledge; // Points to the id that this Pledge was derived from
-        PledgeState pledgeState; //  Pledged, Paying, Paid
-    }
-
-    Pledge[] pledges;
-    /// @dev this mapping allows you to search for a specific pledge's 
-    ///  index number by the hash of that pledge
-    mapping (bytes32 => uint64) hPledge2idx;
-
 
 /////////////////////////////
 // Public constant functions
@@ -112,7 +94,7 @@ contract Pledges is AragonApp {
         PledgeState state
     ) internal returns (uint64)
     {
-        bytes32 hPledge = keccak256(owner, delegationChain, intendedProject, commitTime, oldPledge, state);
+        bytes32 hPledge = keccak256(delegationChain, owner, intendedProject, commitTime, oldPledge, state);
         uint64 id = hPledge2idx[hPledge];
         if (id > 0) {
             return id;
@@ -123,8 +105,8 @@ contract Pledges is AragonApp {
         pledges.push(
             Pledge(
                 0,
-                owner,
                 delegationChain,
+                owner,
                 intendedProject,
                 commitTime,
                 oldPledge,

@@ -54,7 +54,7 @@ contract LiquidPledging is LiquidPledgingBase {
         public payable 
     {
         require(idGiver > 0); // prevent burning donations. idReceiver is checked in _transfer
-        PledgeAdmins.PledgeAdmin storage sender = _findAdmin(idGiver);
+        PledgeAdmin storage sender = _findAdmin(idGiver);
         require(sender.adminType == PledgeAdminType.Giver);
 
         uint amount = msg.value;
@@ -70,10 +70,10 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             0,
-            Pledges.PledgeState.Pledged
+            PledgeState.Pledged
         );
 
-        Pledges.Pledge storage pTo = _findPledge(idPledge);
+        Pledge storage pTo = _findPledge(idPledge);
         pTo.amount += amount;
 
         Transfer(0, idPledge, amount);
@@ -108,10 +108,10 @@ contract LiquidPledging is LiquidPledgingBase {
     function withdraw(uint64 idPledge, uint amount) public {
         idPledge = normalizePledge(idPledge); // Updates pledge info 
 
-        Pledges.Pledge storage p = _findPledge(idPledge);
+        Pledge storage p = _findPledge(idPledge);
         require(p.pledgeState == PledgeState.Pledged);
 
-        PledgeAdmins.PledgeAdmin storage owner = _findAdmin(p.owner);
+        PledgeAdmin storage owner = _findAdmin(p.owner);
         require(canPerform(msg.sender, PLEDGE_ADMIN_ROLE, arr(uint(p.owner))));
 
         uint64 idNewPledge = _findOrCreatePledge(
@@ -120,7 +120,7 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             p.oldPledge,
-            Pledges.PledgeState.Paying
+            PledgeState.Paying
         );
 
         _doTransfer(idPledge, idNewPledge, amount);
@@ -128,14 +128,14 @@ contract LiquidPledging is LiquidPledgingBase {
         vault.authorizePayment(bytes32(idNewPledge), owner.addr, amount);
     }
 
-    /// @notice `onlyVault` Confirms a withdraw request changing the Pledges.PledgeState
+    /// @notice `onlyVault` Confirms a withdraw request changing the PledgeState
     ///  from Paying to Paid
     /// @param idPledge Id of the pledge that is to be withdrawn
     /// @param amount Quantity of ether (in wei) to be withdrawn
     function confirmPayment(uint64 idPledge, uint amount) public onlyVault {
-        Pledges.Pledge storage p = _findPledge(idPledge);
+        Pledge storage p = _findPledge(idPledge);
 
-        require(p.pledgeState == Pledges.PledgeState.Paying);
+        require(p.pledgeState == PledgeState.Paying);
 
         uint64 idNewPledge = _findOrCreatePledge(
             p.owner,
@@ -143,20 +143,20 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             p.oldPledge,
-            Pledges.PledgeState.Paid
+            PledgeState.Paid
         );
 
         _doTransfer(idPledge, idNewPledge, amount);
     }
 
-    /// @notice `onlyVault` Cancels a withdraw request, changing the Pledges.PledgeState
+    /// @notice `onlyVault` Cancels a withdraw request, changing the PledgeState
     ///  from Paying back to Pledged
     /// @param idPledge Id of the pledge that's withdraw is to be canceled
     /// @param amount Quantity of ether (in wei) to be canceled
     function cancelPayment(uint64 idPledge, uint amount) public onlyVault {
-        Pledges.Pledge storage p = _findPledge(idPledge);
+        Pledge storage p = _findPledge(idPledge);
 
-        require(p.pledgeState == Pledges.PledgeState.Paying);
+        require(p.pledgeState == PledgeState.Paying);
 
         // When a payment is canceled, never is assigned to a project.
         uint64 idOldPledge = _findOrCreatePledge(
@@ -165,7 +165,7 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             p.oldPledge,
-            Pledges.PledgeState.Pledged
+            PledgeState.Pledged
         );
 
         idOldPledge = normalizePledge(idOldPledge);
@@ -176,7 +176,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @notice Changes the `project.canceled` flag to `true`; cannot be undone
     /// @param idProject Id of the project that is to be canceled
     function cancelProject(uint64 idProject) authP(PLEDGE_ADMIN_ROLE, arr(uint(idProject))) public {
-        PledgeAdmins.PledgeAdmin storage project = _findAdmin(idProject);
+        PledgeAdmin storage project = _findAdmin(idProject);
         // _checkAdminOwner(project);
         project.canceled = true;
 
@@ -191,7 +191,7 @@ contract LiquidPledging is LiquidPledgingBase {
     function cancelPledge(uint64 idPledge, uint amount) public {
         idPledge = normalizePledge(idPledge);
 
-        Pledges.Pledge storage p = _findPledge(idPledge);
+        Pledge storage p = _findPledge(idPledge);
         require(p.oldPledge != 0);
 
         require(canPerform(msg.sender, PLEDGE_ADMIN_ROLE, arr(uint(p.owner))));
