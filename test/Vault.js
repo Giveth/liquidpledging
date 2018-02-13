@@ -79,7 +79,7 @@ describe('Vault test', function () {
   });
 
   it('Should hold funds from liquidPledging', async function () {
-    await liquidPledging.donate(0, 2, { from: giver1, value: 10000, $extraGas: 100000 });
+    await liquidPledging.addGiverAndDonate(2, { from: giver1, value: 10000, $extraGas: 100000 });
 
     const balance = await web3.eth.getBalance(vault.$address);
     assert.equal(10000, balance);

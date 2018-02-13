@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 
 /*
     Copyright 2017, Jordi Baylina
@@ -87,6 +87,7 @@ contract LPVault is EscapableApp {
 
     function initialize(address _escapeHatchDestination) onlyInit public {
         require(false); // overload the EscapableApp
+        _escapeHatchDestination;
     }
 
     /// @param _liquidPledging 
@@ -110,7 +111,7 @@ contract LPVault is EscapableApp {
     /// @param _automatic If true, payments will confirm instantly, if false
     ///  the training wheels are put on and the owner must manually approve 
     ///  every payment
-    function setAutopay(bool _automatic) external authP(SET_AUTOPAY_ROLE, ar(_automatic)) {
+    function setAutopay(bool _automatic) external authP(SET_AUTOPAY_ROLE, _arr(_automatic)) {
         autoPay = _automatic;
         AutoPaySet(autoPay);
     }
@@ -138,7 +139,7 @@ contract LPVault is EscapableApp {
         AuthorizePayment(idPayment, _ref, _dest, _amount);
 
         if (autoPay) {
-            doConfirmPayment(idPayment);
+            _doConfirmPayment(idPayment);
         }
 
         return idPayment;
@@ -150,21 +151,21 @@ contract LPVault is EscapableApp {
     ///  has been authorized
     /// @param _idPayment Array lookup for the payment.
     function confirmPayment(uint _idPayment) public {
-        doConfirmPayment(_idPayment);
+        _doConfirmPayment(_idPayment);
     }
 
     /// @notice When `autopay` is `false` and after a payment has been authorized
     ///  to allow the owner to cancel a payment instead of confirming it.
     /// @param _idPayment Array lookup for the payment.
     function cancelPayment(uint _idPayment) public {
-        doCancelPayment(_idPayment);
+        _doCancelPayment(_idPayment);
     }
 
     /// @notice `onlyOwner` An efficient way to confirm multiple payments
     /// @param _idPayments An array of multiple payment ids
     function multiConfirm(uint[] _idPayments) external {
         for (uint i = 0; i < _idPayments.length; i++) {
-            doConfirmPayment(_idPayments[i]);
+            _doConfirmPayment(_idPayments[i]);
         }
     }
 
@@ -172,7 +173,7 @@ contract LPVault is EscapableApp {
     /// @param _idPayments An array of multiple payment ids
     function multiCancel(uint[] _idPayments) external {
         for (uint i = 0; i < _idPayments.length; i++) {
-            doCancelPayment(_idPayments[i]);
+            _doCancelPayment(_idPayments[i]);
         }
     }
 
@@ -205,7 +206,7 @@ contract LPVault is EscapableApp {
     /// @notice Transfers ETH according to the data held within the specified
     ///  payment id (internal function)
     /// @param _idPayment id number for the payment about to be fulfilled 
-    function doConfirmPayment(uint _idPayment) internal {
+    function _doConfirmPayment(uint _idPayment) internal {
         require(_idPayment < payments.length);
         Payment storage p = payments[_idPayment];
         require(p.state == PaymentStatus.Pending);
@@ -221,7 +222,7 @@ contract LPVault is EscapableApp {
 
     /// @notice Cancels a pending payment (internal function)
     /// @param _idPayment id number for the payment    
-    function doCancelPayment(uint _idPayment) internal authP(CANCEL_PAYMENT_ROLE, arr(_idPayment)) {
+    function _doCancelPayment(uint _idPayment) internal authP(CANCEL_PAYMENT_ROLE, arr(_idPayment)) {
         require(_idPayment < payments.length);
         Payment storage p = payments[_idPayment];
         require(p.state == PaymentStatus.Pending);
@@ -233,7 +234,7 @@ contract LPVault is EscapableApp {
         CancelPayment(_idPayment, p.ref);
     }
 
-    function ar(bool a) internal pure returns (uint256[] r) {
+    function _arr(bool a) internal pure returns (uint256[] r) {
         r = new uint256[](1);
         uint _a;
         assembly {

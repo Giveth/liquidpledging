@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 
 /*
     Copyright 2017, Jordi Baylina
@@ -61,6 +61,7 @@ contract LiquidPledgingBase is PledgeAdmins, Pledges, EscapableApp {
 
     function initialize(address _escapeHatchDestination) onlyInit public {
         require(false); // overload the EscapableApp
+        _escapeHatchDestination;
     }
 
     /// @param _vault The vault where the ETH backing the pledges is stored
@@ -98,9 +99,191 @@ contract LiquidPledgingBase is PledgeAdmins, Pledges, EscapableApp {
         name = delegate.name;
     }
 
+    /// @notice Only affects pledges with the Pledged Pledges.PledgeState for 2 things:
+    ///   #1: Checks if the pledge should be committed. This means that
+    ///       if the pledge has an intendedProject and it is past the
+    ///       commitTime, it changes the owner to be the proposed project
+    ///       (The UI will have to read the commit time and manually do what
+    ///       this function does to the pledge for the end user
+    ///       at the expiration of the commitTime)
+    ///
+    ///   #2: Checks to make sure that if there has been a cancellation in the
+    ///       chain of projects, the pledge's owner has been changed
+    ///       appropriately.
+    ///
+    /// This function can be called by anybody at anytime on any pledge.
+    ///  In general it can be called to force the calls of the affected 
+    ///  plugins, which also need to be predicted by the UI
+    /// @param idPledge This is the id of the pledge that will be normalized
+    /// @return The normalized Pledge!
+    function normalizePledge(uint64 idPledge) public returns(uint64) {
+        Pledges.Pledge storage p = _findPledge(idPledge);
+
+        // Check to make sure this pledge hasn't already been used 
+        // or is in the process of being used
+        if (p.pledgeState != Pledges.PledgeState.Pledged) {
+            return idPledge;
+        }
+
+        // First send to a project if it's proposed and committed
+        if ((p.intendedProject > 0) && ( _getTime() > p.commitTime)) {
+            uint64 oldPledge = _findOrCreatePledge(
+                p.owner,
+                p.delegationChain,
+                0,
+                0,
+                p.oldPledge,
+                Pledges.PledgeState.Pledged
+            );
+            uint64 toPledge = _findOrCreatePledge(
+                p.intendedProject,
+                new uint64[](0),
+                0,
+                0,
+                oldPledge,
+                Pledges.PledgeState.Pledged
+            );
+            _doTransfer(idPledge, toPledge, p.amount);
+            idPledge = toPledge;
+            p = _findPledge(idPledge);
+        }
+
+        toPledge = _getOldestPledgeNotCanceled(idPledge);
+        if (toPledge != idPledge) {
+            _doTransfer(idPledge, toPledge, p.amount);
+        }
+
+        return toPledge;
+    }
+
 ////////////////////
 // Internal methods
 ////////////////////
+
+    function _transfer( 
+        uint64 idSender,
+        uint64 idPledge,
+        uint amount,
+        uint64 idReceiver
+    ) internal
+    {
+        require(idReceiver > 0); // prevent burning value
+        idPledge = normalizePledge(idPledge);
+
+        Pledges.Pledge storage p = _findPledge(idPledge);
+        PledgeAdmins.PledgeAdmin storage receiver = _findAdmin(idReceiver);
+
+        require(p.pledgeState == PledgeState.Pledged);
+
+        // If the sender is the owner of the Pledge
+        if (p.owner == idSender) {
+
+            if (receiver.adminType == PledgeAdmins.PledgeAdminType.Giver) {
+                _transferOwnershipToGiver(idPledge, amount, idReceiver);
+            } else if (receiver.adminType == PledgeAdmins.PledgeAdminType.Project) {
+                _transferOwnershipToProject(idPledge, amount, idReceiver);
+            } else if (receiver.adminType == PledgeAdmins.PledgeAdminType.Delegate) {
+
+                uint recieverDIdx = _getDelegateIdx(p, idReceiver);
+                if (p.intendedProject > 0 && recieverDIdx != NOTFOUND) {
+                    // if there is an intendedProject and the receiver is in the delegationChain,
+                    // then we want to preserve the delegationChain as this is a veto of the
+                    // intendedProject by the owner
+
+                    if (recieverDIdx == p.delegationChain.length - 1) {
+                        uint64 toPledge = _findOrCreatePledge(
+                            p.owner,
+                            p.delegationChain,
+                            0,
+                            0,
+                            p.oldPledge,
+                            Pledges.PledgeState.Pledged);
+                        _doTransfer(idPledge, toPledge, amount);
+                    } else {
+                        _undelegate(idPledge, amount, p.delegationChain.length - receiverDIdx - 1);
+                    }
+                } else {
+                    // owner is not vetoing an intendedProject and is transferring the pledge to a delegate,
+                    // so we want to reset the delegationChain
+                    idPledge = _undelegate(
+                        idPledge,
+                        amount,
+                        p.delegationChain.length
+                    );
+                    _appendDelegate(idPledge, amount, idReceiver);
+                }
+
+            } else {
+                // This should never be reached as the reciever.adminType
+                // should always be either a Giver, Project, or Delegate
+                assert(false);
+            }
+            return;
+        }
+
+        // If the sender is a Delegate
+        uint senderDIdx = _getDelegateIdx(p, idSender);
+        if (senderDIdx != NOTFOUND) {
+
+            // And the receiver is another Giver
+            if (receiver.adminType == PledgeAdmins.PledgeAdminType.Giver) {
+                // Only transfer to the Giver who owns the pledge
+                assert(p.owner == idReceiver);
+                _undelegate(idPledge, amount, p.delegationChain.length);
+                return;
+            }
+
+            // And the receiver is another Delegate
+            if (receiver.adminType == PledgeAdmins.PledgeAdminType.Delegate) {
+                uint receiverDIdx = _getDelegateIdx(p, idReceiver);
+
+                // And not in the delegationChain
+                if (receiverDIdx == NOTFOUND) {
+                    idPledge = _undelegate(
+                        idPledge,
+                        amount,
+                        p.delegationChain.length - senderDIdx - 1
+                    );
+                    _appendDelegate(idPledge, amount, idReceiver);
+
+                // And part of the delegationChain and is after the sender, then
+                //  all of the other delegates after the sender are removed and
+                //  the receiver is appended at the end of the delegationChain
+                } else if (receiverDIdx > senderDIdx) {
+                    idPledge = _undelegate(
+                        idPledge,
+                        amount,
+                        p.delegationChain.length - senderDIdx - 1
+                    );
+                    _appendDelegate(idPledge, amount, idReceiver);
+
+                // And is already part of the delegate chain but is before the
+                //  sender, then the sender and all of the other delegates after
+                //  the RECEIVER are removed from the delegationChain
+                } else if (receiverDIdx <= senderDIdx) {//TODO Check for Game Theory issues (from Arthur) this allows the sender to sort of go komakosi and remove himself and the delegates between himself and the receiver... should this authority be allowed?
+                    _undelegate(
+                        idPledge,
+                        amount,
+                        p.delegationChain.length - receiverDIdx - 1
+                    );
+                }
+                return;
+            }
+
+            // And the receiver is a Project, all the delegates after the sender
+            //  are removed and the amount is pre-committed to the project
+            if (receiver.adminType == PledgeAdmins.PledgeAdminType.Project) {
+                idPledge = _undelegate(
+                    idPledge,
+                    amount,
+                    p.delegationChain.length - senderDIdx - 1
+                );
+                _proposeAssignProject(idPledge, amount, idReceiver);
+                return;
+            }
+        }
+        assert(false);  // When the sender is not an owner or a delegate
+    }
 
     /// @notice `transferOwnershipToProject` allows for the transfer of
     ///  ownership to the project, but it can also be called by a project

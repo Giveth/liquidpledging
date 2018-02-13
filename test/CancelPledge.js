@@ -65,7 +65,7 @@ describe('LiquidPledging cancelPledge normal scenario', function () {
 
   it('Should add project and donate ', async () => {
     await liquidPledging.addProject('Project1', 'URLProject1', adminProject1, 0, 0, '0x0', { from: adminProject1 });
-    await liquidPledging.donate(0, 1, { from: giver1, value: '1000' });
+    await liquidPledging.addGiverAndDonate(1, { from: giver1, value: '1000' });
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 2);

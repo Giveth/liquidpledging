@@ -1,4 +1,4 @@
-pragma solidity ^0.4.15;
+pragma solidity ^0.4.18;
 /*
     Copyright 2016, Jordi Baylina
     Contributor: Adrià Massanet <adria@codecontext.io>
@@ -22,14 +22,17 @@ import "giveth-common-contracts/contracts/ERC20.sol";
 import "@aragon/os/contracts/apps/AragonApp.sol";
 
 
-/// @dev `Escapable` is a base level contract built off of the `Owned`
-///  contract; it creates an escape hatch function that can be called in an
+/// @dev `EscapableApp` is a base level contract; it creates an escape hatch
+///  function that can be called in an
 ///  emergency that will allow designated addresses to send any ether or tokens
 ///  held in the contract to an `escapeHatchDestination` as long as they were
 ///  not blacklisted
 contract EscapableApp is AragonApp {
     // warning whoever has this role can move all funds to the `escapeHatchDestination`
     bytes32 constant public ESCAPE_HATCH_CALLER_ROLE = keccak256("ESCAPE_HATCH_CALLER_ROLE");
+
+    event EscapeHatchBlackistedToken(address token);
+    event EscapeHatchCalled(address token, uint amount);
 
     address public escapeHatchDestination;
     mapping (address=>bool) private escapeBlacklist; // Token contract addresses
@@ -43,23 +46,6 @@ contract EscapableApp is AragonApp {
         require(_escapeHatchDestination != 0x0);
 
         escapeHatchDestination = _escapeHatchDestination;
-    }
-
-    /// @notice Creates the blacklist of tokens that are not able to be taken
-    ///  out of the contract; can only be done at the deployment, and the logic
-    ///  to add to the blacklist will be in the constructor of a child contract
-    /// @param _token the token contract address that is to be blacklisted 
-    function blacklistEscapeToken(address _token) internal {
-        escapeBlacklist[_token] = true;
-        EscapeHatchBlackistedToken(_token);
-    }
-
-    /// @notice Checks to see if `_token` is in the blacklist of tokens
-    /// @param _token the token address being queried
-    /// @return False if `_token` is in the blacklist and can't be taken out of
-    ///  the contract via the `escapeHatch()`
-    function isTokenEscapable(address _token) constant public returns (bool) {
-        return !escapeBlacklist[_token];
     }
 
     /// @notice The `escapeHatch()` should only be called as a last resort if a
@@ -84,6 +70,20 @@ contract EscapableApp is AragonApp {
         EscapeHatchCalled(_token, balance);
     }
 
-    event EscapeHatchBlackistedToken(address token);
-    event EscapeHatchCalled(address token, uint amount);
+    /// @notice Checks to see if `_token` is in the blacklist of tokens
+    /// @param _token the token address being queried
+    /// @return False if `_token` is in the blacklist and can't be taken out of
+    ///  the contract via the `escapeHatch()`
+    function isTokenEscapable(address _token) constant public returns (bool) {
+        return !escapeBlacklist[_token];
+    }
+
+    /// @notice Creates the blacklist of tokens that are not able to be taken
+    ///  out of the contract; can only be done at the deployment, and the logic
+    ///  to add to the blacklist will be in the constructor of a child contract
+    /// @param _token the token contract address that is to be blacklisted 
+    function _blacklistEscapeToken(address _token) internal {
+        escapeBlacklist[_token] = true;
+        EscapeHatchBlackistedToken(_token);
+    }
 }

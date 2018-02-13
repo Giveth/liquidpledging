@@ -80,6 +80,23 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         ILiquidPledgingPlugin plugin
     ) public returns (uint64 idGiver)
     {
+        return _addGiver(
+            msg.sender,
+            name,
+            url,
+            commitTime,
+            plugin
+        );
+    }
+
+    function _addGiver(
+        address addr,
+        string name,
+        string url,
+        uint64 commitTime,
+        ILiquidPledgingPlugin plugin
+    ) public returns (uint64 idGiver)
+    {
         require(isValidPlugin(plugin)); // Plugin check
 
         idGiver = uint64(admins.length);
@@ -88,7 +105,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         admins.push(
             PledgeAdmin(
                 PledgeAdminType.Giver,
-                msg.sender, // TODO: is this needed?
+                addr, // TODO: is this needed?
                 name,
                 url,
                 commitTime,
@@ -340,7 +357,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     /// @notice A getter to look up a Admin's details
     /// @param idAdmin The id for the Admin to lookup
     /// @return The PledgeAdmin struct for the specified Admin
-    function _findAdmin(uint64 idAdmin) internal returns (PledgeAdmin storage) {
+    function _findAdmin(uint64 idAdmin) internal view returns (PledgeAdmin storage) {
         require(idAdmin < admins.length);
         return admins[idAdmin];
     }

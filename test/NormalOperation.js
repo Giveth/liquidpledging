@@ -335,7 +335,7 @@ describe('LiquidPledging test', function () {
   it('Should make a donation and create giver', async () => {
     const oldNPledges = await liquidPledging.numberOfPledges();
     const oldNAdmins = await liquidPledging.numberOfPledgeAdmins();
-    await liquidPledging.donate(0, 1, { from: giver2, value: utils.toWei('1'), $extraGas: 200000 });
+    await liquidPledging.addGiverAndDonate(1, { from: giver2, value: utils.toWei('1'), $extraGas: 200000 });
     const nPledges = await liquidPledging.numberOfPledges();
     assert.equal(utils.toDecimal(nPledges), utils.toDecimal(oldNPledges) + 1);
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
