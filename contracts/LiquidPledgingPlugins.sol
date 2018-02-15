@@ -25,7 +25,7 @@ import "./LiquidPledgingStorage.sol";
 /// NOTICE: This contract is not using EternalStorage. This is done to save gas. The pluginWhitelist
 /// should be fairly small, and would be trivial and relatively cheap to re-add all valid plugins
 /// when the LiquidPledging contract is upgraded
-contract LiquidPledgingPlugins is LiquidPledgingStorage, AragonApp {
+contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage {
 
     bytes32 constant public PLUGIN_MANAGER_ROLE = keccak256("PLUGIN_MANAGER_ROLE");
 

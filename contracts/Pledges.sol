@@ -22,7 +22,7 @@ pragma solidity ^0.4.18;
 import "@aragon/os/contracts/apps/AragonApp.sol";
 import "./LiquidPledgingStorage.sol";
 
-contract Pledges is LiquidPledgingStorage, AragonApp {
+contract Pledges is AragonApp, LiquidPledgingStorage {
 
     // Limits inserted to prevent large loops that could prevent canceling
     uint constant MAX_DELEGATES = 10;

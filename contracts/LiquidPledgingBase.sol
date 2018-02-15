@@ -27,7 +27,7 @@ import "./EscapableApp.sol";
 /// @dev `LiquidPledgingBase` is the base level contract used to carry out
 ///  liquidPledging's most basic functions, mostly handling and searching the
 ///  data structures
-contract LiquidPledgingBase is LiquidPledgingStorage, PledgeAdmins, Pledges, EscapableApp {
+contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins, Pledges {
 
     // Event Declarations
     event Transfer(uint indexed from, uint indexed to, uint amount);

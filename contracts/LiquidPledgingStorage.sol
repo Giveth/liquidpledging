@@ -54,4 +54,9 @@ contract LiquidPledgingStorage {
     bool public whitelistDisabled = false;
 
     ILPVault public vault;
+
+    // reserve 50 slots for future upgrades. I'm not sure if this is necessary 
+    // but b/c of multiple inheritance used in lp, better safe then sorry.
+    // especially since it is free
+    uint[50] private storageOffset;
 }

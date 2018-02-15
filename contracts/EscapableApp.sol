@@ -36,6 +36,7 @@ contract EscapableApp is AragonApp {
 
     address public escapeHatchDestination;
     mapping (address=>bool) private escapeBlacklist; // Token contract addresses
+    uint[20] private storageOffset; // reserve 20 slots for future upgrades
 
     /// @param _escapeHatchDestination The address of a safe location (usu a
     ///  Multisig) to send the ether held in this contract; if a neutral address
