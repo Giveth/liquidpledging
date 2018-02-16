@@ -26,6 +26,7 @@ describe('LiquidPledging cancelPledge normal scenario', function () {
   let giver1;
   let adminProject1;
   let adminProject2;
+  let token;
 
   before(async () => {
     testrpc = TestRPC.server({
@@ -61,11 +62,15 @@ describe('LiquidPledging cancelPledge normal scenario', function () {
     liquidPledging = new contracts.LiquidPledgingMock(web3, lpAddress);
 
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
+
+    token = await contracts.StandardToken.new(web3);
+    await token.mint(giver1, web3.utils.toWei('1000'));
+    await token.approve(liquidPledging.$address, "0xFFFFFFFFFFFFFFFF", { from: giver1 });
   });
 
   it('Should add project and donate ', async () => {
     await liquidPledging.addProject('Project1', 'URLProject1', adminProject1, 0, 0, '0x0', { from: adminProject1 });
-    await liquidPledging.addGiverAndDonate(1, { from: giver1, value: '1000' });
+    await liquidPledging.addGiverAndDonate(1, token.$address, 1000, { from: giver1 });
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 2);

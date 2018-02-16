@@ -52,6 +52,7 @@ contract Pledges is AragonApp, LiquidPledgingStorage {
         uint64 intendedProject,
         uint64 commitTime,
         uint64 oldPledge,
+        address token,
         PledgeState pledgeState
     ) {
         Pledge memory p = _findPledge(idPledge);
@@ -61,6 +62,7 @@ contract Pledges is AragonApp, LiquidPledgingStorage {
         intendedProject = p.intendedProject;
         commitTime = p.commitTime;
         oldPledge = p.oldPledge;
+        token = p.token;
         pledgeState = p.pledgeState;
     }
 
@@ -91,10 +93,11 @@ contract Pledges is AragonApp, LiquidPledgingStorage {
         uint64 intendedProject,
         uint64 commitTime,
         uint64 oldPledge,
+        address token,
         PledgeState state
     ) internal returns (uint64)
     {
-        bytes32 hPledge = keccak256(delegationChain, owner, intendedProject, commitTime, oldPledge, state);
+        bytes32 hPledge = keccak256(delegationChain, owner, intendedProject, commitTime, oldPledge, token, state);
         uint64 id = hPledge2idx[hPledge];
         if (id > 0) {
             return id;
@@ -110,6 +113,7 @@ contract Pledges is AragonApp, LiquidPledgingStorage {
                 intendedProject,
                 commitTime,
                 oldPledge,
+                token,
                 state
             )
         );

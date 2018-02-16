@@ -28,6 +28,7 @@ describe('NormalizePledge test', function () {
   let delegate2;
   let adminProject1;
   let adminProject2;
+  let token;
 
   before(async () => {
     testrpc = TestRPC.server({
@@ -66,6 +67,12 @@ describe('NormalizePledge test', function () {
     liquidPledging = new contracts.LiquidPledgingMock(web3, lpAddress);
 
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
+
+    token = await contracts.StandardToken.new(web3);
+    await token.mint(giver1, web3.utils.toWei('1000'));
+    await token.mint(giver2, web3.utils.toWei('1000'));
+    await token.approve(liquidPledging.$address, "0xFFFFFFFFFFFFFFFF", { from: giver1 });
+    await token.approve(liquidPledging.$address, "0xFFFFFFFFFFFFFFFF", { from: giver2 });
   });
 
   it('Should add pledgeAdmins', async () => {
@@ -82,11 +89,11 @@ describe('NormalizePledge test', function () {
 
   it('Should commit pledges if commitTime has passed', async () => {
     // commitTime 259200
-    await liquidPledging.donate(1, 2, { from: giver1, value: 1000 });
+    await liquidPledging.donate(1, 2, token.$address, 1000, { from: giver1 });
     // commitTime 86400
-    await liquidPledging.donate(1, 3, { from: giver1, value: 1000 });
+    await liquidPledging.donate(1, 3, token.$address, 1000, { from: giver1 });
     // commitTime 0
-    await liquidPledging.donate(6, 3, { from: giver2, value: 1000 });
+    await liquidPledging.donate(6, 3, token.$address, 1000, { from: giver2 });
 
     // set the time
     const now = Math.floor(new Date().getTime() / 1000);

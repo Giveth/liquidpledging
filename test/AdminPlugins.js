@@ -29,6 +29,7 @@ describe('LiquidPledging plugins test', function () {
   let giver1;
   let adminProject1;
   let adminDelegate1;
+  let token;
 
   before(async () => {
     testrpc = TestRPC.server({
@@ -64,6 +65,10 @@ describe('LiquidPledging plugins test', function () {
     liquidPledging = new contracts.LiquidPledgingMock(web3, lpAddress);
 
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
+
+    token = await contracts.StandardToken.new(web3);
+    await token.mint(giver1, web3.utils.toWei('1000'));
+    await token.approve(liquidPledging.$address, "0xFFFFFFFFFFFFFFFF", { from: giver1 });
   });
 
   it('Should create create giver with no plugin', async function () {

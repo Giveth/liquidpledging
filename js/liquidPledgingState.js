@@ -12,6 +12,7 @@ class LiquidPledgingState {
     .then((res) => {
       pledge.amount = res.amount;
       pledge.owner = res.owner;
+      pledge.token = res.token;
 
       if (res.intendedProject) {
         pledge.intendedProject = res.intendedProject;
@@ -68,12 +69,11 @@ class LiquidPledgingState {
       admin.name = res.name;
       admin.url = res.url;
       admin.commitTime = res.commitTime;
-      if (admin.adminType === 'Project') {
+      if (admin.type === 'Project') {
         admin.parentProject = res.parentProject;
         admin.canceled = res.canceled;
       }
       admin.plugin = res.plugin;
-      admin.canceled = res.canceled;
       return admin;
     });
   }

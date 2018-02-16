@@ -36,6 +36,8 @@ describe('LiquidPledging test', function () {
   let escapeHatchDestination;
   let escapeHatchCaller;
   let acl;
+  let giver1Token;
+  let giver2Token;
 
   before(async () => {
     testrpc = TestRPC.server({
@@ -86,6 +88,15 @@ describe('LiquidPledging test', function () {
     await acl.createPermission(accounts[0], vault.$address, await vault.CONFIRM_PAYMENT_ROLE(), accounts[0], {$extraGas: 200000});
     await acl.grantPermission(escapeHatchCaller, vault.$address, await vault.ESCAPE_HATCH_CALLER_ROLE(), {$extraGas: 200000});
     await acl.revokePermission(accounts[0], vault.$address, await vault.ESCAPE_HATCH_CALLER_ROLE(), {$extraGas: 200000});
+
+    giver1Token = await contracts.StandardToken.new(web3);
+    giver2Token = await contracts.StandardToken.new(web3);
+
+    await giver1Token.mint(giver1, web3.utils.toWei('1000'));
+    await giver2Token.mint(giver2, web3.utils.toWei('1000'));
+
+    await giver1Token.approve(liquidPledging.$address, "0xFFFFFFFFFFFFFFFF", {from: giver1});
+    await giver2Token.approve(liquidPledging.$address, "0xFFFFFFFFFFFFFFFF", {from: giver2});
   });
   it('Should create a giver', async () => {
     await liquidPledging.addGiver('Giver1', 'URLGiver1', 86400, 0, { from: giver1, gas: 1000000 });
@@ -99,12 +110,16 @@ describe('LiquidPledging test', function () {
     assert.equal(res[4], 86400);
   });
   it('Should make a donation', async () => {
-    const r = await liquidPledging.donate(1, 1, { from: giver1, value: utils.toWei('1'), gas: 1000000 });
+    const r = await liquidPledging.donate(1, 1, giver1Token.$address, utils.toWei('1'), { from: giver1, $extraGas: 100000 });
     const nPledges = await liquidPledging.numberOfPledges();
     assert.equal(nPledges, 1);
     const p = await liquidPledging.getPledge(1);
     assert.equal(p.amount, utils.toWei('1'));
     assert.equal(p.owner, 1);
+    const vaultBal = await giver1Token.balanceOf(vault.$address);
+    const giver1Bal = await giver1Token.balanceOf(giver1);
+    assert.equal(vaultBal, web3.utils.toWei('1'))
+    assert.equal(giver1Bal, web3.utils.toWei('999'))
   });
   it('Should create a delegate', async () => {
     await liquidPledging.addDelegate('Delegate1', 'URLDelegate1', 0, 0, { from: delegate1 });
@@ -165,27 +180,29 @@ describe('LiquidPledging test', function () {
     const nPledges = await liquidPledging.numberOfPledges();
     assert.equal(nPledges, 3);
     const res3 = await liquidPledging.getPledge(3);
-    assert.equal(res3[0], utils.toWei('0.2'));
-    assert.equal(res3[1], 1); // Owner
-    assert.equal(res3[2], 1); // Delegates
-    assert.equal(res3[3], 3); // Proposed Project
-    assert.isAbove(utils.toDecimal(res3[4]), n + 86000);
-    assert.equal(res3[5], 0); // Old Node
-    assert.equal(res3[6], 0); // Not Paid
+    assert.equal(res3.amount, utils.toWei('0.2'));
+    assert.equal(res3.owner, 1);
+    assert.equal(res3.nDelegates, 1);
+    assert.equal(res3.intendedProject, 3);
+    assert.isAbove(utils.toDecimal(res3.commitTime), n + 86000);
+    assert.equal(res3.oldPledge, 0);
+    assert.equal(res3.token, giver1Token.$address);
+    assert.equal(res3.pledgeState, 0); // Not Paid
   });
   it('Giver should change his mind and assign half of it to project2', async () => {
     await liquidPledging.transfer(1, 3, utils.toWei('0.1'), 4, { from: giver1 });
     const nPledges = await liquidPledging.numberOfPledges();
     assert.equal(nPledges, 4);
     const res3 = await liquidPledging.getPledge(3);
-    assert.equal(res3[0], utils.toWei('0.1'));
+    assert.equal(res3.amount, utils.toWei('0.1'));
     const res4 = await liquidPledging.getPledge(4);
-    assert.equal(res4[1], 4); // Owner
-    assert.equal(res4[2], 0); // Delegates
-    assert.equal(res4[3], 0); // Proposed Project
-    assert.equal(res4[4], 0);
-    assert.equal(res4[5], 2); // Old Node
-    assert.equal(res4[6], 0); // Not Paid
+    assert.equal(res4.owner, 4);
+    assert.equal(res4.nDelegates, 0);
+    assert.equal(res4.intendedProject, 0);
+    assert.equal(res4.commitTime, 0);
+    assert.equal(res4.oldPledge, 2);
+    assert.equal(res4.token, giver1Token.$address);
+    assert.equal(res4.pledgeState, 0); // Not Paid
   });
   it('After the time, the project1 should be able to spend part of it', async () => {
     const n = Math.floor(new Date().getTime() / 1000);
@@ -194,27 +211,29 @@ describe('LiquidPledging test', function () {
     const nPledges = await liquidPledging.numberOfPledges();
     assert.equal(nPledges, 6);
     const res5 = await liquidPledging.getPledge(5);
-    assert.equal(res5[0], utils.toWei('0.05'));
-    assert.equal(res5[1], 3); // Owner
-    assert.equal(res5[2], 0); // Delegates
-    assert.equal(res5[3], 0); // Proposed Project
-    assert.equal(res5[4], 0);            // commit time
-    assert.equal(res5[5], 2); // Old Node
-    assert.equal(res5[6], 0); // Not Paid
+    assert.equal(res5.amount, utils.toWei('0.05'));
+    assert.equal(res5.owner, 3);
+    assert.equal(res5.nDelegates, 0);
+    assert.equal(res5.intendedProject, 0);
+    assert.equal(res5.commitTime, 0);
+    assert.equal(res5.oldPledge, 2);
+    assert.equal(res5.token, giver1Token.$address);
+    assert.equal(res5.pledgeState, 0); // Not Paid
     const res6 = await liquidPledging.getPledge(6);
-    assert.equal(res6[0], utils.toWei('0.05'));
-    assert.equal(res6[1], 3); // Owner
-    assert.equal(res6[2], 0); // Delegates
-    assert.equal(res6[3], 0); // Proposed Project
-    assert.equal(res6[4], 0);            // commit time
-    assert.equal(res6[5], 2); // Old Node
-    assert.equal(res6[6], 1); // Peinding paid Paid
+    assert.equal(res6.amount, utils.toWei('0.05'));
+    assert.equal(res6.owner, 3);
+    assert.equal(res6.nDelegates, 0);
+    assert.equal(res6.intendedProject, 0);
+    assert.equal(res6.commitTime, 0);
+    assert.equal(res6.oldPledge, 2);
+    assert.equal(res6.token, giver1Token.$address);
+    assert.equal(res6.pledgeState, 1); // Pending
   });
-  it('Should collect the Ether', async () => {
-    const initialBalance = await web3.eth.getBalance(adminProject1);
+  it('Should collect the token', async () => {
+    const initialBalance = await giver1Token.balanceOf(adminProject1);
 
     await vault.confirmPayment(0, {$extraGas: 200000});
-    const finalBalance = await web3.eth.getBalance(adminProject1);
+    const finalBalance = await giver1Token.balanceOf(adminProject1);
 
     const collected = utils.fromWei(utils.toBN(finalBalance).sub(utils.toBN(initialBalance)));
 
@@ -223,13 +242,14 @@ describe('LiquidPledging test', function () {
     const nPledges = await liquidPledging.numberOfPledges();
     assert.equal(nPledges, 7);
     const res7 = await liquidPledging.getPledge(7);
-    assert.equal(res7[0], utils.toWei('0.05'));
-    assert.equal(res7[1], 3); // Owner
-    assert.equal(res7[2], 0); // Delegates
-    assert.equal(res7[3], 0); // Proposed Project
-    assert.equal(res7[4], 0);            // commit time
-    assert.equal(res7[5], 2); // Old pledge
-    assert.equal(res7[6], 2); // Peinding paid Paid
+    assert.equal(res7.amount, utils.toWei('0.05'));
+    assert.equal(res7.owner, 3);
+    assert.equal(res7.nDelegates, 0);
+    assert.equal(res7.intendedProject, 0);
+    assert.equal(res7.commitTime, 0);
+    assert.equal(res7.oldPledge, 2);
+    assert.equal(res7.token, giver1Token.$address);
+    assert.equal(res7.pledgeState, 2); // Pending
   });
   it('Admin of the project1 should be able to cancel project1', async () => {
     await liquidPledging.cancelProject(3, { from: adminProject1, $extraGas: 100000 });
@@ -243,7 +263,7 @@ describe('LiquidPledging test', function () {
     await assertFail(
       liquidPledging.withdraw(5, utils.toWei('0.01'), { from: adminProject1, gas: 4000000 })
     );
-    });
+  });
   it('Delegate should send part of this ETH to project2', async () => {
     await liquidPledging.transfer(2, 5, utils.toWei('0.03'), 4, {from: delegate1, $extraGas: 100000});
     const st = await liquidPledgingState.getState(liquidPledging);
@@ -324,10 +344,10 @@ describe('LiquidPledging test', function () {
 
     await liquidPledging.mWithdraw(encodedPledges, { from: giver1, $extraGas: 200000 });
 
-    const initialBalance = await web3.eth.getBalance(giver1);
+    const initialBalance = await giver1Token.balanceOf(giver1);
     await vault.multiConfirm([2, 3, 4, 5, 6], {$extraGas: 200000});
 
-    const finalBalance = await web3.eth.getBalance(giver1);
+    const finalBalance = await giver1Token.balanceOf(giver1);
     const collected = utils.fromWei(utils.toBN(finalBalance).sub(utils.toBN(initialBalance)));
 
     assert.equal(collected, 0.95);
@@ -335,9 +355,9 @@ describe('LiquidPledging test', function () {
   it('Should make a donation and create giver', async () => {
     const oldNPledges = await liquidPledging.numberOfPledges();
     const oldNAdmins = await liquidPledging.numberOfPledgeAdmins();
-    await liquidPledging.addGiverAndDonate(1, { from: giver2, value: utils.toWei('1'), $extraGas: 200000 });
+    await liquidPledging.addGiverAndDonate(1, giver2Token.$address, utils.toWei('1'), { from: giver2, $extraGas: 200000 });
     const nPledges = await liquidPledging.numberOfPledges();
-    assert.equal(utils.toDecimal(nPledges), utils.toDecimal(oldNPledges) + 1);
+    assert.equal(utils.toDecimal(nPledges), utils.toDecimal(oldNPledges) + 2);
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(utils.toDecimal(nAdmins), utils.toDecimal(oldNAdmins) + 1);
     const res = await liquidPledging.getPledgeAdmin(nAdmins);
@@ -346,6 +366,8 @@ describe('LiquidPledging test', function () {
     assert.equal(res[2], '');
     assert.equal(res[3], '');
     assert.equal(res[4], 259200); // default to 3 day commitTime
+    const giver2Bal = await giver2Token.balanceOf(giver2);
+    assert.equal(giver2Bal, utils.toWei('999'));
   });
   it('Should allow childProject with different parentProject owner', async () => {
     const nAdminsBefore = await liquidPledging.numberOfPledgeAdmins();

@@ -6,8 +6,7 @@ import "./ILiquidPledgingPlugin.sol";
 ///  the ETH that backs the Pledges, only after `LiquidPledging` authorizes
 ///  payments can Pledges be converted for ETH
 interface ILPVault {
-    function authorizePayment(bytes32 _ref, address _dest, uint _amount) public;
-    function () public payable;
+    function authorizePayment(bytes32 _ref, address _dest, address _token, uint _amount) public;
 }
 
 /// This contract contains all state variables used in LiquidPledging contracts
@@ -46,6 +45,7 @@ contract LiquidPledgingStorage {
         uint64 intendedProject; // Used when delegates are sending to projects
         uint64 commitTime;  // When the intendedProject will become the owner
         uint64 oldPledge; // Points to the id that this Pledge was derived from
+        address token;
         PledgeState pledgeState; //  Pledged, Paying, Paid
     }
 

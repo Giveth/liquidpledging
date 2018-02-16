@@ -29,6 +29,7 @@ describe('DelegationChain test', function () {
   let delegate2;
   let delegate3;
   let adminProject1;
+  let token;
 
   const gasUsage = {};
   before(async () => {
@@ -68,6 +69,10 @@ describe('DelegationChain test', function () {
     liquidPledging = new contracts.LiquidPledgingMock(web3, lpAddress);
 
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
+
+    token = await contracts.StandardToken.new(web3);
+    await token.mint(giver1, web3.utils.toWei('1000'));
+    await token.approve(liquidPledging.$address, "0xFFFFFFFFFFFFFFFF", { from: giver1 });
   });
 
   it('Should add pledgeAdmins', async () => {
@@ -83,7 +88,7 @@ describe('DelegationChain test', function () {
   });
 
   it('Should allow previous delegate to transfer pledge', async () => {
-    await liquidPledging.donate(1, 2, { from: giver1, value: 1000 });
+    await liquidPledging.donate(1, 2, token.$address, 1000, { from: giver1 });
     // add delegate2 to chain
     await liquidPledging.transfer(2, 2, 1000, 3, { from: delegate1 });
     // delegate 1 transfer pledge back to self, thus undelegating delegate2

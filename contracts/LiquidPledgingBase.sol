@@ -122,6 +122,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
                 0,
                 0,
                 p.oldPledge,
+                p.token,
                 PledgeState.Pledged
             );
             uint64 toPledge = _findOrCreatePledge(
@@ -130,6 +131,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
                 0,
                 0,
                 oldPledge,
+                p.token,
                 PledgeState.Pledged
             );
             _doTransfer(idPledge, toPledge, p.amount);
@@ -186,6 +188,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
                             0,
                             0,
                             p.oldPledge,
+                            p.token,
                             PledgeState.Pledged);
                         _doTransfer(idPledge, toPledge, amount);
                     } else {
@@ -203,7 +206,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
                 }
 
             } else {
-                // This should never be reached as the reciever.adminType
+                // This should never be reached as the receiver.adminType
                 // should always be either a Giver, Project, or Delegate
                 assert(false);
             }
@@ -299,6 +302,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
             0,
             0,
             p.oldPledge,
+            p.token,
             PledgeState.Pledged
         );
         uint64 toPledge = _findOrCreatePledge(
@@ -306,7 +310,8 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
             new uint64[](0),                // clear the delegation chain
             0,
             0,
-            uint64(oldPledge),
+            oldPledge,
+            p.token,
             PledgeState.Pledged
         );
         _doTransfer(idPledge, toPledge, amount);
@@ -316,8 +321,8 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
     /// @notice `transferOwnershipToGiver` allows for the transfer of
     ///  value back to the Giver, value is placed in a pledged state
     ///  without being attached to a project, delegation chain, or time line.
-    /// @param idPledge the id of the pledge to be transfered.
-    /// @param amount Quantity of value that's being transfered
+    /// @param idPledge the id of the pledge to be transferred.
+    /// @param amount Quantity of value that's being transferred
     /// @param idReceiver The new owner of the pledge
     function _transferOwnershipToGiver(
         uint64 idPledge,
@@ -325,12 +330,15 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
         uint64 idReceiver
     ) internal 
     {
+        Pledge storage p = _findPledge(idPledge);
+
         uint64 toPledge = _findOrCreatePledge(
             idReceiver,
             new uint64[](0),
             0,
             0,
             0,
+            p.token,
             PledgeState.Pledged
         );
         _doTransfer(idPledge, toPledge, amount);
@@ -366,6 +374,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
             0,
             0,
             p.oldPledge,
+            p.token,
             PledgeState.Pledged
         );
         _doTransfer(idPledge, toPledge, amount);
@@ -397,6 +406,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
             0,
             0,
             p.oldPledge,
+            p.token,
             PledgeState.Pledged
         );
         _doTransfer(idPledge, toPledge, amount);
@@ -426,6 +436,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
             idReceiver,
             uint64(_getTime() + _maxCommitTime(p)),
             p.oldPledge,
+            p.token,
             PledgeState.Pledged
         );
         _doTransfer(idPledge, toPledge, amount);
@@ -520,6 +531,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
         uint64 fromPledge,
         uint64 toPledge,
         uint64 context,
+        address token,
         uint amount
     ) internal returns (uint allowedAmount) 
     {
@@ -537,6 +549,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
                     fromPledge,
                     toPledge,
                     context,
+                    token,
                     amount
                 );
                 require(newAmount <= allowedAmount);
@@ -547,6 +560,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
                     fromPledge,
                     toPledge,
                     context,
+                    token,
                     amount
                 );
             }
@@ -585,6 +599,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
             fromPledge,
             toPledge,
             offset,
+            p.token,
             allowedAmount
         );
 
@@ -596,6 +611,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
                 fromPledge,
                 toPledge,
                 offset + i + 1,
+                p.token,
                 allowedAmount
             );
         }
@@ -610,6 +626,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
                 fromPledge,
                 toPledge,
                 offset + 255,
+                p.token,
                 allowedAmount
             );
         }

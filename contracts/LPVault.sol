@@ -18,9 +18,6 @@ pragma solidity ^0.4.18;
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-/// @title LPVault
-/// @author Jordi Baylina
-
 /// @dev This contract holds ether securely for liquid pledging systems; for
 ///  this iteration the funds will come often be escaped to the Giveth Multisig
 ///  (safety precaution), but once fully tested and optimized this contract will
@@ -28,6 +25,7 @@ pragma solidity ^0.4.18;
 ///  to allow for an optional escapeHatch to be implemented in case of issues;
 ///  future versions of this contract will be enabled for tokens
 import "./EscapableApp.sol";
+import "giveth-common-contracts/contracts/ERC20.sol";
 
 /// @dev `LiquidPledging` is a basic interface to allow the `LPVault` contract
 ///  to confirm and cancel payments in the `LiquidPledging` contract.
@@ -53,6 +51,7 @@ contract LPVault is EscapableApp {
         uint indexed idPayment,
         bytes32 indexed ref,
         address indexed dest,
+        address token,
         uint amount
     );
 
@@ -66,9 +65,10 @@ contract LPVault is EscapableApp {
     ///  each payment the `ref` param makes it easy to track the movements of
     ///  funds transparently by its connection to other `Payment` structs
     struct Payment {
-        PaymentStatus state; // Pending, Paid or Canceled
         bytes32 ref; // an input that references details from other contracts
         address dest; // recipient of the ETH
+        PaymentStatus state; // Pending, Paid or Canceled
+        address token;
         uint amount; // amount of ETH (in wei) to be sent
     }
 
@@ -102,10 +102,6 @@ contract LPVault is EscapableApp {
         liquidPledging = ILiquidPledging(_liquidPledging);
     }
 
-    /// @dev The fall back function allows ETH to be deposited into the LPVault
-    ///  through a simple send
-    function () public payable {}
-
     /// @notice Used to decentralize, toggles whether the LPVault will
     ///  automatically confirm a payment after the payment has been authorized
     /// @param _automatic If true, payments will confirm instantly, if false
@@ -126,6 +122,7 @@ contract LPVault is EscapableApp {
     function authorizePayment(
         bytes32 _ref,
         address _dest,
+        address _token,
         uint _amount
     ) external authP(AUTHORIZE_PAYMENT_ROLE, arr(_dest, _amount)) returns (uint)
     {
@@ -134,9 +131,10 @@ contract LPVault is EscapableApp {
         payments[idPayment].state = PaymentStatus.Pending;
         payments[idPayment].ref = _ref;
         payments[idPayment].dest = _dest;
+        payments[idPayment].token = _token;
         payments[idPayment].amount = _amount;
 
-        AuthorizePayment(idPayment, _ref, _dest, _amount);
+        AuthorizePayment(idPayment, _ref, _dest, _token, _amount);
 
         if (autoPay) {
             _doConfirmPayment(idPayment);
@@ -177,20 +175,13 @@ contract LPVault is EscapableApp {
         }
     }
 
-    /// Transfer eth or tokens to the escapeHatchDestination.
+    /// Transfer tokens to the escapeHatchDestination.
     /// Used as a safety mechanism to prevent the vault from holding too much value
     /// before being thoroughly battle-tested.
-    /// @param _token to transfer, use 0x0 for ether
+    /// @param _token to transfer
     /// @param _amount to transfer
     function escapeFunds(address _token, uint _amount) public authP(ESCAPE_HATCH_CALLER_ROLE, arr(_token)) {
-        /// @dev Logic for ether
-        if (_token == 0x0) {
-            require(this.balance >= _amount);
-            escapeHatchDestination.transfer(_amount);
-            EscapeHatchCalled(_token, _amount);
-            return;
-        }
-        /// @dev Logic for tokens
+        require(_token != 0x0);
         ERC20 token = ERC20(_token);
         uint balance = token.balanceOf(this);
         require(balance >= _amount);
@@ -215,7 +206,8 @@ contract LPVault is EscapableApp {
         p.state = PaymentStatus.Paid;
         liquidPledging.confirmPayment(uint64(p.ref), p.amount);
 
-        p.dest.transfer(p.amount);  // Transfers ETH denominated in wei
+        ERC20 token = ERC20(p.token);
+        require(token.transfer(p.dest, p.amount)); // Transfers token to dest
 
         ConfirmPayment(_idPayment, p.ref);
     }

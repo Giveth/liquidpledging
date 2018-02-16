@@ -24,6 +24,7 @@ describe('Vault test', function () {
   let giver1;
   let adminProject1;
   let restrictedPaymentsConfirmer;
+  let token;
 
   before(async () => {
     testrpc = TestRPC.server({
@@ -76,12 +77,16 @@ describe('Vault test', function () {
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 2);
+    
+    token = await contracts.StandardToken.new(web3);
+    await token.mint(giver1, web3.utils.toWei('1000'));
+    await token.approve(liquidPledging.$address, "0xFFFFFFFFFFFFFFFF", {from: giver1});
   });
 
   it('Should hold funds from liquidPledging', async function () {
-    await liquidPledging.addGiverAndDonate(2, { from: giver1, value: 10000, $extraGas: 100000 });
+    await liquidPledging.addGiverAndDonate(2, token.$address, 10000, { from: giver1, $extraGas: 100000 });
 
-    const balance = await web3.eth.getBalance(vault.$address);
+    const balance = await token.balanceOf(vault.$address);
     assert.equal(10000, balance);
   });
 
@@ -94,19 +99,21 @@ describe('Vault test', function () {
   });
 
   it('escapeFunds should send funds to escapeHatchDestination', async function () {
-    const preBalance = await web3.eth.getBalance(escapeHatchDestination);
+    const preBalance = await token.balanceOf(escapeHatchDestination);
 
-    await vault.escapeFunds(0x0, 1000, { from: escapeHatchCaller, $extraGas: 200000 });
+    assertFail(vault.escapeFunds(0x0, 1000, { from: escapeHatchCaller, gas: 1000000}));
 
-    const vaultBalance = await web3.eth.getBalance(vault.$address);
+    await vault.escapeFunds(token.$address, 1000, { from: escapeHatchCaller, $extraGas: 200000 });
+
+    const vaultBalance = await token.balanceOf(vault.$address);
     assert.equal(9000, vaultBalance);
 
     const expected = web3.utils.toBN(preBalance).add(web3.utils.toBN('1000')).toString();
-    const postBalance = await web3.eth.getBalance(escapeHatchDestination);
+    const postBalance = await token.balanceOf(escapeHatchDestination);
 
     assert.equal(expected, postBalance);
 
-    await web3.eth.sendTransaction({from: escapeHatchCaller, to: vault.$address, value: '1000', gas: 21000});
+    await token.transfer(vault.$address, 1000, {from: escapeHatchDestination, $extraGas: 200000});
   });
 
   it('should restrict confirm payment to payments under specified amount', async function () {

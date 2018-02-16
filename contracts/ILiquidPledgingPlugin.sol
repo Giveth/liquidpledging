@@ -49,6 +49,7 @@ contract ILiquidPledgingPlugin {
         uint64 pledgeFrom,
         uint64 pledgeTo,
         uint64 context,
+        address token,
         uint amount ) public returns (uint maxAllowed);
 
     /// @notice Plugins are used (much like web hooks) to initiate an action
@@ -76,6 +77,7 @@ contract ILiquidPledgingPlugin {
         uint64 pledgeFrom,
         uint64 pledgeTo,
         uint64 context,
+        address token,
         uint amount
     ) public;
 }

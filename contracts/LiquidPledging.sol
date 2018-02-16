@@ -27,19 +27,19 @@ import "./LiquidPledgingBase.sol";
 ///  to allow for expanded functionality.
 contract LiquidPledging is LiquidPledgingBase {
 
-    function addGiverAndDonate(uint64 idReceiver)
-        public payable 
+    function addGiverAndDonate(uint64 idReceiver, address token, uint amount)
+        public
     {
-        addGiverAndDonate(idReceiver, msg.sender);
+        addGiverAndDonate(idReceiver, msg.sender, token, amount);
     }
 
-    function addGiverAndDonate(uint64 idReceiver, address donorAddress)
-        public payable 
+    function addGiverAndDonate(uint64 idReceiver, address donorAddress, address token, uint amount)
+        public
     {
         require(donorAddress != 0);
         // default to a 3 day (259200 seconds) commitTime
         uint64 idGiver = _addGiver(donorAddress, "", "", 259200, ILiquidPledgingPlugin(0));
-        donate(idGiver, idReceiver);
+        donate(idGiver, idReceiver, token, amount);
     }
 
     /// @notice This is how value enters the system and how pledges are created;
@@ -50,19 +50,17 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idGiver The id of the Giver donating; if 0, a new id is created
     /// @param idReceiver The Admin receiving the donation; can be any Admin:
     ///  the Giver themselves, another Giver, a Delegate or a Project
-    function donate(uint64 idGiver, uint64 idReceiver)
-        public payable 
+    function donate(uint64 idGiver, uint64 idReceiver, address token, uint amount)
+        public
     {
         require(idGiver > 0); // prevent burning donations. idReceiver is checked in _transfer
+        require(amount > 0);
+        require(token != 0x0);
+
         PledgeAdmin storage sender = _findAdmin(idGiver);
         require(sender.adminType == PledgeAdminType.Giver);
 
-        uint amount = msg.value;
-        require(amount > 0);
-        // Sends the `msg.value` (in wei) to the `vault`
-        // b/c the vault is a proxy, send & transfer will fail since they only provide 2300
-        // gas, and the delegateProxy will sub(gas, 10000) before even making the call
-        require(vault.call.value(amount).gas(16000)());
+        require(ERC20(token).transferFrom(msg.sender, address(vault), amount)); // transfer the token to the `vault`
 
         uint64 idPledge = _findOrCreatePledge(
             idGiver,
@@ -70,6 +68,7 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             0,
+            token,
             PledgeState.Pledged
         );
 
@@ -120,12 +119,13 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             p.oldPledge,
+            p.token,
             PledgeState.Paying
         );
 
         _doTransfer(idPledge, idNewPledge, amount);
 
-        vault.authorizePayment(bytes32(idNewPledge), owner.addr, amount);
+        vault.authorizePayment(bytes32(idNewPledge), owner.addr, p.token, amount);
     }
 
     /// @notice `onlyVault` Confirms a withdraw request changing the PledgeState
@@ -143,6 +143,7 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             p.oldPledge,
+            p.token,
             PledgeState.Paid
         );
 
@@ -165,6 +166,7 @@ contract LiquidPledging is LiquidPledgingBase {
             0,
             0,
             p.oldPledge,
+            p.token,
             PledgeState.Pledged
         );
 
@@ -177,7 +179,6 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idProject Id of the project that is to be canceled
     function cancelProject(uint64 idProject) authP(PLEDGE_ADMIN_ROLE, arr(uint(idProject))) public {
         PledgeAdmin storage project = _findAdmin(idProject);
-        // _checkAdminOwner(project);
         project.canceled = true;
 
         CancelProject(idProject);
