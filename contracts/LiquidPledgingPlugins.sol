@@ -22,9 +22,6 @@ pragma solidity ^0.4.18;
 import "@aragon/os/contracts/apps/AragonApp.sol";
 import "./LiquidPledgingStorage.sol";
 
-/// NOTICE: This contract is not using EternalStorage. This is done to save gas. The pluginWhitelist
-/// should be fairly small, and would be trivial and relatively cheap to re-add all valid plugins
-/// when the LiquidPledging contract is upgraded
 contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage {
 
     bytes32 constant public PLUGIN_MANAGER_ROLE = keccak256("PLUGIN_MANAGER_ROLE");
@@ -39,11 +36,11 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage {
         }
     }
 
-    function removeValidPlugin(bytes32 contractHash) external auth(PLUGIN_MANAGER_ROLE) {
+    function removeValidPlugin(bytes32 contractHash) external authP(PLUGIN_MANAGER_ROLE, arr(contractHash)) {
         pluginWhitelist[contractHash] = false;
     }
 
-    function useWhitelist(bool useWhitelist) external auth(PLUGIN_MANAGER_ROLE) {
+    function useWhitelist(bool useWhitelist) external authP(PLUGIN_MANAGER_ROLE, _arr(useWhitelist)) {
         whitelistDisabled = !useWhitelist;
     }
 
@@ -65,13 +62,19 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage {
             // allocate output byte array - this could also be done without assembly
             // by using o_code = new bytes(size)
             o_code := mload(0x40)
-            // new "memory end" including padding
-            mstore(0x40, add(o_code, and(add(add(size, 0x20), 0x1f), not(0x1f))))
-            // store length in memory
-            mstore(o_code, size)
+            mstore(o_code, size) // store length in memory
             // actually retrieve the code, this needs assembly
             extcodecopy(addr, add(o_code, 0x20), 0, size)
         }
         return keccak256(o_code);
+    }
+
+    function _arr(bool a) internal pure returns (uint[] r) {
+        r = new uint[](1);
+        uint _a;
+        assembly {
+            _a := a // forced casting
+        }
+        r[0] = _a;
     }
 }

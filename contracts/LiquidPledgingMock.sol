@@ -18,6 +18,8 @@ pragma solidity ^0.4.11;
 */
 
 import "./LiquidPledging.sol";
+// hack so that solcpiler will generate a contracts.Kernel object
+import "@aragon/os/contracts/kernel/Kernel.sol";
 
 /// @dev `LiquidPledgingMock` allows for mocking up
 ///  a `LiquidPledging` contract with the added ability

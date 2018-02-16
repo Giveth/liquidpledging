@@ -118,7 +118,6 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     {
         PledgeAdmin storage giver = _findAdmin(idGiver);
         require(giver.adminType == PledgeAdminType.Giver); // Must be a Giver
-        // require(giver.addr == msg.sender); // Current addr had to send this tx
         giver.addr = newAddr;
         giver.name = newName;
         giver.url = newUrl;
@@ -189,7 +188,6 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     {
         PledgeAdmin storage delegate = _findAdmin(idDelegate);
         require(delegate.adminType == PledgeAdminType.Delegate);
-        // require(delegate.addr == msg.sender);// Current addr had to send this tx
         delegate.addr = newAddr;
         delegate.name = newName;
         delegate.url = newUrl;
@@ -223,7 +221,6 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
 
         if (parentProject != 0) {
             PledgeAdmin storage a = _findAdmin(parentProject);
-            // require(a.adminType == PledgeAdminType.Project);
             // getProjectLevel will check that parentProject has a `Project` adminType
             require(_getProjectLevel(a) < MAX_SUBPROJECT_LEVEL);
         }
