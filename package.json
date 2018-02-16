@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "npm run build; mocha --harmony",
-    "sol-compile": "solcpiler -i './contracts/**/*.sol'",
+    "sol-compile": "solcpiler -i './contracts/+(LPVault|LPFactory|LiquidPledging|LiquidPledgingMock|TestSimpleProjectPlugin|TestSimpleProjectPluginFactory).sol' --solc-version v0.4.18+commit.9cf6e910",
     "js-compile": "babel -d lib/ js/",
     "build": "npm run sol-compile; npm run js-compile",
     "prepublish": "npm run build"
