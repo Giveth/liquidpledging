@@ -151,6 +151,14 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
 // Internal methods
 ////////////////////
 
+    /// @notice A check to see if the msg.sender is the owner or the
+    ///  plugin contract for a specific Admin
+    /// @param idAdmin The id of the admin being checked
+    function checkAdminOwner(uint64 idAdmin) internal constant {
+        PledgeAdmin a = _findAdmin(idAdmin);
+        require(msg.sender == address(a.plugin) || msg.sender == a.addr);
+    }
+
     function _transfer( 
         uint64 idSender,
         uint64 idPledge,

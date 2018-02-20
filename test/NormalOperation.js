@@ -101,10 +101,6 @@ describe('LiquidPledging test', function () {
   it('Should create a giver', async () => {
     await liquidPledging.addGiver('Giver1', 'URLGiver1', 86400, 0, { from: giver1, gas: 1000000 });
 
-    // grant permission to giver1 to receive donations. This is not done by default in liquidPledging,
-    // but the test cases use this.
-    await acl.grantPermissionP(await liquidPledging.ANY_ENTITY(), liquidPledging.$address, await liquidPledging.DONOR_ROLE(), ["0x101000000000000000000000000000000000000000000000000000000000000"], {$extraGas: 200000});
-
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 1);
     const res = await liquidPledging.getPledgeAdmin(1);

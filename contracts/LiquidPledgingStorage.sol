@@ -21,11 +21,6 @@ contract LiquidPledgingStorage {
     ///  and can own pledges and act as delegates
     struct PledgeAdmin { 
         PledgeAdminType adminType; // Giver, Delegate or Project
-        // TODO: this is interesting...
-        // it is possible to revoke permission for this addr to be able to
-        // manage this pledgeAdmin. So we are storing the addr, which may or may not
-        // have permission to manage this PledgeAdmin. Maybe we need a custom
-        // ACL which provides a reverse lookup of addys granted a permission
         address addr; // Account or contract address for admin
         uint64 commitTime;  // In seconds, used for time Givers' & Delegates' have to veto
         uint64 parentProject;  // Only for projects

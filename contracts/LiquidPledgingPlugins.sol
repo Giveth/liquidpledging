@@ -41,7 +41,7 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
         pluginWhitelist[contractHash] = false;
     }
 
-    function useWhitelist(bool useWhitelist) external authP(PLUGIN_MANAGER_ROLE, arr(useWhitelist)) {
+    function useWhitelist(bool useWhitelist) external auth(PLUGIN_MANAGER_ROLE) {
         whitelistDisabled = !useWhitelist;
     }
 

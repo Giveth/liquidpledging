@@ -52,7 +52,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idReceiver The Admin receiving the donation; can be any Admin:
     ///  the Giver themselves, another Giver, a Delegate or a Project
     function donate(uint64 idGiver, uint64 idReceiver, address token, uint amount)
-        public authP(DONOR_ROLE, arr(idGiver, idReceiver, token, amount, msg.sender))
+        public
     {
         require(idGiver > 0); // prevent burning donations. idReceiver is checked in _transfer
         require(amount > 0);
@@ -95,8 +95,9 @@ contract LiquidPledging is LiquidPledgingBase {
         uint64 idPledge,
         uint amount,
         uint64 idReceiver
-    ) authP(PLEDGE_ADMIN_ROLE, arr(uint(idSender), amount)) public 
+    ) public
     {
+        checkAdminOwner(idSender);
         _transfer(idSender, idPledge, amount, idReceiver);
     }
 
@@ -110,9 +111,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         Pledge storage p = _findPledge(idPledge);
         require(p.pledgeState == PledgeState.Pledged);
-
-        PledgeAdmin storage owner = _findAdmin(p.owner);
-        require(canPerform(msg.sender, PLEDGE_ADMIN_ROLE, arr(uint(p.owner))));
+        checkAdminOwner(p.owner);
 
         uint64 idNewPledge = _findOrCreatePledge(
             p.owner,
@@ -126,6 +125,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         _doTransfer(idPledge, idNewPledge, amount);
 
+        PledgeAdmin storage owner = _findAdmin(p.owner);
         vault.authorizePayment(bytes32(idNewPledge), owner.addr, p.token, amount);
     }
 
@@ -178,8 +178,9 @@ contract LiquidPledging is LiquidPledgingBase {
 
     /// @notice Changes the `project.canceled` flag to `true`; cannot be undone
     /// @param idProject Id of the project that is to be canceled
-    function cancelProject(uint64 idProject) authP(PLEDGE_ADMIN_ROLE, arr(uint(idProject))) public {
+    function cancelProject(uint64 idProject) public {
         PledgeAdmin storage project = _findAdmin(idProject);
+        checkAdminOwner(idProject);
         project.canceled = true;
 
         CancelProject(idProject);
@@ -195,8 +196,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         Pledge storage p = _findPledge(idPledge);
         require(p.oldPledge != 0);
-
-        require(canPerform(msg.sender, PLEDGE_ADMIN_ROLE, arr(uint(p.owner))));
+        checkAdminOwner(p.owner);
 
         uint64 oldPledge = _getOldestPledgeNotCanceled(p.oldPledge);
         _doTransfer(idPledge, oldPledge, amount);
