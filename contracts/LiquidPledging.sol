@@ -27,6 +27,7 @@ import "./LiquidPledgingBase.sol";
 ///  to allow for expanded functionality.
 contract LiquidPledging is LiquidPledgingBase {
 
+
     function addGiverAndDonate(uint64 idReceiver, address token, uint amount)
         public
     {
@@ -38,7 +39,7 @@ contract LiquidPledging is LiquidPledgingBase {
     {
         require(donorAddress != 0);
         // default to a 3 day (259200 seconds) commitTime
-        uint64 idGiver = _addGiver(donorAddress, "", "", 259200, ILiquidPledgingPlugin(0));
+        uint64 idGiver = addGiver(donorAddress, "", "", 259200, ILiquidPledgingPlugin(0));
         donate(idGiver, idReceiver, token, amount);
     }
 
@@ -51,7 +52,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idReceiver The Admin receiving the donation; can be any Admin:
     ///  the Giver themselves, another Giver, a Delegate or a Project
     function donate(uint64 idGiver, uint64 idReceiver, address token, uint amount)
-        public
+        public authP(DONOR_ROLE, arr(idGiver, idReceiver, token, amount, msg.sender))
     {
         require(idGiver > 0); // prevent burning donations. idReceiver is checked in _transfer
         require(amount > 0);

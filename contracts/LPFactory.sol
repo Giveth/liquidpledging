@@ -43,6 +43,7 @@ contract LPFactory is DAOFactory {
         bytes32 hatchCallerRole = v.ESCAPE_HATCH_CALLER_ROLE();
         bytes32 authPaymentRole = v.AUTHORIZE_PAYMENT_ROLE();
         bytes32 pledgeAdminRole = lp.PLEDGE_ADMIN_ROLE();
+        bytes32 donorRole = lp.DONOR_ROLE();
         bytes32 pluginManagerRole = lp.PLUGIN_MANAGER_ROLE();
 
         acl.createPermission(_root, address(v), hatchCallerRole, _root);
@@ -50,6 +51,7 @@ contract LPFactory is DAOFactory {
         acl.createPermission(_root, address(lp), pluginManagerRole, _root);
         acl.createPermission(address(lp), address(v), authPaymentRole, _root);
         acl.createPermission(0x0, address(lp), pledgeAdminRole, address(lp));
+        acl.createPermission(0x0, address(lp), donorRole, address(lp));
         // TODO: set pledgeAdminRole manager to 0x0? maybe it doesn't matter b/c it can be recreated by _root anyways
 
         acl.grantPermission(_root, address(kernel), appManagerRole);

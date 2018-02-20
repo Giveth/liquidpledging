@@ -21,8 +21,9 @@ pragma solidity ^0.4.18;
 
 import "@aragon/os/contracts/apps/AragonApp.sol";
 import "./LiquidPledgingStorage.sol";
+import "./LiquidPledgingACLHelpers.sol";
 
-contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage {
+contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgingACLHelpers {
 
     bytes32 constant public PLUGIN_MANAGER_ROLE = keccak256("PLUGIN_MANAGER_ROLE");
 
@@ -40,7 +41,7 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage {
         pluginWhitelist[contractHash] = false;
     }
 
-    function useWhitelist(bool useWhitelist) external authP(PLUGIN_MANAGER_ROLE, _arr(useWhitelist)) {
+    function useWhitelist(bool useWhitelist) external authP(PLUGIN_MANAGER_ROLE, arr(useWhitelist)) {
         whitelistDisabled = !useWhitelist;
     }
 
@@ -67,14 +68,5 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage {
             extcodecopy(addr, add(o_code, 0x20), 0, size)
         }
         return keccak256(o_code);
-    }
-
-    function _arr(bool a) internal pure returns (uint[] r) {
-        r = new uint[](1);
-        uint _a;
-        assembly {
-            _a := a // forced casting
-        }
-        r[0] = _a;
     }
 }

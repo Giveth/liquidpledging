@@ -24,7 +24,11 @@ import "@aragon/os/contracts/acl/ACL.sol";
 
 contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
 
+    // NOTE: PLEDGE_ADMIN_ROLE assumes that the 1st param passed to the authP modifier
+    // is the idAdmin. This is critical to prevent unauthorized access
     bytes32 constant public PLEDGE_ADMIN_ROLE = keccak256("PLEDGE_ADMIN_ROLE");
+    bytes32 constant public DONOR_ROLE = keccak256("DONOR_ROLE");
+    address constant public ANY_ENTITY = address(-1);
 
     // Limits inserted to prevent large loops that could prevent canceling
     uint constant MAX_SUBPROJECT_LEVEL = 20;
@@ -57,7 +61,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         ILiquidPledgingPlugin plugin
     ) public returns (uint64 idGiver)
     {
-        return _addGiver(
+        return addGiver(
             msg.sender,
             name,
             url,
@@ -66,7 +70,8 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         );
     }
 
-    function _addGiver(
+    // TODO: is there an issue w/ allowing anyone to create a giver on behalf of another addy?
+    function addGiver(
         address addr,
         string name,
         string url,
@@ -91,6 +96,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
                 url)
         );
 
+        // TODO: do we want to grant permission accept donations as a giver? maybe from self only?
         _grantPledgeAdminPermission(msg.sender, idGiver);
         if (address(plugin) != 0) {
             _grantPledgeAdminPermission(address(plugin), idGiver);
@@ -159,6 +165,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
                 url)
         );
 
+        _grantAnyDonorPermission(idDelegate);
         _grantPledgeAdminPermission(msg.sender, idDelegate);
         if (address(plugin) != 0) {
             _grantPledgeAdminPermission(address(plugin), idDelegate);
@@ -239,6 +246,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
                 url)
         );
 
+        _grantAnyDonorPermission(idProject);
         _grantPledgeAdminPermission(projectAdmin, idProject);
         if (address(plugin) != 0) {
             _grantPledgeAdminPermission(address(plugin), idProject);
@@ -275,6 +283,32 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         project.commitTime = newCommitTime;
 
         ProjectUpdated(idProject);
+    }
+
+    function grantPledgeAdminPermission(uint64 idAdmin, address _who, uint[] _params) public authP(PLEDGE_ADMIN_ROLE, arr(uint(idAdmin), 0, 1)) {
+        uint[] memory params;
+
+        // if params are passed, we need to add a AND logic statement as the first param
+        // which limits the permission to the given idAdmin. This is to prevent granting
+        // PledgeAdminPermission to a idAdmin that msg.sender is not an admin to
+        // idAdmin (on msg call) == idAdmin AND _params
+        if (_params.length > 0) {
+            params = new uint[](_params.length + 2);
+            // paramId: 204 (LOGIC) op: AND(8) val: 1 (param index) & 2 (param index)
+            params[0] = uint(bytes32(204 << 8 * 31) | bytes32(8 << 8 * 30) | bytes32(2 << 8 * 4) | bytes32(1));
+            // paramId: 0 op: EQ(1) val: idAdmin
+            params[1] = uint(bytes32(1 << 8 * 30) | idAdmin);
+
+            for (uint64 i = 0; i < _params.length; i++) {
+                params[i + 2] = _params[i];
+            }
+        } else {
+            params = new uint[](1);
+            // paramId: 0 op: EQ(1) val: idAdmin
+            params[0] = uint(bytes32(1 << 8 * 30) | idAdmin);
+        }
+
+        ACL(kernel.acl()).grantPermissionP(_who, address(this), PLEDGE_ADMIN_ROLE, _params); 
     }
 
 
@@ -374,13 +408,27 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         return _getProjectLevel(parent) + 1;
     }
 
-    function _grantPledgeAdminPermission(address _who, uint64 idPledge) internal {
+    function _grantPledgeAdminPermission(address _who, uint64 idAdmin) internal {
         bytes32 id;
-        assembly { id := idPledge }
+        assembly { id := idAdmin }
 
         uint[] memory params = new uint[](1);
+        // paramId: 0 op: EQ(1) val: idAdmin
         params[0] = uint(bytes32(1 << 8 * 30) | id);
 
+        // grant _who the PLEDGE_ADMIN_ROLE for idAdmin
         ACL(kernel.acl()).grantPermissionP(_who, address(this), PLEDGE_ADMIN_ROLE, params); 
+    }
+
+    function _grantAnyDonorPermission(uint64 idAdmin) internal {
+        bytes32 id;
+        assembly { id := idAdmin }
+
+        uint[] memory params = new uint[](1);
+        // paramId: 1 op: EQ(1) val: idAdmin
+        params[0] = uint(bytes32(1 << 8 * 31) | bytes32(1 << 8 * 30) | id);
+
+        // grant ANY_ENTITY permission to donate to idAdmin
+        ACL(kernel.acl()).grantPermissionP(ANY_ENTITY, address(this), DONOR_ROLE, params); 
     }
 }

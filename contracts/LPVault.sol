@@ -25,6 +25,7 @@ pragma solidity ^0.4.18;
 ///  to allow for an optional escapeHatch to be implemented in case of issues;
 ///  future versions of this contract will be enabled for tokens
 import "./EscapableApp.sol";
+import "./LiquidPledgingACLHelpers.sol";
 import "giveth-common-contracts/contracts/ERC20.sol";
 
 /// @dev `LiquidPledging` is a basic interface to allow the `LPVault` contract
@@ -36,7 +37,7 @@ contract ILiquidPledging {
 
 /// @dev `LPVault` is a higher level contract built off of the `Escapable`
 ///  contract that holds funds for the liquid pledging system.
-contract LPVault is EscapableApp {
+contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
 
     bytes32 constant public CONFIRM_PAYMENT_ROLE = keccak256("CONFIRM_PAYMENT_ROLE");
     bytes32 constant public CANCEL_PAYMENT_ROLE = keccak256("CANCEL_PAYMENT_ROLE");
@@ -107,7 +108,7 @@ contract LPVault is EscapableApp {
     /// @param _automatic If true, payments will confirm instantly, if false
     ///  the training wheels are put on and the owner must manually approve 
     ///  every payment
-    function setAutopay(bool _automatic) external authP(SET_AUTOPAY_ROLE, _arr(_automatic)) {
+    function setAutopay(bool _automatic) external authP(SET_AUTOPAY_ROLE, arr(_automatic)) {
         autoPay = _automatic;
         AutoPaySet(autoPay);
     }
@@ -224,14 +225,5 @@ contract LPVault is EscapableApp {
         liquidPledging.cancelPayment(uint64(p.ref), p.amount);
 
         CancelPayment(_idPayment, p.ref);
-    }
-
-    function _arr(bool a) internal pure returns (uint256[] r) {
-        r = new uint256[](1);
-        uint _a;
-        assembly {
-            _a := a // forced casting
-        }
-        r[0] = _a;
     }
 }
