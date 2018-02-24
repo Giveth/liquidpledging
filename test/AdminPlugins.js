@@ -99,7 +99,7 @@ describe('LiquidPledging plugins test', function () {
   it('Should deploy TestSimpleProjectPlugin and add project', async function () {
     // add plugin as valid plugin
     const codeHash = web3.utils.soliditySha3(simpleProjectPluginRuntimeByteCode);
-    await liquidPledging.addValidPlugin(codeHash, { $extraGas: 200000 });
+    await liquidPledging.addValidPluginContract(codeHash, { $extraGas: 200000 });
 
     // deploy new plugin
     const factoryContract = await new web3.eth.Contract(simpleProjectPluginFactoryAbi)

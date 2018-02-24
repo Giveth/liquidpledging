@@ -50,7 +50,10 @@ contract LiquidPledgingStorage {
     ///  index number by the hash of that pledge
     mapping (bytes32 => uint64) hPledge2idx;
 
-    mapping (bytes32 => bool) pluginWhitelist;
+    // this whitelist is for non-proxied plugins
+    mapping (bytes32 => bool) pluginContractWhitelist;
+    // this whitelist is for proxied plugins
+    mapping (address => bool) pluginInstanceWhitelist;
     bool public whitelistDisabled = false;
 
     ILPVault public vault;

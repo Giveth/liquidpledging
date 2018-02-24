@@ -27,18 +27,26 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
 
     bytes32 constant public PLUGIN_MANAGER_ROLE = keccak256("PLUGIN_MANAGER_ROLE");
 
-    function addValidPlugin(bytes32 contractHash) auth(PLUGIN_MANAGER_ROLE) public {
-        pluginWhitelist[contractHash] = true;
+    function addValidPluginInstance(address addr) auth(PLUGIN_MANAGER_ROLE) public {
+        pluginInstanceWhitelist[addr] = true;
     }
 
-    function addValidPlugins(bytes32[] contractHashes) external auth(PLUGIN_MANAGER_ROLE) {
+    function addValidPluginContract(bytes32 contractHash) auth(PLUGIN_MANAGER_ROLE) public {
+        pluginContractWhitelist[contractHash] = true;
+    }
+
+    function addValidPluginContracts(bytes32[] contractHashes) external auth(PLUGIN_MANAGER_ROLE) {
         for (uint8 i = 0; i < contractHashes.length; i++) {
-            addValidPlugin(contractHashes[i]);
+            addValidPluginContract(contractHashes[i]);
         }
     }
 
-    function removeValidPlugin(bytes32 contractHash) external authP(PLUGIN_MANAGER_ROLE, arr(contractHash)) {
-        pluginWhitelist[contractHash] = false;
+    function removeValidPluginContract(bytes32 contractHash) external authP(PLUGIN_MANAGER_ROLE, arr(contractHash)) {
+        pluginContractWhitelist[contractHash] = false;
+    }
+
+    function removeValidPluginInstance(address addr) external auth(PLUGIN_MANAGER_ROLE) {
+        pluginInstanceWhitelist[addr] = false;
     }
 
     function useWhitelist(bool useWhitelist) external auth(PLUGIN_MANAGER_ROLE) {
@@ -50,9 +58,15 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
             return true;
         }
 
+        // first check pluginInstances
+        if (pluginInstanceWhitelist[addr]) {
+            return true;
+        }
+
+        // if the addr isn't a valid instance, check the contract code
         bytes32 contractHash = getCodeHash(addr);
 
-        return pluginWhitelist[contractHash];
+        return pluginContractWhitelist[contractHash];
     }
 
     function getCodeHash(address addr) public view returns(bytes32) {

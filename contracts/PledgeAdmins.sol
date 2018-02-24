@@ -307,24 +307,11 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         plugin = address(a.plugin);
     }
 
-
-///////////////////
-// Internal methods
-///////////////////
-
-    /// @notice A getter to look up a Admin's details
-    /// @param idAdmin The id for the Admin to lookup
-    /// @return The PledgeAdmin struct for the specified Admin
-    function _findAdmin(uint64 idAdmin) internal view returns (PledgeAdmin storage) {
-        require(idAdmin < admins.length);
-        return admins[idAdmin];
-    }
-
     /// @notice A getter to find if a specified Project has been canceled
     /// @param projectId The Admin id number used to specify the Project
     /// @return True if the Project has been canceled
-    function _isProjectCanceled(uint64 projectId)
-        internal constant returns (bool)
+    function isProjectCanceled(uint64 projectId)
+        public constant returns (bool)
     {
         PledgeAdmin storage a = _findAdmin(projectId);
 
@@ -341,7 +328,19 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
             return false;
         }
 
-        return _isProjectCanceled(a.parentProject);
+        return isProjectCanceled(a.parentProject);
+    }
+
+///////////////////
+// Internal methods
+///////////////////
+
+    /// @notice A getter to look up a Admin's details
+    /// @param idAdmin The id for the Admin to lookup
+    /// @return The PledgeAdmin struct for the specified Admin
+    function _findAdmin(uint64 idAdmin) internal view returns (PledgeAdmin storage) {
+        require(idAdmin < admins.length);
+        return admins[idAdmin];
     }
 
     /// @notice Find the level of authority a specific Project has

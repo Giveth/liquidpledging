@@ -34,6 +34,9 @@ contract LPFactory is DAOFactory {
         v.initialize(address(lp), _escapeHatchDestination);
         lp.initialize(address(v), _escapeHatchDestination);
 
+        // register the lp instance w/ the kernel
+        kernel.setApp(kernel.APP_ADDR_NAMESPACE(), LP_APP_ID, address(lp));
+
         _setPermissions(_root, acl, kernel, v, lp);
     }
 

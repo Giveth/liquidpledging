@@ -155,7 +155,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
     ///  plugin contract for a specific Admin
     /// @param idAdmin The id of the admin being checked
     function checkAdminOwner(uint64 idAdmin) internal constant {
-        PledgeAdmin a = _findAdmin(idAdmin);
+        PledgeAdmin storage a = _findAdmin(idAdmin);
         require(msg.sender == address(a.plugin) || msg.sender == a.addr);
     }
 
@@ -302,7 +302,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
         // Ensure that the pledge is not already at max pledge depth
         // and the project has not been canceled
         require(_getPledgeLevel(p) < MAX_INTERPROJECT_LEVEL);
-        require(!_isProjectCanceled(idReceiver));
+        require(!isProjectCanceled(idReceiver));
 
         uint64 oldPledge = _findOrCreatePledge(
             p.owner,
@@ -436,7 +436,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
         Pledge storage p = _findPledge(idPledge);
 
         require(_getPledgeLevel(p) < MAX_INTERPROJECT_LEVEL);
-        require(!_isProjectCanceled(idReceiver));
+        require(!isProjectCanceled(idReceiver));
 
         uint64 toPledge = _findOrCreatePledge(
             p.owner,
@@ -452,9 +452,9 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
 
     /// @notice `doTransfer` is designed to allow for pledge amounts to be 
     ///  shifted around internally.
-    /// @param from This is the id of the pledge from which value will be transfered.
-    /// @param to This is the id of the pledge that value will be transfered to.
-    /// @param _amount The amount of value that will be transfered.
+    /// @param from This is the id of the pledge from which value will be transferred.
+    /// @param to This is the id of the pledge that value will be transferred to.
+    /// @param _amount The amount of value that will be transferred.
     function _doTransfer(uint64 from, uint64 to, uint _amount) internal {
         uint amount = _callPlugins(true, from, to, _amount);
         if (from == to) {
@@ -512,7 +512,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
         }
 
         assert(admin.adminType == PledgeAdminType.Project);
-        if (!_isProjectCanceled(p.owner)) {
+        if (!isProjectCanceled(p.owner)) {
             return idPledge;
         }
 
