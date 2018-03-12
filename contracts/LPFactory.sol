@@ -3,13 +3,11 @@ pragma solidity ^0.4.18;
 import "@aragon/os/contracts/factory/DAOFactory.sol";
 import "./LPVault.sol";
 import "./LiquidPledging.sol";
+import "./LPConstants.sol";
 
-contract LPFactory is DAOFactory {
+contract LPFactory is LPConstants, DAOFactory {
     address public vaultBase;
     address public lpBase;
-
-    bytes32 constant public VAULT_APP_ID = keccak256("vault");
-    bytes32 constant public LP_APP_ID = keccak256("liquidPledging");
 
     event DeployVault(address vault);
     event DeployLiquidPledging(address liquidPledging);

@@ -9,7 +9,7 @@
   },
   "scripts": {
     "test": "npm run build; mocha --harmony",
-    "sol-compile": "solcpiler -i './contracts/{LPVault,LPFactory,LiquidPledging,LiquidPledgingMock,test/{TestSimpleProjectPluginFactory,StandardToken}}.sol' --solc-version v0.4.18+commit.9cf6e910",
+    "sol-compile": "solcpiler --solc-version v0.4.18+commit.9cf6e910",
     "js-compile": "babel -d lib/ js/",
     "build": "npm run sol-compile; npm run js-compile",
     "prepublish": "npm run build"
@@ -44,7 +44,7 @@
     "lerna": "^2.2.0",
     "mocha": "^3.5.0",
     "random-bytes": "^1.0.0",
-    "solcpiler": "^0.0.15",
+    "solcpiler": "https://github.com/perissology/solcpiler.git#b60ac51b",
     "web3": "1.0.0-beta.24"
   },
   "homepage": "https://github.com/Giveth/liquidpledging#readme",
