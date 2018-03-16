@@ -5,5 +5,6 @@ exports.LPVault = contracts.LPVault;
 exports.LPFactory = contracts.LPFactory;
 exports.test = {
     StandardTokenTest: contracts.StandardToken,
-    assertFail: require('./test/helpers/assertFail')
+    assertFail: require('./test/helpers/assertFail'),
+	LiquidPledgingMock: contracts.LiquidPledgingMock,
 };
