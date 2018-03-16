@@ -45,7 +45,7 @@
     "mocha": "^3.5.0",
     "random-bytes": "^1.0.0",
     "solcpiler": "https://github.com/perissology/solcpiler.git#b60ac51b",
-    "web3": "1.0.0-beta.24"
+    "web3": "1.0.0-beta.31"
   },
   "homepage": "https://github.com/Giveth/liquidpledging#readme",
   "dependencies": {
