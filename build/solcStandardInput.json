@@ -1,0 +1,26 @@
+{
+  "language": "Solidity",
+  "sources": {},
+  "settings": {
+    "optimizer": {
+      "enabled": true,
+      "runs": 200
+    },
+    "metadata": {
+      "useLiteralContent": true
+    },
+    "outputSelection": {
+      "*": {
+        "*": [
+          "metadata",
+          "evm.bytecode.object",
+          "evm.bytecode.sourceMap",
+          "abi",
+          "evm.methodIdentifiers",
+          "evm.deployedBytecode.object",
+          "evm.deployedBytecode.sourceMap"
+        ]
+      }
+    }
+  }
+}
