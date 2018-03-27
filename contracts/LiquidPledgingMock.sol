@@ -28,6 +28,9 @@ contract LiquidPledgingMock is LiquidPledging {
 
     uint public mock_time;
 
+    function LiquidPledgingMock(address _escapeHatchDestination) LiquidPledging(_escapeHatchDestination) public {
+    }
+
     /// @dev `LiquidPledgingMock` creates a standard `LiquidPledging`
     ///  instance and sets the mocked time to the current blocktime.
     function initialize(address _vault, address _escapeHatchDestination) onlyInit public {

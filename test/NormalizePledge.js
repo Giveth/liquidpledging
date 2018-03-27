@@ -54,8 +54,8 @@ describe('NormalizePledge test', function () {
   });
 
   it('Should deploy LiquidPledging contract', async () => {
-    const baseVault = await contracts.LPVault.new(web3);
-    const baseLP = await contracts.LiquidPledgingMock.new(web3);
+    const baseVault = await contracts.LPVault.new(web3, accounts[0]);
+    const baseLP = await contracts.LiquidPledgingMock.new(web3, accounts[0]);
     lpFactory = await contracts.LPFactory.new(web3, baseVault.$address, baseLP.$address);
 
     const r = await lpFactory.newLP(accounts[0], accounts[0]);

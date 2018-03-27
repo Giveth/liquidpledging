@@ -41,7 +41,6 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
 
     bytes32 constant public CONFIRM_PAYMENT_ROLE = keccak256("CONFIRM_PAYMENT_ROLE");
     bytes32 constant public CANCEL_PAYMENT_ROLE = keccak256("CANCEL_PAYMENT_ROLE");
-    bytes32 constant public AUTHORIZE_PAYMENT_ROLE = keccak256("AUTHORIZE_PAYMENT_ROLE");
     bytes32 constant public SET_AUTOPAY_ROLE = keccak256("SET_AUTOPAY_ROLE");
 
     event AutoPaySet(bool autoPay);
@@ -86,6 +85,9 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
         _;
     }
 
+    function LPVault(address _escapeHatchDestination) EscapableApp(_escapeHatchDestination) public {
+    }
+
     function initialize(address _escapeHatchDestination) onlyInit public {
         require(false); // overload the EscapableApp
         _escapeHatchDestination;
@@ -125,7 +127,7 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
         address _dest,
         address _token,
         uint _amount
-    ) external authP(AUTHORIZE_PAYMENT_ROLE, arr(_dest, _amount)) returns (uint)
+    ) external onlyLiquidPledging returns (uint)
     {
         uint idPayment = payments.length;
         payments.length ++;
@@ -150,13 +152,15 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
     ///  has been authorized
     /// @param _idPayment Array lookup for the payment.
     function confirmPayment(uint _idPayment) public {
+        Payment storage p = payments[_idPayment];
+        require(canPerform(msg.sender, CONFIRM_PAYMENT_ROLE, arr(_idPayment, p.amount)));
         _doConfirmPayment(_idPayment);
     }
 
     /// @notice When `autopay` is `false` and after a payment has been authorized
     ///  to allow the owner to cancel a payment instead of confirming it.
     /// @param _idPayment Array lookup for the payment.
-    function cancelPayment(uint _idPayment) public {
+    function cancelPayment(uint _idPayment) external {
         _doCancelPayment(_idPayment);
     }
 
@@ -164,7 +168,7 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
     /// @param _idPayments An array of multiple payment ids
     function multiConfirm(uint[] _idPayments) external {
         for (uint i = 0; i < _idPayments.length; i++) {
-            _doConfirmPayment(_idPayments[i]);
+            confirmPayment(_idPayments[i]);
         }
     }
 
@@ -181,17 +185,15 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
     /// before being thoroughly battle-tested.
     /// @param _token to transfer
     /// @param _amount to transfer
-    function escapeFunds(address _token, uint _amount) public authP(ESCAPE_HATCH_CALLER_ROLE, arr(_token)) {
+    function escapeFunds(address _token, uint _amount) external authP(ESCAPE_HATCH_CALLER_ROLE, arr(_token)) {
         require(_token != 0x0);
         ERC20 token = ERC20(_token);
-        uint balance = token.balanceOf(this);
-        require(balance >= _amount);
         require(token.transfer(escapeHatchDestination, _amount));
         EscapeFundsCalled(_token, _amount);
     }
 
     /// @return The total number of payments that have ever been authorized
-    function nPayments() public view returns (uint) {
+    function nPayments() external view returns (uint) {
         return payments.length;
     }
 
@@ -202,7 +204,6 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
         require(_idPayment < payments.length);
         Payment storage p = payments[_idPayment];
         require(p.state == PaymentStatus.Pending);
-        require(canPerform(msg.sender, CONFIRM_PAYMENT_ROLE, arr(_idPayment, p.amount)));
 
         p.state = PaymentStatus.Paid;
         liquidPledging.confirmPayment(uint64(p.ref), p.amount);

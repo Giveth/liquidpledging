@@ -67,9 +67,12 @@ describe('LiquidPledging test', function () {
   });
 
   it('Should deploy LiquidPledging contract', async () => {
-    const baseVault = await contracts.LPVault.new(web3);
-    const baseLP = await contracts.LiquidPledgingMock.new(web3, {gas: 6700000});
+    const baseVault = await contracts.LPVault.new(web3, escapeHatchDestination);
+    const baseLP = await contracts.LiquidPledgingMock.new(web3, escapeHatchDestination, {gas: 6700000});
     lpFactory = await contracts.LPFactory.new(web3, baseVault.$address, baseLP.$address);
+
+    assert.isAbove(Number(await baseVault.getInitializationBlock()), 0);
+    assert.isAbove(Number(await baseLP.getInitializationBlock()), 0);
 
     const r = await lpFactory.newLP(accounts[0], escapeHatchDestination);
 

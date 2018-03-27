@@ -27,7 +27,7 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
 
     bytes32 constant public PLUGIN_MANAGER_ROLE = keccak256("PLUGIN_MANAGER_ROLE");
 
-    function addValidPluginInstance(address addr) auth(PLUGIN_MANAGER_ROLE) public {
+    function addValidPluginInstance(address addr) auth(PLUGIN_MANAGER_ROLE) external {
         pluginInstanceWhitelist[addr] = true;
     }
 
@@ -45,7 +45,7 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
         pluginContractWhitelist[contractHash] = false;
     }
 
-    function removeValidPluginInstance(address addr) external auth(PLUGIN_MANAGER_ROLE) {
+    function removeValidPluginInstance(address addr) external authP(PLUGIN_MANAGER_ROLE, arr(addr)) {
         pluginInstanceWhitelist[addr] = false;
     }
 

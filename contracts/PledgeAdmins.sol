@@ -52,7 +52,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         string url,
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
-    ) public returns (uint64 idGiver)
+    ) external returns (uint64 idGiver)
     {
         return addGiver(
             msg.sender,
@@ -107,7 +107,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         string newName,
         string newUrl,
         uint64 newCommitTime
-    ) public
+    ) external 
     {
         PledgeAdmin storage giver = _findAdmin(idGiver);
         require(msg.sender == giver.addr);
@@ -135,7 +135,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         string url,
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
-    ) public returns (uint64 idDelegate) 
+    ) external returns (uint64 idDelegate) 
     {
         require(isValidPlugin(plugin)); // Plugin check
 
@@ -173,7 +173,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         string newName,
         string newUrl,
         uint64 newCommitTime
-    ) public
+    ) external 
     {
         PledgeAdmin storage delegate = _findAdmin(idDelegate);
         require(msg.sender == delegate.addr);
@@ -205,7 +205,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         uint64 parentProject,
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
-    ) public returns (uint64 idProject) 
+    ) external returns (uint64 idProject) 
     {
         require(isValidPlugin(plugin));
 
@@ -248,7 +248,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         string newName,
         string newUrl,
         uint64 newCommitTime
-    ) public
+    ) external 
     {
         PledgeAdmin storage project = _findAdmin(idProject);
 
@@ -269,7 +269,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
 
     /// @notice A constant getter used to check how many total Admins exist
     /// @return The total number of admins (Givers, Delegates and Projects) .
-    function numberOfPledgeAdmins() public constant returns(uint) {
+    function numberOfPledgeAdmins() external view returns(uint) {
         return admins.length - 1;
     }
 
@@ -286,7 +286,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     ///  canceled
     /// @return plugin This is Project's liquidPledging plugin allowing for
     ///  extended functionality
-    function getPledgeAdmin(uint64 idAdmin) public view returns (
+    function getPledgeAdmin(uint64 idAdmin) external view returns (
         PledgeAdminType adminType,
         address addr,
         string name,
@@ -311,7 +311,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     /// @param projectId The Admin id number used to specify the Project
     /// @return True if the Project has been canceled
     function isProjectCanceled(uint64 projectId)
-        public constant returns (bool)
+        public view returns (bool)
     {
         PledgeAdmin storage a = _findAdmin(projectId);
 
@@ -347,7 +347,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     ///  using a recursive loop
     /// @param a The project admin being queried
     /// @return The level of authority a specific Project has
-    function _getProjectLevel(PledgeAdmin a) internal returns(uint64) {
+    function _getProjectLevel(PledgeAdmin a) internal view returns(uint64) {
         assert(a.adminType == PledgeAdminType.Project);
 
         if (a.parentProject == 0) {

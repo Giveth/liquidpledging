@@ -19,7 +19,7 @@ contract LPFactory is LPConstants, DAOFactory {
         lpBase = _lpBase;
     }
 
-    function newLP(address _root, address _escapeHatchDestination) public {
+    function newLP(address _root, address _escapeHatchDestination) external {
         Kernel kernel = newDAO(this);
         ACL acl = ACL(kernel.acl());
 
@@ -42,13 +42,11 @@ contract LPFactory is LPConstants, DAOFactory {
         bytes32 appManagerRole = kernel.APP_MANAGER_ROLE();
         bytes32 permRole = acl.CREATE_PERMISSIONS_ROLE();
         bytes32 hatchCallerRole = v.ESCAPE_HATCH_CALLER_ROLE();
-        bytes32 authPaymentRole = v.AUTHORIZE_PAYMENT_ROLE();
         bytes32 pluginManagerRole = lp.PLUGIN_MANAGER_ROLE();
 
         acl.createPermission(_root, address(v), hatchCallerRole, _root);
         acl.createPermission(_root, address(lp), hatchCallerRole, _root);
         acl.createPermission(_root, address(lp), pluginManagerRole, _root);
-        acl.createPermission(address(lp), address(v), authPaymentRole, _root);
         // TODO: set pledgeAdminRole manager to 0x0? maybe it doesn't matter b/c it can be recreated by _root anyways
 
         acl.grantPermission(_root, address(kernel), appManagerRole);

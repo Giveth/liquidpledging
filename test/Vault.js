@@ -50,8 +50,8 @@ describe('Vault test', function () {
   });
 
   it('Should deploy Vault contract', async function () {
-    const baseVault = await contracts.LPVault.new(web3);
-    const baseLP = await contracts.LiquidPledgingMock.new(web3);
+    const baseVault = await contracts.LPVault.new(web3, escapeHatchDestination);
+    const baseLP = await contracts.LiquidPledgingMock.new(web3, escapeHatchDestination);
     lpFactory = await contracts.LPFactory.new(web3, baseVault.$address, baseLP.$address);
 
     const r = await lpFactory.newLP(accounts[0], escapeHatchDestination);

@@ -12,7 +12,7 @@ contract TestSimpleDelegatePlugin {
     event BeforeTransfer(uint64 pledgeAdmin, uint64 pledgeFrom, uint64 pledgeTo, uint64 context, uint amount);
     event AfterTransfer(uint64 pledgeAdmin, uint64 pledgeFrom, uint64 pledgeTo, uint64 context, uint amount);
 
-    function TestSimpleDelegatePlugin(LiquidPledging _liquidPledging) {
+    function TestSimpleDelegatePlugin(LiquidPledging _liquidPledging) public {
         require(msg.sender != tx.origin); // Avoids being created directly by mistake.
         liquidPledging = _liquidPledging;
         initPending = true;
@@ -22,7 +22,7 @@ contract TestSimpleDelegatePlugin {
         string name,
         string url,
         uint64 commitTime
-    ) {
+    ) public {
         require(initPending);
         idDelegate = liquidPledging.addDelegate(name, url, commitTime, ILiquidPledgingPlugin(this));
         initPending = false;
@@ -54,12 +54,12 @@ contract TestSimpleDelegatePlugin {
 
 contract TestSimpleDelegatePluginFactory {
 
-    function TestSimpleDelegatePluginFactory (
+    function TestSimpleDelegatePluginFactory(
         LiquidPledging liquidPledging,
         string name,
         string url,
         uint64 commitTime
-    ) {
+    ) public {
         TestSimpleDelegatePlugin d = new TestSimpleDelegatePlugin(liquidPledging);
         d.init(name, url, commitTime);
     }

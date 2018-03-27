@@ -29,7 +29,6 @@ import "./EscapableApp.sol";
 ///  data structures
 contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins, Pledges {
 
-    // Event Declarations
     event Transfer(uint indexed from, uint indexed to, uint amount);
     event CancelProject(uint indexed idProject);
 
@@ -76,7 +75,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
     /// @notice Getter to find Delegate w/ the Pledge ID & the Delegate index
     /// @param idPledge The id number representing the pledge being queried
     /// @param idxDelegate The index number for the delegate in this Pledge 
-    function getPledgeDelegate(uint64 idPledge, uint64 idxDelegate) public view returns(
+    function getPledgeDelegate(uint64 idPledge, uint64 idxDelegate) external view returns(
         uint64 idDelegate,
         address addr,
         string name
@@ -87,6 +86,10 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
         addr = delegate.addr;
         name = delegate.name;
     }
+
+///////////////////
+// Public functions
+///////////////////
 
     /// @notice Only affects pledges with the Pledged PledgeState for 2 things:
     ///   #1: Checks if the pledge should be committed. This means that
@@ -154,7 +157,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
     /// @notice A check to see if the msg.sender is the owner or the
     ///  plugin contract for a specific Admin
     /// @param idAdmin The id of the admin being checked
-    function checkAdminOwner(uint64 idAdmin) internal constant {
+    function _checkAdminOwner(uint64 idAdmin) internal view {
         PledgeAdmin storage a = _findAdmin(idAdmin);
         require(msg.sender == address(a.plugin) || msg.sender == a.addr);
     }
@@ -179,8 +182,10 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
 
             if (receiver.adminType == PledgeAdminType.Giver) {
                 _transferOwnershipToGiver(idPledge, amount, idReceiver);
+                return;
             } else if (receiver.adminType == PledgeAdminType.Project) {
                 _transferOwnershipToProject(idPledge, amount, idReceiver);
+                return;
             } else if (receiver.adminType == PledgeAdminType.Delegate) {
 
                 uint recieverDIdx = _getDelegateIdx(p, idReceiver);
@@ -199,26 +204,26 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
                             p.token,
                             PledgeState.Pledged);
                         _doTransfer(idPledge, toPledge, amount);
-                    } else {
-                        _undelegate(idPledge, amount, p.delegationChain.length - receiverDIdx - 1);
+                        return;
                     }
-                } else {
-                    // owner is not vetoing an intendedProject and is transferring the pledge to a delegate,
-                    // so we want to reset the delegationChain
-                    idPledge = _undelegate(
-                        idPledge,
-                        amount,
-                        p.delegationChain.length
-                    );
-                    _appendDelegate(idPledge, amount, idReceiver);
-                }
 
-            } else {
-                // This should never be reached as the receiver.adminType
-                // should always be either a Giver, Project, or Delegate
-                assert(false);
+                    _undelegate(idPledge, amount, p.delegationChain.length - receiverDIdx - 1);
+                    return;
+                }
+                // owner is not vetoing an intendedProject and is transferring the pledge to a delegate,
+                // so we want to reset the delegationChain
+                idPledge = _undelegate(
+                    idPledge,
+                    amount,
+                    p.delegationChain.length
+                );
+                _appendDelegate(idPledge, amount, idReceiver);
+                return;
             }
-            return;
+
+            // This should never be reached as the receiver.adminType
+            // should always be either a Giver, Project, or Delegate
+            assert(false);
         }
 
         // If the sender is a Delegate
@@ -245,6 +250,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
                         p.delegationChain.length - senderDIdx - 1
                     );
                     _appendDelegate(idPledge, amount, idReceiver);
+                    return;
 
                 // And part of the delegationChain and is after the sender, then
                 //  all of the other delegates after the sender are removed and
@@ -256,17 +262,18 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
                         p.delegationChain.length - senderDIdx - 1
                     );
                     _appendDelegate(idPledge, amount, idReceiver);
+                    return;
+                }
 
                 // And is already part of the delegate chain but is before the
                 //  sender, then the sender and all of the other delegates after
                 //  the RECEIVER are removed from the delegationChain
-                } else if (receiverDIdx <= senderDIdx) {//TODO Check for Game Theory issues (from Arthur) this allows the sender to sort of go komakosi and remove himself and the delegates between himself and the receiver... should this authority be allowed?
-                    _undelegate(
-                        idPledge,
-                        amount,
-                        p.delegationChain.length - receiverDIdx - 1
-                    );
-                }
+                //TODO Check for Game Theory issues (from Arthur) this allows the sender to sort of go komakosi and remove himself and the delegates between himself and the receiver... should this authority be allowed?
+                _undelegate(
+                    idPledge,
+                    amount,
+                    p.delegationChain.length - receiverDIdx - 1
+                );
                 return;
             }
 

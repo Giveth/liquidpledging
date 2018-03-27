@@ -38,21 +38,22 @@ contract EscapableApp is AragonApp {
     mapping (address=>bool) private escapeBlacklist; // Token contract addresses
     uint[20] private storageOffset; // reserve 20 slots for future upgrades
 
+    function EscapableApp(address _escapeHatchDestination) public {
+        _init(_escapeHatchDestination);
+    }
+
     /// @param _escapeHatchDestination The address of a safe location (usu a
     ///  Multisig) to send the ether held in this contract; if a neutral address
     ///  is required, the WHG Multisig is an option:
     ///  0x8Ff920020c8AD673661c8117f2855C384758C572 
     function initialize(address _escapeHatchDestination) onlyInit public {
-        initialized();
-        require(_escapeHatchDestination != 0x0);
-
-        escapeHatchDestination = _escapeHatchDestination;
+        _init(_escapeHatchDestination);
     }
 
     /// @notice The `escapeHatch()` should only be called as a last resort if a
     /// security issue is uncovered or something unexpected happened
     /// @param _token to transfer, use 0x0 for ether
-    function escapeHatch(address _token) public authP(ESCAPE_HATCH_CALLER_ROLE, arr(_token)) {
+    function escapeHatch(address _token) external authP(ESCAPE_HATCH_CALLER_ROLE, arr(_token)) {
         require(escapeBlacklist[_token]==false);
 
         uint256 balance;
@@ -75,8 +76,15 @@ contract EscapableApp is AragonApp {
     /// @param _token the token address being queried
     /// @return False if `_token` is in the blacklist and can't be taken out of
     ///  the contract via the `escapeHatch()`
-    function isTokenEscapable(address _token) constant public returns (bool) {
+    function isTokenEscapable(address _token) view external returns (bool) {
         return !escapeBlacklist[_token];
+    }
+
+    function _init(address _escapeHatchDestination) internal {
+        initialized();
+        require(_escapeHatchDestination != 0x0);
+
+        escapeHatchDestination = _escapeHatchDestination;
     }
 
     /// @notice Creates the blacklist of tokens that are not able to be taken

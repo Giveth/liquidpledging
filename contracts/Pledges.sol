@@ -36,7 +36,7 @@ contract Pledges is AragonApp, LiquidPledgingStorage {
 
     /// @notice A constant getter that returns the total number of pledges
     /// @return The total number of Pledges in the system
-    function numberOfPledges() public view returns (uint) {
+    function numberOfPledges() external view returns (uint) {
         return pledges.length - 1;
     }
 
@@ -45,7 +45,7 @@ contract Pledges is AragonApp, LiquidPledgingStorage {
     /// @return the amount, owner, the number of delegates (but not the actual
     ///  delegates, the intendedProject (if any), the current commit time and
     ///  the previous pledge this pledge was derived from
-    function getPledge(uint64 idPledge) public view returns(
+    function getPledge(uint64 idPledge) external view returns(
         uint amount,
         uint64 owner,
         uint64 nDelegates,

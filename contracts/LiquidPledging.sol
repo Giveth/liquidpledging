@@ -27,6 +27,8 @@ import "./LiquidPledgingBase.sol";
 ///  to allow for expanded functionality.
 contract LiquidPledging is LiquidPledgingBase {
 
+    function LiquidPledging(address _escapeHatchDestination) EscapableApp(_escapeHatchDestination) public {
+    }
 
     function addGiverAndDonate(uint64 idReceiver, address token, uint amount)
         public
@@ -48,7 +50,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  found), the amount of ETH donated in wei is added to the `amount` in
     ///  the Giver's Pledge, and an LP transfer is done to the idReceiver for
     ///  the full amount
-    /// @param idGiver The id of the Giver donating; if 0, a new id is created
+    /// @param idGiver The id of the Giver donating
     /// @param idReceiver The Admin receiving the donation; can be any Admin:
     ///  the Giver themselves, another Giver, a Delegate or a Project
     function donate(uint64 idGiver, uint64 idReceiver, address token, uint amount)
@@ -61,6 +63,9 @@ contract LiquidPledging is LiquidPledgingBase {
         PledgeAdmin storage sender = _findAdmin(idGiver);
         require(sender.adminType == PledgeAdminType.Giver);
 
+        // TODO should this be done at the end of this function?
+        // what re-entrancy issues are there if this is done here?
+        // if done at the end of the function, will that affect plugins?
         require(ERC20(token).transferFrom(msg.sender, address(vault), amount)); // transfer the token to the `vault`
 
         uint64 idPledge = _findOrCreatePledge(
@@ -97,7 +102,7 @@ contract LiquidPledging is LiquidPledgingBase {
         uint64 idReceiver
     ) public
     {
-        checkAdminOwner(idSender);
+        _checkAdminOwner(idSender);
         _transfer(idSender, idPledge, amount, idReceiver);
     }
 
@@ -111,7 +116,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         Pledge storage p = _findPledge(idPledge);
         require(p.pledgeState == PledgeState.Pledged);
-        checkAdminOwner(p.owner);
+        _checkAdminOwner(p.owner);
 
         uint64 idNewPledge = _findOrCreatePledge(
             p.owner,
@@ -180,7 +185,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idProject Id of the project that is to be canceled
     function cancelProject(uint64 idProject) public {
         PledgeAdmin storage project = _findAdmin(idProject);
-        checkAdminOwner(idProject);
+        _checkAdminOwner(idProject);
         project.canceled = true;
 
         CancelProject(idProject);
@@ -196,7 +201,8 @@ contract LiquidPledging is LiquidPledgingBase {
 
         Pledge storage p = _findPledge(idPledge);
         require(p.oldPledge != 0);
-        checkAdminOwner(p.owner);
+        require(p.pledgeState == PledgeState.Pledged);
+        _checkAdminOwner(p.owner);
 
         uint64 oldPledge = _getOldestPledgeNotCanceled(p.oldPledge);
         _doTransfer(idPledge, oldPledge, amount);
@@ -231,7 +237,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ) public 
     {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
-            uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
+            uint64 idPledge = uint64(pledgesAmounts[i] & (D64-1));
             uint amount = pledgesAmounts[i] / D64;
 
             transfer(idSender, idPledge, amount, idReceiver);
@@ -245,7 +251,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  bitmask
     function mWithdraw(uint[] pledgesAmounts) public {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
-            uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
+            uint64 idPledge = uint64(pledgesAmounts[i] & (D64-1));
             uint amount = pledgesAmounts[i] / D64;
 
             withdraw(idPledge, amount);
@@ -258,7 +264,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  using the D64 bitmask
     function mConfirmPayment(uint[] pledgesAmounts) public {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
-            uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
+            uint64 idPledge = uint64(pledgesAmounts[i] & (D64-1));
             uint amount = pledgesAmounts[i] / D64;
 
             confirmPayment(idPledge, amount);
@@ -271,7 +277,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  using the D64 bitmask
     function mCancelPayment(uint[] pledgesAmounts) public {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
-            uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
+            uint64 idPledge = uint64(pledgesAmounts[i] & (D64-1));
             uint amount = pledgesAmounts[i] / D64;
 
             cancelPayment(idPledge, amount);
@@ -283,7 +289,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param pledges An array of pledge IDs
     function mNormalizePledge(uint64[] pledges) public {
         for (uint i = 0; i < pledges.length; i++ ) {
-            normalizePledge( pledges[i] );
+            normalizePledge(pledges[i]);
         }
     }
 }
