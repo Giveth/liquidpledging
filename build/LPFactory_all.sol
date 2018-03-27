@@ -1576,21 +1576,22 @@ contract EscapableApp is AragonApp {
     mapping (address=>bool) private escapeBlacklist; // Token contract addresses
     uint[20] private storageOffset; // reserve 20 slots for future upgrades
 
+    function EscapableApp(address _escapeHatchDestination) public {
+        _init(_escapeHatchDestination);
+    }
+
     /// @param _escapeHatchDestination The address of a safe location (usu a
     ///  Multisig) to send the ether held in this contract; if a neutral address
     ///  is required, the WHG Multisig is an option:
     ///  0x8Ff920020c8AD673661c8117f2855C384758C572 
     function initialize(address _escapeHatchDestination) onlyInit public {
-        initialized();
-        require(_escapeHatchDestination != 0x0);
-
-        escapeHatchDestination = _escapeHatchDestination;
+        _init(_escapeHatchDestination);
     }
 
     /// @notice The `escapeHatch()` should only be called as a last resort if a
     /// security issue is uncovered or something unexpected happened
     /// @param _token to transfer, use 0x0 for ether
-    function escapeHatch(address _token) public authP(ESCAPE_HATCH_CALLER_ROLE, arr(_token)) {
+    function escapeHatch(address _token) external authP(ESCAPE_HATCH_CALLER_ROLE, arr(_token)) {
         require(escapeBlacklist[_token]==false);
 
         uint256 balance;
@@ -1613,8 +1614,15 @@ contract EscapableApp is AragonApp {
     /// @param _token the token address being queried
     /// @return False if `_token` is in the blacklist and can't be taken out of
     ///  the contract via the `escapeHatch()`
-    function isTokenEscapable(address _token) constant public returns (bool) {
+    function isTokenEscapable(address _token) view external returns (bool) {
         return !escapeBlacklist[_token];
+    }
+
+    function _init(address _escapeHatchDestination) internal {
+        initialized();
+        require(_escapeHatchDestination != 0x0);
+
+        escapeHatchDestination = _escapeHatchDestination;
     }
 
     /// @notice Creates the blacklist of tokens that are not able to be taken
@@ -1697,7 +1705,6 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
 
     bytes32 constant public CONFIRM_PAYMENT_ROLE = keccak256("CONFIRM_PAYMENT_ROLE");
     bytes32 constant public CANCEL_PAYMENT_ROLE = keccak256("CANCEL_PAYMENT_ROLE");
-    bytes32 constant public AUTHORIZE_PAYMENT_ROLE = keccak256("AUTHORIZE_PAYMENT_ROLE");
     bytes32 constant public SET_AUTOPAY_ROLE = keccak256("SET_AUTOPAY_ROLE");
 
     event AutoPaySet(bool autoPay);
@@ -1742,6 +1749,9 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
         _;
     }
 
+    function LPVault(address _escapeHatchDestination) EscapableApp(_escapeHatchDestination) public {
+    }
+
     function initialize(address _escapeHatchDestination) onlyInit public {
         require(false); // overload the EscapableApp
         _escapeHatchDestination;
@@ -1781,7 +1791,7 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
         address _dest,
         address _token,
         uint _amount
-    ) external authP(AUTHORIZE_PAYMENT_ROLE, arr(_dest, _amount)) returns (uint)
+    ) external onlyLiquidPledging returns (uint)
     {
         uint idPayment = payments.length;
         payments.length ++;
@@ -1806,13 +1816,15 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
     ///  has been authorized
     /// @param _idPayment Array lookup for the payment.
     function confirmPayment(uint _idPayment) public {
+        Payment storage p = payments[_idPayment];
+        require(canPerform(msg.sender, CONFIRM_PAYMENT_ROLE, arr(_idPayment, p.amount)));
         _doConfirmPayment(_idPayment);
     }
 
     /// @notice When `autopay` is `false` and after a payment has been authorized
     ///  to allow the owner to cancel a payment instead of confirming it.
     /// @param _idPayment Array lookup for the payment.
-    function cancelPayment(uint _idPayment) public {
+    function cancelPayment(uint _idPayment) external {
         _doCancelPayment(_idPayment);
     }
 
@@ -1820,7 +1832,7 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
     /// @param _idPayments An array of multiple payment ids
     function multiConfirm(uint[] _idPayments) external {
         for (uint i = 0; i < _idPayments.length; i++) {
-            _doConfirmPayment(_idPayments[i]);
+            confirmPayment(_idPayments[i]);
         }
     }
 
@@ -1837,17 +1849,15 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
     /// before being thoroughly battle-tested.
     /// @param _token to transfer
     /// @param _amount to transfer
-    function escapeFunds(address _token, uint _amount) public authP(ESCAPE_HATCH_CALLER_ROLE, arr(_token)) {
+    function escapeFunds(address _token, uint _amount) external authP(ESCAPE_HATCH_CALLER_ROLE, arr(_token)) {
         require(_token != 0x0);
         ERC20 token = ERC20(_token);
-        uint balance = token.balanceOf(this);
-        require(balance >= _amount);
         require(token.transfer(escapeHatchDestination, _amount));
         EscapeFundsCalled(_token, _amount);
     }
 
     /// @return The total number of payments that have ever been authorized
-    function nPayments() public view returns (uint) {
+    function nPayments() external view returns (uint) {
         return payments.length;
     }
 
@@ -1858,7 +1868,6 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
         require(_idPayment < payments.length);
         Payment storage p = payments[_idPayment];
         require(p.state == PaymentStatus.Pending);
-        require(canPerform(msg.sender, CONFIRM_PAYMENT_ROLE, arr(_idPayment, p.amount)));
 
         p.state = PaymentStatus.Paid;
         liquidPledging.confirmPayment(uint64(p.ref), p.amount);
@@ -2071,7 +2080,7 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
 
     bytes32 constant public PLUGIN_MANAGER_ROLE = keccak256("PLUGIN_MANAGER_ROLE");
 
-    function addValidPluginInstance(address addr) auth(PLUGIN_MANAGER_ROLE) public {
+    function addValidPluginInstance(address addr) auth(PLUGIN_MANAGER_ROLE) external {
         pluginInstanceWhitelist[addr] = true;
     }
 
@@ -2089,7 +2098,7 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
         pluginContractWhitelist[contractHash] = false;
     }
 
-    function removeValidPluginInstance(address addr) external auth(PLUGIN_MANAGER_ROLE) {
+    function removeValidPluginInstance(address addr) external authP(PLUGIN_MANAGER_ROLE, arr(addr)) {
         pluginInstanceWhitelist[addr] = false;
     }
 
@@ -2185,7 +2194,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         string url,
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
-    ) public returns (uint64 idGiver)
+    ) external returns (uint64 idGiver)
     {
         return addGiver(
             msg.sender,
@@ -2240,7 +2249,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         string newName,
         string newUrl,
         uint64 newCommitTime
-    ) public
+    ) external 
     {
         PledgeAdmin storage giver = _findAdmin(idGiver);
         require(msg.sender == giver.addr);
@@ -2268,7 +2277,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         string url,
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
-    ) public returns (uint64 idDelegate) 
+    ) external returns (uint64 idDelegate) 
     {
         require(isValidPlugin(plugin)); // Plugin check
 
@@ -2306,7 +2315,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         string newName,
         string newUrl,
         uint64 newCommitTime
-    ) public
+    ) external 
     {
         PledgeAdmin storage delegate = _findAdmin(idDelegate);
         require(msg.sender == delegate.addr);
@@ -2338,7 +2347,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         uint64 parentProject,
         uint64 commitTime,
         ILiquidPledgingPlugin plugin
-    ) public returns (uint64 idProject) 
+    ) external returns (uint64 idProject) 
     {
         require(isValidPlugin(plugin));
 
@@ -2381,7 +2390,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         string newName,
         string newUrl,
         uint64 newCommitTime
-    ) public
+    ) external 
     {
         PledgeAdmin storage project = _findAdmin(idProject);
 
@@ -2402,7 +2411,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
 
     /// @notice A constant getter used to check how many total Admins exist
     /// @return The total number of admins (Givers, Delegates and Projects) .
-    function numberOfPledgeAdmins() public constant returns(uint) {
+    function numberOfPledgeAdmins() external view returns(uint) {
         return admins.length - 1;
     }
 
@@ -2419,7 +2428,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     ///  canceled
     /// @return plugin This is Project's liquidPledging plugin allowing for
     ///  extended functionality
-    function getPledgeAdmin(uint64 idAdmin) public view returns (
+    function getPledgeAdmin(uint64 idAdmin) external view returns (
         PledgeAdminType adminType,
         address addr,
         string name,
@@ -2444,7 +2453,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     /// @param projectId The Admin id number used to specify the Project
     /// @return True if the Project has been canceled
     function isProjectCanceled(uint64 projectId)
-        public constant returns (bool)
+        public view returns (bool)
     {
         PledgeAdmin storage a = _findAdmin(projectId);
 
@@ -2480,7 +2489,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     ///  using a recursive loop
     /// @param a The project admin being queried
     /// @return The level of authority a specific Project has
-    function _getProjectLevel(PledgeAdmin a) internal returns(uint64) {
+    function _getProjectLevel(PledgeAdmin a) internal view returns(uint64) {
         assert(a.adminType == PledgeAdminType.Project);
 
         if (a.parentProject == 0) {
@@ -2532,7 +2541,7 @@ contract Pledges is AragonApp, LiquidPledgingStorage {
 
     /// @notice A constant getter that returns the total number of pledges
     /// @return The total number of Pledges in the system
-    function numberOfPledges() public view returns (uint) {
+    function numberOfPledges() external view returns (uint) {
         return pledges.length - 1;
     }
 
@@ -2541,7 +2550,7 @@ contract Pledges is AragonApp, LiquidPledgingStorage {
     /// @return the amount, owner, the number of delegates (but not the actual
     ///  delegates, the intendedProject (if any), the current commit time and
     ///  the previous pledge this pledge was derived from
-    function getPledge(uint64 idPledge) public view returns(
+    function getPledge(uint64 idPledge) external view returns(
         uint amount,
         uint64 owner,
         uint64 nDelegates,
@@ -2687,7 +2696,6 @@ pragma solidity ^0.4.18;
 ///  data structures
 contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins, Pledges {
 
-    // Event Declarations
     event Transfer(uint indexed from, uint indexed to, uint amount);
     event CancelProject(uint indexed idProject);
 
@@ -2734,7 +2742,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
     /// @notice Getter to find Delegate w/ the Pledge ID & the Delegate index
     /// @param idPledge The id number representing the pledge being queried
     /// @param idxDelegate The index number for the delegate in this Pledge 
-    function getPledgeDelegate(uint64 idPledge, uint64 idxDelegate) public view returns(
+    function getPledgeDelegate(uint64 idPledge, uint64 idxDelegate) external view returns(
         uint64 idDelegate,
         address addr,
         string name
@@ -2745,6 +2753,10 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
         addr = delegate.addr;
         name = delegate.name;
     }
+
+///////////////////
+// Public functions
+///////////////////
 
     /// @notice Only affects pledges with the Pledged PledgeState for 2 things:
     ///   #1: Checks if the pledge should be committed. This means that
@@ -2812,7 +2824,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
     /// @notice A check to see if the msg.sender is the owner or the
     ///  plugin contract for a specific Admin
     /// @param idAdmin The id of the admin being checked
-    function checkAdminOwner(uint64 idAdmin) internal constant {
+    function _checkAdminOwner(uint64 idAdmin) internal view {
         PledgeAdmin storage a = _findAdmin(idAdmin);
         require(msg.sender == address(a.plugin) || msg.sender == a.addr);
     }
@@ -2837,8 +2849,10 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
 
             if (receiver.adminType == PledgeAdminType.Giver) {
                 _transferOwnershipToGiver(idPledge, amount, idReceiver);
+                return;
             } else if (receiver.adminType == PledgeAdminType.Project) {
                 _transferOwnershipToProject(idPledge, amount, idReceiver);
+                return;
             } else if (receiver.adminType == PledgeAdminType.Delegate) {
 
                 uint recieverDIdx = _getDelegateIdx(p, idReceiver);
@@ -2857,26 +2871,26 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
                             p.token,
                             PledgeState.Pledged);
                         _doTransfer(idPledge, toPledge, amount);
-                    } else {
-                        _undelegate(idPledge, amount, p.delegationChain.length - receiverDIdx - 1);
+                        return;
                     }
-                } else {
-                    // owner is not vetoing an intendedProject and is transferring the pledge to a delegate,
-                    // so we want to reset the delegationChain
-                    idPledge = _undelegate(
-                        idPledge,
-                        amount,
-                        p.delegationChain.length
-                    );
-                    _appendDelegate(idPledge, amount, idReceiver);
-                }
 
-            } else {
-                // This should never be reached as the receiver.adminType
-                // should always be either a Giver, Project, or Delegate
-                assert(false);
+                    _undelegate(idPledge, amount, p.delegationChain.length - receiverDIdx - 1);
+                    return;
+                }
+                // owner is not vetoing an intendedProject and is transferring the pledge to a delegate,
+                // so we want to reset the delegationChain
+                idPledge = _undelegate(
+                    idPledge,
+                    amount,
+                    p.delegationChain.length
+                );
+                _appendDelegate(idPledge, amount, idReceiver);
+                return;
             }
-            return;
+
+            // This should never be reached as the receiver.adminType
+            // should always be either a Giver, Project, or Delegate
+            assert(false);
         }
 
         // If the sender is a Delegate
@@ -2903,6 +2917,7 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
                         p.delegationChain.length - senderDIdx - 1
                     );
                     _appendDelegate(idPledge, amount, idReceiver);
+                    return;
 
                 // And part of the delegationChain and is after the sender, then
                 //  all of the other delegates after the sender are removed and
@@ -2914,17 +2929,18 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
                         p.delegationChain.length - senderDIdx - 1
                     );
                     _appendDelegate(idPledge, amount, idReceiver);
+                    return;
+                }
 
                 // And is already part of the delegate chain but is before the
                 //  sender, then the sender and all of the other delegates after
                 //  the RECEIVER are removed from the delegationChain
-                } else if (receiverDIdx <= senderDIdx) {//TODO Check for Game Theory issues (from Arthur) this allows the sender to sort of go komakosi and remove himself and the delegates between himself and the receiver... should this authority be allowed?
-                    _undelegate(
-                        idPledge,
-                        amount,
-                        p.delegationChain.length - receiverDIdx - 1
-                    );
-                }
+                //TODO Check for Game Theory issues (from Arthur) this allows the sender to sort of go komakosi and remove himself and the delegates between himself and the receiver... should this authority be allowed?
+                _undelegate(
+                    idPledge,
+                    amount,
+                    p.delegationChain.length - receiverDIdx - 1
+                );
                 return;
             }
 
@@ -3376,6 +3392,8 @@ pragma solidity ^0.4.18;
 ///  to allow for expanded functionality.
 contract LiquidPledging is LiquidPledgingBase {
 
+    function LiquidPledging(address _escapeHatchDestination) EscapableApp(_escapeHatchDestination) public {
+    }
 
     function addGiverAndDonate(uint64 idReceiver, address token, uint amount)
         public
@@ -3397,7 +3415,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  found), the amount of ETH donated in wei is added to the `amount` in
     ///  the Giver's Pledge, and an LP transfer is done to the idReceiver for
     ///  the full amount
-    /// @param idGiver The id of the Giver donating; if 0, a new id is created
+    /// @param idGiver The id of the Giver donating
     /// @param idReceiver The Admin receiving the donation; can be any Admin:
     ///  the Giver themselves, another Giver, a Delegate or a Project
     function donate(uint64 idGiver, uint64 idReceiver, address token, uint amount)
@@ -3410,6 +3428,9 @@ contract LiquidPledging is LiquidPledgingBase {
         PledgeAdmin storage sender = _findAdmin(idGiver);
         require(sender.adminType == PledgeAdminType.Giver);
 
+        // TODO should this be done at the end of this function?
+        // what re-entrancy issues are there if this is done here?
+        // if done at the end of the function, will that affect plugins?
         require(ERC20(token).transferFrom(msg.sender, address(vault), amount)); // transfer the token to the `vault`
 
         uint64 idPledge = _findOrCreatePledge(
@@ -3446,7 +3467,7 @@ contract LiquidPledging is LiquidPledgingBase {
         uint64 idReceiver
     ) public
     {
-        checkAdminOwner(idSender);
+        _checkAdminOwner(idSender);
         _transfer(idSender, idPledge, amount, idReceiver);
     }
 
@@ -3460,7 +3481,7 @@ contract LiquidPledging is LiquidPledgingBase {
 
         Pledge storage p = _findPledge(idPledge);
         require(p.pledgeState == PledgeState.Pledged);
-        checkAdminOwner(p.owner);
+        _checkAdminOwner(p.owner);
 
         uint64 idNewPledge = _findOrCreatePledge(
             p.owner,
@@ -3529,7 +3550,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idProject Id of the project that is to be canceled
     function cancelProject(uint64 idProject) public {
         PledgeAdmin storage project = _findAdmin(idProject);
-        checkAdminOwner(idProject);
+        _checkAdminOwner(idProject);
         project.canceled = true;
 
         CancelProject(idProject);
@@ -3545,7 +3566,8 @@ contract LiquidPledging is LiquidPledgingBase {
 
         Pledge storage p = _findPledge(idPledge);
         require(p.oldPledge != 0);
-        checkAdminOwner(p.owner);
+        require(p.pledgeState == PledgeState.Pledged);
+        _checkAdminOwner(p.owner);
 
         uint64 oldPledge = _getOldestPledgeNotCanceled(p.oldPledge);
         _doTransfer(idPledge, oldPledge, amount);
@@ -3580,7 +3602,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ) public 
     {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
-            uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
+            uint64 idPledge = uint64(pledgesAmounts[i] & (D64-1));
             uint amount = pledgesAmounts[i] / D64;
 
             transfer(idSender, idPledge, amount, idReceiver);
@@ -3594,7 +3616,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  bitmask
     function mWithdraw(uint[] pledgesAmounts) public {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
-            uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
+            uint64 idPledge = uint64(pledgesAmounts[i] & (D64-1));
             uint amount = pledgesAmounts[i] / D64;
 
             withdraw(idPledge, amount);
@@ -3607,7 +3629,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  using the D64 bitmask
     function mConfirmPayment(uint[] pledgesAmounts) public {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
-            uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
+            uint64 idPledge = uint64(pledgesAmounts[i] & (D64-1));
             uint amount = pledgesAmounts[i] / D64;
 
             confirmPayment(idPledge, amount);
@@ -3620,7 +3642,7 @@ contract LiquidPledging is LiquidPledgingBase {
     ///  using the D64 bitmask
     function mCancelPayment(uint[] pledgesAmounts) public {
         for (uint i = 0; i < pledgesAmounts.length; i++ ) {
-            uint64 idPledge = uint64( pledgesAmounts[i] & (D64-1) );
+            uint64 idPledge = uint64(pledgesAmounts[i] & (D64-1));
             uint amount = pledgesAmounts[i] / D64;
 
             cancelPayment(idPledge, amount);
@@ -3632,7 +3654,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param pledges An array of pledge IDs
     function mNormalizePledge(uint64[] pledges) public {
         for (uint i = 0; i < pledges.length; i++ ) {
-            normalizePledge( pledges[i] );
+            normalizePledge(pledges[i]);
         }
     }
 }
@@ -3672,7 +3694,7 @@ contract LPFactory is LPConstants, DAOFactory {
         lpBase = _lpBase;
     }
 
-    function newLP(address _root, address _escapeHatchDestination) public {
+    function newLP(address _root, address _escapeHatchDestination) external {
         Kernel kernel = newDAO(this);
         ACL acl = ACL(kernel.acl());
 
@@ -3695,13 +3717,77 @@ contract LPFactory is LPConstants, DAOFactory {
         bytes32 appManagerRole = kernel.APP_MANAGER_ROLE();
         bytes32 permRole = acl.CREATE_PERMISSIONS_ROLE();
         bytes32 hatchCallerRole = v.ESCAPE_HATCH_CALLER_ROLE();
-        bytes32 authPaymentRole = v.AUTHORIZE_PAYMENT_ROLE();
         bytes32 pluginManagerRole = lp.PLUGIN_MANAGER_ROLE();
 
         acl.createPermission(_root, address(v), hatchCallerRole, _root);
         acl.createPermission(_root, address(lp), hatchCallerRole, _root);
         acl.createPermission(_root, address(lp), pluginManagerRole, _root);
-        acl.createPermission(address(lp), address(v), authPaymentRole, _root);
+        // TODO: set pledgeAdminRole manager to 0x0? maybe it doesn't matter b/c it can be recreated by _root anyways
+
+        acl.grantPermission(_root, address(kernel), appManagerRole);
+        acl.grantPermission(_root, address(acl), permRole);
+        acl.revokePermission(this, address(kernel), appManagerRole);
+        acl.revokePermission(this, address(acl), permRole);
+
+        acl.setPermissionManager(_root, address(kernel), appManagerRole);
+        acl.setPermissionManager(_root, address(acl), permRole);
+
+        DeployVault(address(v));
+        DeployLiquidPledging(address(lp));
+    }
+}
+
+///File: ./contracts/LPFactory.sol
+
+pragma solidity ^0.4.18;
+
+
+
+
+
+
+contract LPFactory is LPConstants, DAOFactory {
+    address public vaultBase;
+    address public lpBase;
+
+    event DeployVault(address vault);
+    event DeployLiquidPledging(address liquidPledging);
+
+    function LPFactory(address _vaultBase, address _lpBase) public DAOFactory(0) {
+        require(_vaultBase != 0);
+        require(_lpBase != 0);
+        vaultBase = _vaultBase;
+        lpBase = _lpBase;
+    }
+
+    function newLP(address _root, address _escapeHatchDestination) external {
+        Kernel kernel = newDAO(this);
+        ACL acl = ACL(kernel.acl());
+
+        bytes32 appManagerRole = kernel.APP_MANAGER_ROLE();
+
+        acl.createPermission(this, address(kernel), appManagerRole, this);
+
+        LPVault v = LPVault(kernel.newAppInstance(VAULT_APP_ID, vaultBase));
+        LiquidPledging lp = LiquidPledging(kernel.newAppInstance(LP_APP_ID, lpBase));
+        v.initialize(address(lp), _escapeHatchDestination);
+        lp.initialize(address(v), _escapeHatchDestination);
+
+        // register the lp instance w/ the kernel
+        kernel.setApp(kernel.APP_ADDR_NAMESPACE(), LP_APP_ID, address(lp));
+
+        _setPermissions(_root, acl, kernel, v, lp);
+    }
+
+    function _setPermissions(address _root, ACL acl, Kernel kernel, LPVault v, LiquidPledging lp) internal {
+        bytes32 appManagerRole = kernel.APP_MANAGER_ROLE();
+        bytes32 permRole = acl.CREATE_PERMISSIONS_ROLE();
+        bytes32 hatchCallerRole = v.ESCAPE_HATCH_CALLER_ROLE();
+        bytes32 pluginManagerRole = lp.PLUGIN_MANAGER_ROLE();
+
+        acl.createPermission(_root, address(v), hatchCallerRole, _root);
+        acl.createPermission(_root, address(lp), hatchCallerRole, _root);
+        acl.createPermission(_root, address(lp), pluginManagerRole, _root);
         // TODO: set pledgeAdminRole manager to 0x0? maybe it doesn't matter b/c it can be recreated by _root anyways
 
         acl.grantPermission(_root, address(kernel), appManagerRole);
