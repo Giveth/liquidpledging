@@ -389,8 +389,37 @@ describe('LiquidPledging test', function () {
       await liquidPledging.addProject(`ProjectLevel${i}`, '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1, $extraGas: 100000 });
     }
 
-    assertFail(
+    await assertFail(
       liquidPledging.addProject('ProjectLevel21', '', adminProject1, ++nAdmins, 86400, 0, { from: adminProject1, gas: 4000000 })
     );
-  })
+  });
+
+  it('should prevent donation to 0 receiverId', async () => {
+    await assertFail(liquidPledging.donate(1, 0, giver1Token.$address, 1, { from: giver1, gas: 6700000 }));
+  });
+
+  it('should prevent donation from 0 giverId', async () => {
+    await assertFail(liquidPledging.donate(0, 1, giver1Token.$address, 1, { from: giver1, gas: 6700000 }));
+  });
+
+  it('should donate on behalf of another addy', async () => {
+    const oldNPledges = await liquidPledging.numberOfPledges();
+    const oldNAdmins = await liquidPledging.numberOfPledgeAdmins();
+    const preGiver1Bal = await giver1Token.balanceOf(giver1);
+    await liquidPledging.addGiverAndDonate(1, accounts[8], giver1Token.$address, 11, { from: giver1, $extraGas: 200000 });
+    const nPledges = await liquidPledging.numberOfPledges();
+    assert.equal(utils.toDecimal(nPledges), utils.toDecimal(oldNPledges) + 1);
+    const nAdmins = await liquidPledging.numberOfPledgeAdmins();
+    assert.equal(utils.toDecimal(nAdmins), utils.toDecimal(oldNAdmins) + 1);
+    const res = await liquidPledging.getPledgeAdmin(nAdmins);
+    assert.equal(res[0], 0); // Giver
+    assert.equal(res[1], accounts[8]);
+    assert.equal(res[2], '');
+    assert.equal(res[3], '');
+    assert.equal(res[4], 259200); // default to 3 day commitTime
+    const giver1Bal = await giver1Token.balanceOf(giver1);
+    assert.equal(new utils.BN(preGiver1Bal).subn(11).toString(), giver1Bal);
+    await printState(liquidPledgingState);
+    console.log(liquidPledging.$address);
+  });
 });

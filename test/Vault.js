@@ -101,7 +101,7 @@ describe('Vault test', function () {
   it('escapeFunds should send funds to escapeHatchDestination', async function () {
     const preBalance = await token.balanceOf(escapeHatchDestination);
 
-    assertFail(vault.escapeFunds(0x0, 1000, { from: escapeHatchCaller, gas: 1000000}));
+    await assertFail(vault.escapeFunds(0x0, 1000, { from: escapeHatchCaller, gas: 1000000}));
 
     await vault.escapeFunds(token.$address, 1000, { from: escapeHatchCaller, $extraGas: 200000 });
 
@@ -123,7 +123,7 @@ describe('Vault test', function () {
     // set permission for 2nd param (p.amount) <= 300
     await acl.grantPermissionP(restrictedPaymentsConfirmer, vault.$address, await vault.CONFIRM_PAYMENT_ROLE(), ["0x010600000000000000000000000000000000000000000000000000000000012c"], {$extraGas: 200000});
 
-    assertFail(vault.confirmPayment(1, { from: restrictedPaymentsConfirmer, gas: 4000000 }));
+    await assertFail(vault.confirmPayment(1, { from: restrictedPaymentsConfirmer, gas: 4000000 }));
     await vault.confirmPayment(0, { from: restrictedPaymentsConfirmer, $extraGas: 200000 });
   });
 });
