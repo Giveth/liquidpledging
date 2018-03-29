@@ -28,12 +28,12 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     uint constant MAX_INTERPROJECT_LEVEL = 20;
 
     // Events
-    event GiverAdded(uint64 indexed idGiver);
-    event GiverUpdated(uint64 indexed idGiver);
-    event DelegateAdded(uint64 indexed idDelegate);
-    event DelegateUpdated(uint64 indexed idDelegate);
-    event ProjectAdded(uint64 indexed idProject);
-    event ProjectUpdated(uint64 indexed idProject);
+    event GiverAdded(uint64 indexed idGiver, string url);
+    event GiverUpdated(uint64 indexed idGiver, string url);
+    event DelegateAdded(uint64 indexed idDelegate, string url);
+    event DelegateUpdated(uint64 indexed idDelegate, string url);
+    event ProjectAdded(uint64 indexed idProject, string url);
+    event ProjectUpdated(uint64 indexed idProject, string url);
 
 ////////////////////
 // Public functions
@@ -89,7 +89,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
                 url)
         );
 
-        GiverAdded(idGiver);
+        GiverAdded(idGiver, url);
     }
 
     /// @notice Updates a Giver's info to change the address, name, url, or
@@ -117,7 +117,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         giver.url = newUrl;
         giver.commitTime = newCommitTime;
 
-        GiverUpdated(idGiver);
+        GiverUpdated(idGiver, newUrl);
     }
 
     /// @notice Creates a Delegate Admin with the `msg.sender` as the Admin addr
@@ -153,7 +153,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
                 url)
         );
 
-        DelegateAdded(idDelegate);
+        DelegateAdded(idDelegate, url);
     }
 
     /// @notice Updates a Delegate's info to change the address, name, url, or
@@ -183,7 +183,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         delegate.url = newUrl;
         delegate.commitTime = newCommitTime;
 
-        DelegateUpdated(idDelegate);
+        DelegateUpdated(idDelegate, newUrl);
     }
 
     /// @notice Creates a Project Admin with the `msg.sender` as the Admin addr
@@ -229,7 +229,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
                 url)
         );
 
-        ProjectAdded(idProject);
+        ProjectAdded(idProject, url);
     }
 
     /// @notice Updates a Project's info to change the address, name, url, or
@@ -260,7 +260,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         project.url = newUrl;
         project.commitTime = newCommitTime;
 
-        ProjectUpdated(idProject);
+        ProjectUpdated(idProject, newUrl);
     }
 
 /////////////////////////////
