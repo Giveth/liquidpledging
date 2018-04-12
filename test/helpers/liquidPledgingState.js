@@ -3,43 +3,44 @@ class LiquidPledgingState {
     this.$lp = liquidPledging;
   }
 
-  $getPledge(idPledge) {
+  getPledge(idPledge) {
     const pledge = {
       delegates: [],
     };
 
     return this.$lp.getPledge(idPledge)
     .then((res) => {
-      pledge.amount = res.amount;
-      pledge.owner = res.owner;
-      pledge.token = res.token;
+      pledge.amount = res[0];
+      pledge.owner = res[1];
+      pledge.nDelegates = res[2];
+      pledge.token = res[6];
 
-      if (res.intendedProject) {
-        pledge.intendedProject = res.intendedProject;
-        pledge.commmitTime = res.commitTime;
+      if (res[3]) { 
+        pledge.intendedProject =res[3];
+        pledge.commitTime = res[4];
       }
-      if (res.oldPledge) {
-        pledge.oldPledge = res.oldPledge;
+      
+      if (res[5]) {
+        pledge.oldPledge = res[5];
       }
-      if (res.pledgeState === '0') {
+      if (res[7] == '0') {
         pledge.pledgeState = 'Pledged';
-      } else if (res.pledgeState === '1') {
+      } else if (res[7] == '1') {
         pledge.pledgeState = 'Paying';
-      } else if (res.pledgeState === '2') {
+      } else if (res[7] == '2') {
         pledge.pledgeState = 'Paid';
       } else {
         pledge.pledgeState = 'Unknown';
       }
-
+      
       const promises = [];
-      for (let i = 1; i <= res.nDelegates; i += 1) {
+      for (let i = 1; i <= res[2].toNumber(); i += 1) {
         promises.push(
           this.$lp.getPledgeDelegate(idPledge, i)
           .then(r => ({
-            id: r.idDelegate,
-            addr: r.addr,
-            name: r.name,
-            url: r.url,
+            id: r[0],
+            addr: r[1],
+            name: r[2],
           })),
           );
       }
@@ -52,28 +53,28 @@ class LiquidPledgingState {
     });
   }
 
-  $getAdmin(idAdmin) {
+  getAdmin(idAdmin) {
     const admin = {};
     return this.$lp.getPledgeAdmin(idAdmin)
     .then((res) => {
-      if (res.adminType === '0') {
+      if (res[0] == '0') {
         admin.type = 'Giver';
-      } else if (res.adminType === '1') {
+      } else if (res[0] == '1') {
         admin.type = 'Delegate';
-      } else if (res.adminType === '2') {
+      } else if (res[0] == '2') {
         admin.type = 'Project';
       } else {
         admin.type = 'Unknown';
       }
-      admin.addr = res.addr;
-      admin.name = res.name;
-      admin.url = res.url;
-      admin.commitTime = res.commitTime;
+      admin.addr = res[1];
+      admin.name = res[2];
+      admin.url = res[3];
+      admin.commitTime = res[4];
       if (admin.type === 'Project') {
-        admin.parentProject = res.parentProject;
-        admin.canceled = res.canceled;
+        admin.parentProject = res[5];
+        admin.canceled = res[6];
       }
-      admin.plugin = res.plugin;
+      admin.plugin = res[7];
       return admin;
     });
   }
@@ -83,7 +84,7 @@ class LiquidPledgingState {
     .then((nPledges) => {
       const promises = [];
       for (let i = 1; i <= nPledges; i += 1) {
-        promises.push(this.$getPledge(i));
+        promises.push(this.getPledge(i));
       }
       return Promise.all(promises);
     });
@@ -92,7 +93,7 @@ class LiquidPledgingState {
     .then((nAdmins) => {
       const promises = [];
       for (let i = 1; i <= nAdmins; i += 1) {
-        promises.push(this.$getAdmin(i));
+        promises.push(this.getAdmin(i));
       }
 
       return Promise.all(promises);

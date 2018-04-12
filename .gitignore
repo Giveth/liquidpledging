@@ -9,3 +9,5 @@ __pycache__
 .idea
 *.iml
 
+coverage.json
+coverage
