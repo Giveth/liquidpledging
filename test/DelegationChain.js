@@ -1,20 +1,18 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const TestRPC = require("ganache-cli");
+const TestRPC = require('ganache-cli');
 const Web3 = require('web3');
-const chai = require('chai');
-const contracts = require("../build/contracts.js");
-const LiquidPledgingState = require('../index').LiquidPledgingState;
+const { assert } = require('chai');
+const { LPVault, LPFactory, LiquidPledgingState, test } = require('../index');
 
-const assertFail = require('./helpers/assertFail');
-const assert = chai.assert;
+const { StandardTokenTest, assertFail, LiquidPledgingMock } = test;
 
-const printState = async (liquidPledgingState) => {
+const printState = async liquidPledgingState => {
   const st = await liquidPledgingState.getState();
   console.log(JSON.stringify(st, null, 2));
 };
 
-describe('DelegationChain test', function () {
+describe('DelegationChain test', function() {
   this.timeout(0);
 
   let testrpc;
@@ -50,29 +48,29 @@ describe('DelegationChain test', function () {
     giver2 = accounts[6];
   });
 
-  after((done) => {
+  after(done => {
     testrpc.close();
     done();
   });
 
   it('Should deploy LiquidPledging contract', async () => {
-    const baseVault = await contracts.LPVault.new(web3, accounts[0]);
-    const baseLP = await contracts.LiquidPledgingMock.new(web3, accounts[0]);
-    lpFactory = await contracts.LPFactory.new(web3, baseVault.$address, baseLP.$address);
+    const baseVault = await LPVault.new(web3, accounts[0]);
+    const baseLP = await LiquidPledgingMock.new(web3, accounts[0]);
+    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address);
 
     const r = await lpFactory.newLP(accounts[0], accounts[0]);
 
     const vaultAddress = r.events.DeployVault.returnValues.vault;
-    vault = new contracts.LPVault(web3, vaultAddress);
+    vault = new LPVault(web3, vaultAddress);
 
     const lpAddress = r.events.DeployLiquidPledging.returnValues.liquidPledging;
-    liquidPledging = new contracts.LiquidPledgingMock(web3, lpAddress);
+    liquidPledging = new LiquidPledgingMock(web3, lpAddress);
 
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
 
-    token = await contracts.StandardToken.new(web3);
+    token = await StandardTokenTest.new(web3);
     await token.mint(giver1, web3.utils.toWei('1000'));
-    await token.approve(liquidPledging.$address, "0xFFFFFFFFFFFFFFFF", { from: giver1 });
+    await token.approve(liquidPledging.$address, '0xFFFFFFFFFFFFFFFF', { from: giver1 });
   });
 
   it('Should add pledgeAdmins', async () => {
@@ -80,7 +78,9 @@ describe('DelegationChain test', function () {
     await liquidPledging.addDelegate('Delegate1', 'URLDelegate1', 259200, 0, { from: delegate1 }); // pledgeAdmin 2
     await liquidPledging.addDelegate('Delegate2', 'URLDelegate2', 0, 0, { from: delegate2 }); // pledgeAdmin 3
     await liquidPledging.addDelegate('Delegate3', 'URLDelegate3', 0, 0, { from: delegate3 }); // pledgeAdmin 4
-    await liquidPledging.addProject('Project1', 'URLProject1', adminProject1, 0, 0, 0, { from: adminProject1 }); // pledgeAdmin 5
+    await liquidPledging.addProject('Project1', 'URLProject1', adminProject1, 0, 0, 0, {
+      from: adminProject1,
+    }); // pledgeAdmin 5
     await liquidPledging.addGiver('Giver2', 'URLGiver2', 0, 0, { from: giver2 }); // pledgeAdmin 6
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
@@ -192,7 +192,7 @@ describe('DelegationChain test', function () {
     assert.equal(pledge.commitTime, now + 259200); // 259200 is longest commitTime in delegationChain
   });
 
-  it('delegation chain should remain the same when owner veto\'s delegation', async () => {
+  it("delegation chain should remain the same when owner veto's delegation", async () => {
     // owner veto delegation to project1
     await liquidPledging.transfer(1, 8, 1000, 3, { from: giver1, $extraGas: 200000 });
 
@@ -204,7 +204,7 @@ describe('DelegationChain test', function () {
     assert.equal(st.pledges[3].delegates[1].id, 3);
   });
 
-  it('delegation chain should remain the same upto delegate of reciever when owner veto\'s delegation', async () => {
+  it("delegation chain should remain the same upto delegate of reciever when owner veto's delegation", async () => {
     // propose project1 delegation
     await liquidPledging.transfer(3, 3, 1000, 5, { from: delegate2, $extraGas: 200000 });
     // owner veto delegation to project1 and remove delegate2
