@@ -26,16 +26,19 @@ contract LiquidPledgingMock is LiquidPledging {
 
     uint public mock_time;
 
+    function LiquidPledgingMock(address _escapeHatchDestination) LiquidPledging(_escapeHatchDestination) public {
+    }
+
     /// @dev `LiquidPledgingMock` creates a standard `LiquidPledging`
     ///  instance and sets the mocked time to the current blocktime.
-    /// @param _vault The vault where ETH backing this pledge is stored    
-    function LiquidPledgingMock(address _vault) LiquidPledging(_vault) {
+    function initialize(address _vault, address _escapeHatchDestination) onlyInit public {
+        super.initialize(_vault, _escapeHatchDestination);
         mock_time = now;
     }
 
     /// @dev `getTime` is a basic getter function for
     ///  the mock_time parameter
-    function getTime() internal returns (uint) {
+    function _getTime() internal view returns (uint) {
         return mock_time;
     }
 
@@ -43,7 +46,7 @@ contract LiquidPledgingMock is LiquidPledging {
     ///  the mock_time parameter
     /// @param _t This is the value to which the mocked time
     ///  will be set.
-    function setMockedTime(uint _t) {
+    function setMockedTime(uint _t) public {
         mock_time = _t;
     }
 }
