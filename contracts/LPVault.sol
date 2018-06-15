@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.24;
 
 /*
     Copyright 2017, Jordi Baylina
@@ -24,9 +24,8 @@ pragma solidity ^0.4.18;
 ///  be a safe place to store funds equipped with optional variable time delays
 ///  to allow for an optional escapeHatch to be implemented in case of issues;
 ///  future versions of this contract will be enabled for tokens
-import "./EscapableApp.sol";
 import "./LiquidPledgingACLHelpers.sol";
-import "giveth-common-contracts/contracts/ERC20.sol";
+import "@aragon/os/contracts/apps/AragonApp.sol";
 
 /// @dev `LiquidPledging` is a basic interface to allow the `LPVault` contract
 ///  to confirm and cancel payments in the `LiquidPledging` contract.
@@ -37,11 +36,12 @@ contract ILiquidPledging {
 
 /// @dev `LPVault` is a higher level contract built off of the `Escapable`
 ///  contract that holds funds for the liquid pledging system.
-contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
+contract LPVault is AragonApp, LiquidPledgingACLHelpers {
 
     bytes32 constant public CONFIRM_PAYMENT_ROLE = keccak256("CONFIRM_PAYMENT_ROLE");
     bytes32 constant public CANCEL_PAYMENT_ROLE = keccak256("CANCEL_PAYMENT_ROLE");
     bytes32 constant public SET_AUTOPAY_ROLE = keccak256("SET_AUTOPAY_ROLE");
+    bytes32 constant public ESCAPE_HATCH_CALLER_ROLE = keccak256("ESCAPE_HATCH_CALLER_ROLE");
 
     event AutoPaySet(bool autoPay);
     event EscapeFundsCalled(address token, uint amount);
@@ -85,22 +85,9 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
         _;
     }
 
-    function LPVault(address _escapeHatchDestination) EscapableApp(_escapeHatchDestination) public {
-    }
-
-    function initialize(address _escapeHatchDestination) onlyInit public {
-        require(false); // overload the EscapableApp
-        _escapeHatchDestination;
-    }
-
-    /// @param _liquidPledging 
-    /// @param _escapeHatchDestination The address of a safe location (usu a
-    ///  Multisig) to send the ether held in this contract; if a neutral address
-    ///  is required, the WHG Multisig is an option:
-    ///  0x8Ff920020c8AD673661c8117f2855C384758C572 
-    function initialize(address _liquidPledging, address _escapeHatchDestination) onlyInit external {
-        super.initialize(_escapeHatchDestination);
-
+    /// @param _liquidPledging Address of the liquidPledging instance associated
+    /// with this LPVault
+    function initialize(address _liquidPledging) onlyInit external {
         require(_liquidPledging != 0x0);
         liquidPledging = ILiquidPledging(_liquidPledging);
     }
@@ -112,7 +99,7 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
     ///  every payment
     function setAutopay(bool _automatic) external authP(SET_AUTOPAY_ROLE, arr(_automatic)) {
         autoPay = _automatic;
-        AutoPaySet(autoPay);
+        emit AutoPaySet(autoPay);
     }
 
     /// @notice If `autoPay == true` the transfer happens automatically `else` the `owner`
@@ -137,7 +124,7 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
         payments[idPayment].token = _token;
         payments[idPayment].amount = _amount;
 
-        AuthorizePayment(idPayment, _ref, _dest, _token, _amount);
+        emit AuthorizePayment(idPayment, _ref, _dest, _token, _amount);
 
         if (autoPay) {
             _doConfirmPayment(idPayment);
@@ -180,16 +167,16 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
         }
     }
 
-    /// Transfer tokens to the escapeHatchDestination.
-    /// Used as a safety mechanism to prevent the vault from holding too much value
-    /// before being thoroughly battle-tested.
-    /// @param _token to transfer
-    /// @param _amount to transfer
-    function escapeFunds(address _token, uint _amount) external authP(ESCAPE_HATCH_CALLER_ROLE, arr(_token)) {
-        require(_token != 0x0);
-        ERC20 token = ERC20(_token);
-        require(token.transfer(escapeHatchDestination, _amount));
-        EscapeFundsCalled(_token, _amount);
+    /**
+    * @dev By default, AragonApp will allow anyone to call transferToVault
+    *      Because this app is designed to hold funds, we only want to call
+    *      transferToVault in the case of an emergency. Only senders with the
+    *      ESCAPE_HATCH_CALLER_ROLE are allowed to pull the "escapeHatch"
+    * @param token Token address that would be recovered
+    * @return bool whether the app allows the recovery
+    */
+    function allowRecoverability(address token) public view returns (bool) {
+        return canPerform(msg.sender, ESCAPE_HATCH_CALLER_ROLE, arr(token));
     }
 
     /// @return The total number of payments that have ever been authorized
@@ -211,7 +198,7 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
         ERC20 token = ERC20(p.token);
         require(token.transfer(p.dest, p.amount)); // Transfers token to dest
 
-        ConfirmPayment(_idPayment, p.ref);
+        emit ConfirmPayment(_idPayment, p.ref);
     }
 
     /// @notice Cancels a pending payment (internal function)
@@ -225,6 +212,6 @@ contract LPVault is EscapableApp, LiquidPledgingACLHelpers {
 
         liquidPledging.cancelPayment(uint64(p.ref), p.amount);
 
-        CancelPayment(_idPayment, p.ref);
+        emit CancelPayment(_idPayment, p.ref);
     }
 }
