@@ -1,4 +1,4 @@
-const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../../js/contracts');
+const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../../lib/contracts');
 const { RecoveryVault } = test;
 
 module.exports = async web3 => {
