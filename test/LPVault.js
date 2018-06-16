@@ -4,10 +4,11 @@ const TestRPC = require('ganache-cli');
 const Web3 = require('web3');
 const { assert } = require('chai');
 const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../index');
+const { RecoveryVault } = require('../build/contracts');
 
 const { StandardTokenTest, assertFail, LiquidPledgingMock } = test;
 
-describe('Vault test', function() {
+describe('LPVault test', function() {
   this.timeout(0);
 
   let testrpc;
@@ -18,7 +19,7 @@ describe('Vault test', function() {
   let vault;
   let vaultOwner;
   let escapeHatchCaller;
-  let escapeHatchDestination;
+  let recoveryVault;
   let giver1;
   let adminProject1;
   let restrictedPaymentsConfirmer;
@@ -37,9 +38,9 @@ describe('Vault test', function() {
     giver1 = accounts[1];
     adminProject1 = accounts[2];
     vaultOwner = accounts[3];
-    escapeHatchDestination = accounts[4];
-    escapeHatchCaller = accounts[5];
-    restrictedPaymentsConfirmer = accounts[6];
+    escapeHatchCaller = accounts[4];
+    recoveryVault = (await RecoveryVault.new(web3)).$address;
+    restrictedPaymentsConfirmer = accounts[5];
   });
 
   after(done => {
@@ -47,12 +48,14 @@ describe('Vault test', function() {
     done();
   });
 
-  it('Should deploy Vault contract', async function() {
-    const baseVault = await LPVault.new(web3, escapeHatchDestination);
-    const baseLP = await LiquidPledgingMock.new(web3, escapeHatchDestination);
-    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address);
+  it('Should deploy LPVault contract', async function() {
+    const baseVault = await LPVault.new(web3);
+    const baseLP = await LiquidPledgingMock.new(web3, {
+      gas: 6700000,
+    });
+    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address, { gas: 6700000 });
 
-    const r = await lpFactory.newLP(accounts[0], escapeHatchDestination);
+    const r = await lpFactory.newLP(accounts[0], recoveryVault);
 
     const vaultAddress = r.events.DeployVault.returnValues.vault;
     vault = new LPVault(web3, vaultAddress);
@@ -85,12 +88,6 @@ describe('Vault test', function() {
       await vault.ESCAPE_HATCH_CALLER_ROLE(),
       { $extraGas: 200000 },
     );
-    await acl.revokePermission(
-      accounts[0],
-      vault.$address,
-      await vault.ESCAPE_HATCH_CALLER_ROLE(),
-      { $extraGas: 200000 },
-    );
 
     await liquidPledging.addGiver('Giver1', '', 0, '0x0', { from: giver1, $extraGas: 100000 });
     await liquidPledging.addProject('Project1', '', adminProject1, 0, 0, '0x0', {
@@ -116,35 +113,6 @@ describe('Vault test', function() {
     assert.equal(10000, balance);
   });
 
-  it('escapeFunds should fail', async function() {
-    // only vaultOwner can escapeFunds
-    await assertFail(vault.escapeFunds(0x0, 1000, { gas: 4000000 }));
-
-    // can't send more then the balance
-    await assertFail(vault.escapeFunds(0x0, 11000, { from: vaultOwner, gas: 4000000 }));
-  });
-
-  it('escapeFunds should send funds to escapeHatchDestination', async function() {
-    const preBalance = await token.balanceOf(escapeHatchDestination);
-
-    await assertFail(vault.escapeFunds(0x0, 1000, { from: escapeHatchCaller, gas: 1000000 }));
-
-    await vault.escapeFunds(token.$address, 1000, { from: escapeHatchCaller, $extraGas: 200000 });
-
-    const vaultBalance = await token.balanceOf(vault.$address);
-    assert.equal(9000, vaultBalance);
-
-    const expected = web3.utils
-      .toBN(preBalance)
-      .add(web3.utils.toBN('1000'))
-      .toString();
-    const postBalance = await token.balanceOf(escapeHatchDestination);
-
-    assert.equal(expected, postBalance);
-
-    await token.transfer(vault.$address, 1000, { from: escapeHatchDestination, $extraGas: 200000 });
-  });
-
   it('should restrict confirm payment to payments under specified amount', async function() {
     await liquidPledging.withdraw(2, 300, { from: adminProject1, $extraGas: 200000 });
     await liquidPledging.withdraw(2, 700, { from: adminProject1, $extraGas: 200000 });
@@ -160,5 +128,22 @@ describe('Vault test', function() {
 
     await assertFail(vault.confirmPayment(1, { from: restrictedPaymentsConfirmer, gas: 4000000 }));
     await vault.confirmPayment(0, { from: restrictedPaymentsConfirmer, $extraGas: 200000 });
+  });
+
+  it('Only escapeHatchCaller role should be able to pull "escapeHatch"', async function() {
+    const preVaultBalance = await token.balanceOf(vault.$address);
+
+    // transferToVault is a bit confusing, but is the name of the function in aragonOs
+    // this is the escapeHatch and will transfer all funds to the recoveryVault
+    await assertFail(vault.transferToVault(token.$address, { from: vaultOwner, gas: 6700000 }));
+    assert.equal(await token.balanceOf(vault.$address), preVaultBalance);
+
+    await vault.transferToVault(token.$address, { from: escapeHatchCaller, $extraGas: 100000 });
+
+    const vaultBalance = await token.balanceOf(vault.$address);
+    assert.equal(0, vaultBalance);
+
+    const recoveryVaultBalance = await token.balanceOf(recoveryVault);
+    assert.equal(preVaultBalance, recoveryVaultBalance);
   });
 });

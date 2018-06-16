@@ -5,14 +5,15 @@ import "./LPVault.sol";
 import "./LiquidPledging.sol";
 import "./LPConstants.sol";
 
-contract LPFactory is LPConstants, DAOFactory {
+contract LPFactory is LPConstants, DAOFactory(new Kernel(), new ACL(), 0) {
+    bytes32 public constant RECOVERY_VAULT_ID = keccak256("recoveryVault");
     address public vaultBase;
     address public lpBase;
 
     event DeployVault(address vault);
     event DeployLiquidPledging(address liquidPledging);
 
-    function LPFactory(address _vaultBase, address _lpBase) public DAOFactory(new Kernel(), new ACL(), 0) {
+    function LPFactory(address _vaultBase, address _lpBase) public {
         require(_vaultBase != 0);
         require(_lpBase != 0);
         vaultBase = _vaultBase;
@@ -34,8 +35,8 @@ contract LPFactory is LPConstants, DAOFactory {
         lp.initialize(address(v));
 
         // set the recoveryVault to the escapeHatchDestination
-        kernel.setRecoveryVaultId(keccak256(APP_ADDR_NAMESPACE, keccak256("recoveryVault")));
-        kernel.setApp(APP_ADDR_NAMESPACE, keccak256("recoveryVault"), _escapeHatchDestination);
+        kernel.setRecoveryVaultId(RECOVERY_VAULT_ID);
+        kernel.setApp(APP_ADDR_NAMESPACE, RECOVERY_VAULT_ID, _escapeHatchDestination);
 
         _setPermissions(_root, acl, kernel, v, lp);
     }

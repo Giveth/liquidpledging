@@ -85,17 +85,13 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
         _;
     }
 
-// TODO if we remove EscapableApp, we won't be able to escape the base contracts???
-    function LPVault() {
-        initialized();
-    };
-
     /// @param _liquidPledging Address of the liquidPledging instance associated
     /// with this LPVault
     function initialize(address _liquidPledging) onlyInit external {
         require(_liquidPledging != 0x0);
-        liquidPledging = ILiquidPledging(_liquidPledging);
         initialized();
+
+        liquidPledging = ILiquidPledging(_liquidPledging);
     }
 
     /// @notice Used to decentralize, toggles whether the LPVault will

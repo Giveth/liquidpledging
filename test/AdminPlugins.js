@@ -1,24 +1,18 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const TestRPC = require('ganache-cli');
+const Ganache = require('ganache-cli');
 const Web3 = require('web3');
 const chai = require('chai');
-const {
-  LPVault,
-  LPFactory,
-  LiquidPledgingState,
-  test,
-} = require('../index');
+const { test } = require('../index');
+const deployLP = require('./helpers/deployLP');
 
-const simpleProjectPluginFactoryAbi = require('../build/TestSimpleProjectPluginFactory.sol')
-  .TestSimpleProjectPluginFactoryAbi;
-const simpleProjectPluginFactoryByteCode = require('../build/TestSimpleProjectPluginFactory.sol')
-  .TestSimpleProjectPluginFactoryByteCode;
-const simpleProjectPluginRuntimeByteCode = require('../build/TestSimpleProjectPluginFactory.sol')
-  .TestSimpleProjectPluginRuntimeByteCode;
+const { compilerOutput } = require('../build/TestSimpleProjectPluginFactory.json');
+const simpleProjectPluginFactoryAbi = compilerOutput.abi;
+const simpleProjectPluginFactoryByteCode = compilerOutput.evm.bytecode.object;
+const simpleProjectPluginRuntimeByteCode = '0x' + require('../build/TestSimpleProjectPlugin.json').compilerOutput.evm.deployedBytecode.object;
 const assert = chai.assert;
 
-const { StandardTokenTest, assertFail, LiquidPledgingMock } = test;
+const { assertFail } = test;
 
 const printState = async liquidPledgingState => {
   const st = await liquidPledgingState.getState();
@@ -28,7 +22,7 @@ const printState = async liquidPledgingState => {
 describe('LiquidPledging plugins test', function() {
   this.timeout(0);
 
-  let testrpc;
+  let ganache;
   let web3;
   let accounts;
   let liquidPledging;
@@ -37,46 +31,30 @@ describe('LiquidPledging plugins test', function() {
   let giver1;
   let adminProject1;
   let adminDelegate1;
-  let token;
 
   before(async () => {
-    testrpc = TestRPC.server({
+    ganache = Ganache.server({
       gasLimit: 6700000,
       total_accounts: 10,
     });
 
-    testrpc.listen(8545, '127.0.0.1');
+    ganache.listen(8545, '127.0.0.1');
 
     web3 = new Web3('http://localhost:8545');
     accounts = await web3.eth.getAccounts();
-    giver1 = accounts[1];
     adminProject1 = accounts[2];
     adminDelegate1 = accounts[3];
+
+    const deployment = await deployLP(web3);
+    giver1 = deployment.giver1;
+    vault = deployment.vault;
+    liquidPledging = deployment.liquidPledging;
+    liquidPledgingState = deployment.liquidPledgingState;
   });
 
   after(done => {
-    testrpc.close();
+    ganache.close();
     done();
-  });
-
-  it('Should deploy LiquidPledging contract', async function() {
-    const baseVault = await LPVault.new(web3, accounts[0]);
-    const baseLP = await LiquidPledgingMock.new(web3, accounts[0]);
-    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address);
-
-    const r = await lpFactory.newLP(accounts[0], accounts[0]);
-
-    const vaultAddress = r.events.DeployVault.returnValues.vault;
-    vault = new LPVault(web3, vaultAddress);
-
-    const lpAddress = r.events.DeployLiquidPledging.returnValues.liquidPledging;
-    liquidPledging = new LiquidPledgingMock(web3, lpAddress);
-
-    liquidPledgingState = new LiquidPledgingState(liquidPledging);
-
-    token = await StandardTokenTest.new(web3);
-    await token.mint(giver1, web3.utils.toWei('1000'));
-    await token.approve(liquidPledging.$address, '0xFFFFFFFFFFFFFFFF', { from: giver1 });
   });
 
   it('Should create create giver with no plugin', async function() {

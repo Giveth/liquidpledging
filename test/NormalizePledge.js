@@ -1,11 +1,9 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const TestRPC = require('ganache-cli');
+const Ganache = require('ganache-cli');
 const Web3 = require('web3');
 const { assert } = require('chai');
-const { LPVault, LPFactory, LiquidPledgingState, test } = require('../index');
-
-const { StandardTokenTest, assertFail, LiquidPledgingMock } = test;
+const deployLP = require('./helpers/deployLP');
 
 const printState = async liquidPledgingState => {
   const st = await liquidPledgingState.getState();
@@ -15,12 +13,11 @@ const printState = async liquidPledgingState => {
 describe('NormalizePledge test', function() {
   this.timeout(0);
 
-  let testrpc;
+  let ganache;
   let web3;
   let accounts;
   let liquidPledging;
   let liquidPledgingState;
-  let vault;
   let giver1;
   let giver2;
   let delegate1;
@@ -30,48 +27,34 @@ describe('NormalizePledge test', function() {
   let token;
 
   before(async () => {
-    testrpc = TestRPC.server({
+    ganache = Ganache.server({
       gasLimit: 6700000,
       total_accounts: 10,
     });
 
-    testrpc.listen(8545, '127.0.0.1');
+    ganache.listen(8545, '127.0.0.1');
 
     web3 = new Web3('http://localhost:8545');
     accounts = await web3.eth.getAccounts();
-    giver1 = accounts[1];
     delegate1 = accounts[2];
     delegate2 = accounts[3];
     adminProject1 = accounts[4];
     adminProject2 = accounts[5];
     giver2 = accounts[6];
+
+    const deployment = await deployLP(web3);
+    giver1 = deployment.giver1;
+    liquidPledging = deployment.liquidPledging;
+    liquidPledgingState = deployment.liquidPledgingState;
+    token = deployment.token;
+
+    await token.mint(giver2, web3.utils.toWei('1000'));
+    await token.approve(liquidPledging.$address, '0xFFFFFFFFFFFFFFFF', { from: giver2 });
   });
 
   after(done => {
-    testrpc.close();
+    ganache.close();
     done();
-  });
-
-  it('Should deploy LiquidPledging contract', async () => {
-    const baseVault = await LPVault.new(web3, accounts[0]);
-    const baseLP = await LiquidPledgingMock.new(web3, accounts[0]);
-    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address);
-
-    const r = await lpFactory.newLP(accounts[0], accounts[0]);
-
-    const vaultAddress = r.events.DeployVault.returnValues.vault;
-    vault = new LPVault(web3, vaultAddress);
-
-    const lpAddress = r.events.DeployLiquidPledging.returnValues.liquidPledging;
-    liquidPledging = new LiquidPledgingMock(web3, lpAddress);
-
-    liquidPledgingState = new LiquidPledgingState(liquidPledging);
-
-    token = await StandardTokenTest.new(web3);
-    await token.mint(giver1, web3.utils.toWei('1000'));
-    await token.mint(giver2, web3.utils.toWei('1000'));
-    await token.approve(liquidPledging.$address, '0xFFFFFFFFFFFFFFFF', { from: giver1 });
-    await token.approve(liquidPledging.$address, '0xFFFFFFFFFFFFFFFF', { from: giver2 });
   });
 
   it('Should add pledgeAdmins', async () => {

@@ -50,6 +50,7 @@ contract LiquidPledgingBase is AragonApp, LiquidPledgingStorage, PledgeAdmins, P
     /// @param _vault The vault where the ETH backing the pledges is stored
     function initialize(address _vault) onlyInit public {
         require(_vault != 0x0);
+        initialized();
 
         vault = ILPVault(_vault);
 
