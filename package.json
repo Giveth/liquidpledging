@@ -1,6 +1,6 @@
 {
   "name": "giveth-liquidpledging",
-  "version": "1.0.0-beta.3",
+  "version": "1.0.0-beta.4",
   "description": "Liquid Pledging Smart Contract",
   "main": "index.js",
   "directories": {
@@ -53,6 +53,6 @@
     "@aragon/os": "3.1.9",
     "async": "^2.4.0",
     "chai": "^4.1.0",
-    "eth-contract-class": "^0.0.11"
+    "eth-contract-class": "^0.0.12"
   }
 }
