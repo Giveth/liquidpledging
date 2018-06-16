@@ -4,9 +4,8 @@ const Ganache = require('ganache-cli');
 const Web3 = require('web3');
 const { assert } = require('chai');
 const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../index');
-const { RecoveryVault } = require('../build/contracts');
 
-const { StandardTokenTest, assertFail, LiquidPledgingMock } = test;
+const { StandardTokenTest, assertFail, LiquidPledgingMock, RecoveryVault } = test;
 const { utils } = Web3;
 
 const printState = async liquidPledgingState => {

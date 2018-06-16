@@ -1,43 +1,7 @@
-const LPFactoryArtifact = require('./build/LPFactory.json');
-const LiquidPledgingArtifact = require('./build/LiquidPledging.json');
-const LPVaultArtifact = require('./build/LPVault.json');
-const KernelArtifact = require('./build/Kernel.json');
-const ACLArtifact = require('./build/ACL.json');
-const StandardTokenTestAtifact = require('./build/StandardToken.json');
-const LiquidPledgingMockArtifact = require('./build/LiquidPledgingMock.json');
 const generateClass = require('eth-contract-class').default;
 
-module.exports = {
-  LiquidPledging: generateClass(
-    LiquidPledgingArtifact.compilerOutput.abi,
-    LiquidPledgingArtifact.compilerOutput.evm.bytecode.object,
-  ),
-  LPFactory: generateClass(
-    LPFactoryArtifact.compilerOutput.abi,
-    LPFactoryArtifact.compilerOutput.evm.bytecode.object,
-  ),
-  LiquidPledgingState: require('./lib/liquidPledgingState.js'),
-  LPVault: generateClass(
-    LPVaultArtifact.compilerOutput.abi,
-    LPVaultArtifact.compilerOutput.evm.bytecode.object,
-  ),
-  Kernel: generateClass(
-    KernelArtifact.compilerOutput.abi,
-    KernelArtifact.compilerOutput.evm.bytecode.object,
-  ),
-  ACL: generateClass(
-    ACLArtifact.compilerOutput.abi,
-    ACLArtifact.compilerOutput.evm.bytecode.object,
-  ),
-  test: {
-    StandardTokenTest: generateClass(
-      StandardTokenTestAtifact.compilerOutput.abi,
-      StandardTokenTestAtifact.compilerOutput.evm.bytecode.object,
-    ),
-    assertFail: require('./test/helpers/assertFail'),
-    LiquidPledgingMock: generateClass(
-      LiquidPledgingMockArtifact.compilerOutput.abi,
-      LiquidPledgingMockArtifact.compilerOutput.evm.bytecode.object,
-    ),
-  },
-};
+const contracts = require('./js/contracts');
+contracts.test.assertFail = require('./test/helpers/assertFail');
+contracts.test.deployLP = require('./test/helpers/deployLP');
+
+module.exports = contracts;

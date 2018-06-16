@@ -1,5 +1,5 @@
-const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../../index');
-const { RecoveryVault } = require('../../build/contracts');
+const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../../js/contracts');
+const { RecoveryVault } = test;
 
 module.exports = async web3 => {
   const accounts = await web3.eth.getAccounts();
