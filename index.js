@@ -1,6 +1,6 @@
 const generateClass = require('eth-contract-class').default;
 
-const contracts = require('./js/contracts');
+const contracts = require('./lib/contracts');
 contracts.test.assertFail = require('./test/helpers/assertFail');
 contracts.test.deployLP = require('./test/helpers/deployLP');
 
