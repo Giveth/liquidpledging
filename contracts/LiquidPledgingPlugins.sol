@@ -27,10 +27,18 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
 
     bytes32 constant public PLUGIN_MANAGER_ROLE = keccak256("PLUGIN_MANAGER_ROLE");
 
+    /**
+    * @dev adds an instance of a plugin to the whitelist
+    */
     function addValidPluginInstance(address addr) auth(PLUGIN_MANAGER_ROLE) external {
         pluginInstanceWhitelist[addr] = true;
     }
 
+    /**
+    * @dev add a contract to the plugin whitelist.
+    * @notice Proxy contracts should never be added using this method. Each individual
+    *         proxy instance should be added by calling `addValidPluginInstance`
+    */
     function addValidPluginContract(bytes32 contractHash) auth(PLUGIN_MANAGER_ROLE) public {
         pluginContractWhitelist[contractHash] = true;
     }
@@ -41,18 +49,31 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
         }
     }
 
+    /**
+    * @dev removes a contract from the plugin whitelist
+    */
     function removeValidPluginContract(bytes32 contractHash) external authP(PLUGIN_MANAGER_ROLE, arr(contractHash)) {
         pluginContractWhitelist[contractHash] = false;
     }
 
+    /**
+    * @dev removes an instance of a plugin to the whitelist
+    */
     function removeValidPluginInstance(address addr) external authP(PLUGIN_MANAGER_ROLE, arr(addr)) {
         pluginInstanceWhitelist[addr] = false;
     }
 
+    /**
+    * @dev enable/disable the plugin whitelist.
+    * @notice you better know what you're doing if you are going to disable it
+    */
     function useWhitelist(bool useWhitelist) external auth(PLUGIN_MANAGER_ROLE) {
         whitelistDisabled = !useWhitelist;
     }
 
+    /**
+    * check if the contract at the provided address is in the plugin whitelist
+    */
     function isValidPlugin(address addr) public view returns(bool) {
         if (whitelistDisabled || addr == 0x0) {
             return true;
@@ -69,6 +90,9 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
         return pluginContractWhitelist[contractHash];
     }
 
+    /**
+    * @return the hash of the code for the given address
+    */
     function getCodeHash(address addr) public view returns(bytes32) {
         bytes memory o_code;
         assembly {

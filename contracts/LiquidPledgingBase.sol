@@ -22,12 +22,12 @@ pragma solidity ^0.4.18;
 import "./LiquidPledgingStorage.sol";
 import "./PledgeAdmins.sol";
 import "./Pledges.sol";
-import "./EscapableApp.sol";
+import "@aragon/os/contracts/apps/AragonApp.sol";
 
 /// @dev `LiquidPledgingBase` is the base level contract used to carry out
 ///  liquidPledging's most basic functions, mostly handling and searching the
 ///  data structures
-contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins, Pledges {
+contract LiquidPledgingBase is AragonApp, LiquidPledgingStorage, PledgeAdmins, Pledges {
 
     event Transfer(uint indexed from, uint indexed to, uint amount);
     event CancelProject(uint indexed idProject);
@@ -47,18 +47,8 @@ contract LiquidPledgingBase is EscapableApp, LiquidPledgingStorage, PledgeAdmins
 // Constructor
 ///////////////
 
-    function initialize(address _escapeHatchDestination) onlyInit public {
-        require(false); // overload the EscapableApp
-        _escapeHatchDestination;
-    }
-
     /// @param _vault The vault where the ETH backing the pledges is stored
-    /// @param _escapeHatchDestination The address of a safe location (usu a
-    ///  Multisig) to send the ether held in this contract; if a neutral address
-    ///  is required, the WHG Multisig is an option:
-    ///  0x8Ff920020c8AD673661c8117f2855C384758C572 
-    function initialize(address _vault, address _escapeHatchDestination) onlyInit public {
-        super.initialize(_escapeHatchDestination);
+    function initialize(address _vault) onlyInit public {
         require(_vault != 0x0);
 
         vault = ILPVault(_vault);

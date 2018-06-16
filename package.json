@@ -1,6 +1,6 @@
 {
   "name": "giveth-liquidpledging",
-  "version": "0.1.1",
+  "version": "1.0.0-beta.0",
   "description": "Liquid Pledging Smart Contract",
   "main": "index.js",
   "directories": {
@@ -8,10 +8,11 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npm run build; mocha --harmony",
-    "sol-compile": "solcpiler -i './contracts/**/*.sol' ./node_modules/@aragon/os/contracts/{kernel/Kernel.sol,acl/ACL.sol}",
-    "js-compile": "babel -d lib/ js/",
-    "build": "npm run sol-compile; npm run js-compile",
+    "test": "npm run build && mocha --harmony",
+    "compile:sol": "solcpiler -i './contracts/**/*.sol' ./node_modules/@aragon/os/contracts/{kernel/Kernel.sol,acl/ACL.sol} --output-sol-dir build/contracts",
+    "compile:js": "babel -d lib/ js/",
+    "compile": "npm run compile:sol &&  npm run compile:js",
+    "build": "npm run compile",
     "prepublish": "npm run build"
   },
   "repository": {
@@ -40,11 +41,11 @@
     "eslint-plugin-import": "^2.6.0",
     "eslint-plugin-jsx-a11y": "^6.0.2",
     "eslint-plugin-react": "^7.1.0",
-    "ganache-cli": "^7.0.0-beta.0",
+    "ganache-cli": "^6.1.3",
     "lerna": "^2.2.0",
     "mocha": "^3.5.0",
     "random-bytes": "^1.0.0",
-    "solcpiler": "1.0.0-beta.2",
+    "solcpiler": "1.0.0-beta.3",
     "web3": "1.0.0-beta.34"
   },
   "homepage": "https://github.com/Giveth/liquidpledging#readme",
@@ -52,7 +53,6 @@
     "@aragon/os": "3.1.9",
     "async": "^2.4.0",
     "chai": "^4.1.0",
-    "eth-contract-class": "^0.0.9",
-    "giveth-common-contracts": "0.6.0"
+    "eth-contract-class": "^0.0.9"
   }
 }

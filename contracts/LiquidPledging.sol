@@ -27,9 +27,6 @@ import "./LiquidPledgingBase.sol";
 ///  to allow for expanded functionality.
 contract LiquidPledging is LiquidPledgingBase {
 
-    function LiquidPledging(address _escapeHatchDestination) EscapableApp(_escapeHatchDestination) public {
-    }
-
     function addGiverAndDonate(uint64 idReceiver, address token, uint amount)
         public
     {
@@ -63,9 +60,6 @@ contract LiquidPledging is LiquidPledgingBase {
         PledgeAdmin storage sender = _findAdmin(idGiver);
         require(sender.adminType == PledgeAdminType.Giver);
 
-        // TODO should this be done at the end of this function?
-        // what re-entrancy issues are there if this is done here?
-        // if done at the end of the function, will that affect plugins?
         require(ERC20(token).transferFrom(msg.sender, address(vault), amount)); // transfer the token to the `vault`
 
         uint64 idPledge = _findOrCreatePledge(
@@ -255,32 +249,6 @@ contract LiquidPledging is LiquidPledgingBase {
             uint amount = pledgesAmounts[i] / D64;
 
             withdraw(idPledge, amount);
-        }
-    }
-
-    /// @notice `mConfirmPayment` allows for multiple pledges to be confirmed
-    ///  efficiently
-    /// @param pledgesAmounts An array of pledge amounts and IDs which are extrapolated
-    ///  using the D64 bitmask
-    function mConfirmPayment(uint[] pledgesAmounts) public {
-        for (uint i = 0; i < pledgesAmounts.length; i++ ) {
-            uint64 idPledge = uint64(pledgesAmounts[i] & (D64-1));
-            uint amount = pledgesAmounts[i] / D64;
-
-            confirmPayment(idPledge, amount);
-        }
-    }
-
-    /// @notice `mCancelPayment` allows for multiple pledges to be canceled
-    ///  efficiently
-    /// @param pledgesAmounts An array of pledge amounts and IDs which are extrapolated
-    ///  using the D64 bitmask
-    function mCancelPayment(uint[] pledgesAmounts) public {
-        for (uint i = 0; i < pledgesAmounts.length; i++ ) {
-            uint64 idPledge = uint64(pledgesAmounts[i] & (D64-1));
-            uint amount = pledgesAmounts[i] / D64;
-
-            cancelPayment(idPledge, amount);
         }
     }
 

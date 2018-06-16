@@ -1,6 +1,6 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const TestRPC = require('ganache-cli');
+const Ganache = require('ganache-cli');
 const Web3 = require('web3');
 const { assert } = require('chai');
 const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../index');
@@ -15,7 +15,7 @@ const printState = async liquidPledgingState => {
 
 describe('LiquidPledging test', function() {
   this.timeout(0);
-  let testrpc;
+  let ganache;
   let web3;
   let accounts;
   let liquidPledging;
@@ -36,12 +36,12 @@ describe('LiquidPledging test', function() {
   let giver2Token;
 
   before(async () => {
-    testrpc = TestRPC.server({
+    ganache = Ganache.server({
       gasLimit: 6700000,
       total_accounts: 11,
     });
 
-    testrpc.listen(8545, '127.0.0.1');
+    ganache.listen(8545, '127.0.0.1');
 
     web3 = new Web3('http://localhost:8545');
     accounts = await web3.eth.getAccounts();
@@ -58,16 +58,16 @@ describe('LiquidPledging test', function() {
   });
 
   after(done => {
-    testrpc.close();
+    ganache.close();
     done();
   });
 
   it('Should deploy LiquidPledging contract', async () => {
-    const baseVault = await LPVault.new(web3, escapeHatchDestination);
-    const baseLP = await LiquidPledgingMock.new(web3, escapeHatchDestination, {
+    const baseVault = await LPVault.new(web3);
+    const baseLP = await LiquidPledgingMock.new(web3, {
       gas: 6700000,
     });
-    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address);
+    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address, { gas: 6700000 });
 
     assert.isAbove(Number(await baseVault.getInitializationBlock()), 0);
     assert.isAbove(Number(await baseLP.getInitializationBlock()), 0);

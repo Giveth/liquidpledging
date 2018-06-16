@@ -1,4 +1,4 @@
-pragma solidity ^0.4.24;
+pragma solidity ^0.4.18;
 
 /*
     Copyright 2017, Jordi Baylina
@@ -85,11 +85,17 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
         _;
     }
 
+// TODO if we remove EscapableApp, we won't be able to escape the base contracts???
+    function LPVault() {
+        initialized();
+    };
+
     /// @param _liquidPledging Address of the liquidPledging instance associated
     /// with this LPVault
     function initialize(address _liquidPledging) onlyInit external {
         require(_liquidPledging != 0x0);
         liquidPledging = ILiquidPledging(_liquidPledging);
+        initialized();
     }
 
     /// @notice Used to decentralize, toggles whether the LPVault will
@@ -99,7 +105,7 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
     ///  every payment
     function setAutopay(bool _automatic) external authP(SET_AUTOPAY_ROLE, arr(_automatic)) {
         autoPay = _automatic;
-        emit AutoPaySet(autoPay);
+        AutoPaySet(autoPay);
     }
 
     /// @notice If `autoPay == true` the transfer happens automatically `else` the `owner`
@@ -124,7 +130,7 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
         payments[idPayment].token = _token;
         payments[idPayment].amount = _amount;
 
-        emit AuthorizePayment(idPayment, _ref, _dest, _token, _amount);
+        AuthorizePayment(idPayment, _ref, _dest, _token, _amount);
 
         if (autoPay) {
             _doConfirmPayment(idPayment);
@@ -198,7 +204,7 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
         ERC20 token = ERC20(p.token);
         require(token.transfer(p.dest, p.amount)); // Transfers token to dest
 
-        emit ConfirmPayment(_idPayment, p.ref);
+        ConfirmPayment(_idPayment, p.ref);
     }
 
     /// @notice Cancels a pending payment (internal function)
@@ -212,6 +218,6 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
 
         liquidPledging.cancelPayment(uint64(p.ref), p.amount);
 
-        emit CancelPayment(_idPayment, p.ref);
+        CancelPayment(_idPayment, p.ref);
     }
 }

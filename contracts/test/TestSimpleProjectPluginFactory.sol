@@ -11,7 +11,7 @@ contract TestSimpleProjectPluginFactory {
         string name,
         string url,
         uint64 parentProject
-    ) {
+    ) public {
         TestSimpleProjectPlugin p = new TestSimpleProjectPlugin();
         p.init(liquidPledging, name, url, parentProject);
     }

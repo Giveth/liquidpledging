@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 
 import "../LiquidPledging.sol";
 
@@ -36,6 +36,7 @@ contract TestSimpleDelegatePlugin {
         uint amount
     ) external returns (uint maxAllowed) {
         require(!initPending);
+        maxAllowed;
         BeforeTransfer(pledgeAdmin, pledgeFrom, pledgeTo, context, amount);
     }
 

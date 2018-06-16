@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 
 import "../LiquidPledging.sol";
 
@@ -11,7 +11,7 @@ contract TestSimpleProjectPlugin {
     event BeforeTransfer(uint64 pledgeAdmin, uint64 pledgeFrom, uint64 pledgeTo, uint64 context, uint amount);
     event AfterTransfer(uint64 pledgeAdmin, uint64 pledgeFrom, uint64 pledgeTo, uint64 context, uint amount);
 
-    function TestSimpleProjectPlugin() {
+    function TestSimpleProjectPlugin() public {
         require(msg.sender != tx.origin); // Avoids being created directly by mistake.
         initPending = true;
     }
@@ -21,7 +21,7 @@ contract TestSimpleProjectPlugin {
         string name,
         string url,
         uint64 parentProject
-    ) {
+    ) public {
         require(initPending);
         idProject = liquidPledging.addProject(name, url, address(this), parentProject, 0, ILiquidPledgingPlugin(this));
         initPending = false;
@@ -35,6 +35,7 @@ contract TestSimpleProjectPlugin {
         uint amount
     ) external returns (uint maxAllowed) {
         require(!initPending);
+        maxAllowed;
         BeforeTransfer(pledgeAdmin, pledgeFrom, pledgeTo, context, amount);
     }
 
