@@ -1,9 +1,10 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const TestRPC = require('ganache-cli');
+const Ganache = require('ganache-cli');
 const Web3 = require('web3');
 const { assert } = require('chai');
 const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../index');
+const { RecoveryVault } = require('../build/contracts');
 
 const { StandardTokenTest, assertFail, LiquidPledgingMock } = test;
 const { utils } = Web3;
@@ -15,7 +16,7 @@ const printState = async liquidPledgingState => {
 
 describe('LiquidPledging test', function() {
   this.timeout(0);
-  let testrpc;
+  let ganache;
   let web3;
   let accounts;
   let liquidPledging;
@@ -29,19 +30,19 @@ describe('LiquidPledging test', function() {
   let adminProject2a;
   let adminProject3;
   let delegate2;
-  let escapeHatchDestination;
+  let recoveryVault;
   let escapeHatchCaller;
   let acl;
   let giver1Token;
   let giver2Token;
 
   before(async () => {
-    testrpc = TestRPC.server({
+    ganache = Ganache.server({
       gasLimit: 6700000,
       total_accounts: 11,
     });
 
-    testrpc.listen(8545, '127.0.0.1');
+    ganache.listen(8545, '127.0.0.1');
 
     web3 = new Web3('http://localhost:8545');
     accounts = await web3.eth.getAccounts();
@@ -53,32 +54,32 @@ describe('LiquidPledging test', function() {
     delegate2 = accounts[6];
     giver2 = accounts[7];
     adminProject3 = accounts[8];
-    escapeHatchDestination = accounts[9];
+    recoveryVault = (await RecoveryVault.new(web3)).$address;
     escapeHatchCaller = accounts[10];
   });
 
   after(done => {
-    testrpc.close();
+    ganache.close();
     done();
   });
 
   it('Should deploy LiquidPledging contract', async () => {
-    const baseVault = await LPVault.new(web3, escapeHatchDestination);
-    const baseLP = await LiquidPledgingMock.new(web3, escapeHatchDestination, {
+    const baseVault = await LPVault.new(web3);
+    const baseLP = await LiquidPledgingMock.new(web3, {
       gas: 6700000,
     });
-    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address);
+    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address, { gas: 6700000 });
 
-    assert.isAbove(Number(await baseVault.getInitializationBlock()), 0);
-    assert.isAbove(Number(await baseLP.getInitializationBlock()), 0);
-
-    const r = await lpFactory.newLP(accounts[0], escapeHatchDestination);
+    const r = await lpFactory.newLP(accounts[0], recoveryVault);
 
     const vaultAddress = r.events.DeployVault.returnValues.vault;
     vault = new LPVault(web3, vaultAddress);
 
     const lpAddress = r.events.DeployLiquidPledging.returnValues.liquidPledging;
     liquidPledging = new LiquidPledgingMock(web3, lpAddress);
+
+    assert.isAbove(Number(await vault.getInitializationBlock()), 0);
+    assert.isAbove(Number(await liquidPledging.getInitializationBlock()), 0);
 
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
 
@@ -493,5 +494,30 @@ describe('LiquidPledging test', function() {
 
     const giver1Bal = await giver1Token.balanceOf(giver1);
     assert.equal(new utils.BN(preGiver1Bal).subn(11).toString(), giver1Bal);
+  });
+
+  it('Should recover funds from contract instances', async function() {
+    assert.equal(await giver1Token.balanceOf(recoveryVault), 0);
+    assert.equal(await giver1Token.balanceOf(liquidPledging.$address), 0);
+
+    // shouldn't be able to send eth to contract
+    await assertFail(
+      web3.eth.sendTransaction({
+        to: liquidPledging.$address,
+        value: 1000,
+        from: giver1,
+        gas: 6700000,
+      }),
+    );
+
+    // however, we can't stop tokens, so lets make sure we can recover them
+    await giver1Token.transfer(liquidPledging.$address, 1000, { from: giver1 });
+    assert.equal(await giver1Token.balanceOf(liquidPledging.$address), 1000);
+
+    const kernel = new Kernel(web3, await liquidPledging.kernel());
+    await liquidPledging.transferToVault(giver1Token.$address, { $extraGas: 100000 });
+
+    assert.equal(await giver1Token.balanceOf(recoveryVault), 1000);
+    assert.equal(await giver1Token.balanceOf(liquidPledging.$address), 0);
   });
 });

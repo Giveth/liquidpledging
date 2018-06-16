@@ -63,7 +63,6 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         );
     }
 
-    // TODO: is there an issue w/ allowing anyone to create a giver on behalf of another addy?
     function addGiver(
         address addr,
         string name,

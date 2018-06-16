@@ -1,4 +1,4 @@
-pragma solidity ^0.4.11;
+pragma solidity ^0.4.18;
 /*
     Copyright 2017, Jordi Baylina
     Contributor: Adrià Massanet <adria@codecontext.io>
@@ -26,13 +26,10 @@ contract LiquidPledgingMock is LiquidPledging {
 
     uint public mock_time;
 
-    function LiquidPledgingMock(address _escapeHatchDestination) LiquidPledging(_escapeHatchDestination) public {
-    }
-
     /// @dev `LiquidPledgingMock` creates a standard `LiquidPledging`
     ///  instance and sets the mocked time to the current blocktime.
-    function initialize(address _vault, address _escapeHatchDestination) onlyInit public {
-        super.initialize(_vault, _escapeHatchDestination);
+    function initialize(address _vault) onlyInit public {
+        super.initialize(_vault);
         mock_time = now;
     }
 
