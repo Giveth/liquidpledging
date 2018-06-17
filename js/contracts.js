@@ -5,6 +5,7 @@ const LiquidPledgingArtifact = require('../build/LiquidPledging.json');
 const LPVaultArtifact = require('../build/LPVault.json');
 const KernelArtifact = require('../build/Kernel.json');
 const ACLArtifact = require('../build/ACL.json');
+const AppProxyUpgradeableArtifact = require('../build/AppProxyUpgradeable.json');
 const StandardTokenTestAtifact = require('../build/StandardToken.json');
 const LiquidPledgingMockArtifact = require('../build/LiquidPledgingMock.json');
 const RecoveryVaultArtifact = require('../build/RecoveryVault.json');
@@ -30,6 +31,10 @@ module.exports = {
   ACL: generateClass(
     ACLArtifact.compilerOutput.abi,
     ACLArtifact.compilerOutput.evm.bytecode.object,
+  ),
+  AppProxyUpgradeable: generateClass(
+    AppProxyUpgradeableArtifact.compilerOutput.abi,
+    AppProxyUpgradeableArtifact.compilerOutput.evm.bytecode.object,
   ),
   test: {
     RecoveryVault: generateClass(
