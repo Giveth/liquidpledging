@@ -96,13 +96,12 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
     function getCodeHash(address addr) public view returns(bytes32) {
         bytes memory o_code;
         assembly {
-            // retrieve the size of the code, this needs assembly
+            // retrieve the size of the code
             let size := extcodesize(addr)
-            // allocate output byte array - this could also be done without assembly
-            // by using o_code = new bytes(size)
+            // allocate output byte array
             o_code := mload(0x40)
             mstore(o_code, size) // store length in memory
-            // actually retrieve the code, this needs assembly
+            // actually retrieve the code
             extcodecopy(addr, add(o_code, 0x20), 0, size)
         }
         return keccak256(o_code);

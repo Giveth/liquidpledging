@@ -27,12 +27,23 @@ import "./LiquidPledgingBase.sol";
 ///  to allow for expanded functionality.
 contract LiquidPledging is LiquidPledgingBase {
 
+    /// Create a "giver" pledge admin for the sender & donate 
+    /// @param idReceiver The Admin receiving the donation; can be any Admin:
+    ///  the Giver themselves, another Giver, a Delegate or a Project
+    /// @param token The address of the token being donated.
+    /// @param amount The amount of tokens being donated
     function addGiverAndDonate(uint64 idReceiver, address token, uint amount)
         public
     {
         addGiverAndDonate(idReceiver, msg.sender, token, amount);
     }
 
+    /// Create a "giver" pledge admin for the given `donorAddress` & donate 
+    /// @param idReceiver The Admin receiving the donation; can be any Admin:
+    ///  the Giver themselves, another Giver, a Delegate or a Project
+    /// @param donorAddress The address of the "giver" of this donation
+    /// @param token The address of the token being donated.
+    /// @param amount The amount of tokens being donated
     function addGiverAndDonate(uint64 idReceiver, address donorAddress, address token, uint amount)
         public
     {
@@ -50,6 +61,8 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param idGiver The id of the Giver donating
     /// @param idReceiver The Admin receiving the donation; can be any Admin:
     ///  the Giver themselves, another Giver, a Delegate or a Project
+    /// @param token The address of the token being donated.
+    /// @param amount The amount of tokens being donated
     function donate(uint64 idGiver, uint64 idReceiver, address token, uint amount)
         public
     {

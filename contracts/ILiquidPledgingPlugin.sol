@@ -1,7 +1,7 @@
 pragma solidity ^0.4.0;
 
 /*
-    Copyright 2017, Jordi Baylina
+    Copyright 2018, Jordi Baylina
     Contributors: Adrià Massanet <adria@codecontext.io>, RJ Ewing, Griff
     Green, Arthur Lunn
 

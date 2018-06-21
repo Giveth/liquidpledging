@@ -1,6 +1,6 @@
 {
   "name": "giveth-liquidpledging",
-  "version": "1.0.0-beta.5",
+  "version": "1.0.0-beta.6",
   "description": "Liquid Pledging Smart Contract",
   "main": "index.js",
   "directories": {
@@ -45,7 +45,7 @@
     "lerna": "^2.2.0",
     "mocha": "^3.5.0",
     "random-bytes": "^1.0.0",
-    "solcpiler": "1.0.0-beta.5",
+    "solcpiler": "1.0.0-beta.7",
     "web3": "1.0.0-beta.34"
   },
   "homepage": "https://github.com/Giveth/liquidpledging#readme",

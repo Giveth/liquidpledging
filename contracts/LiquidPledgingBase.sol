@@ -233,20 +233,11 @@ contract LiquidPledgingBase is AragonApp, LiquidPledgingStorage, PledgeAdmins, P
             if (receiver.adminType == PledgeAdminType.Delegate) {
                 uint receiverDIdx = _getDelegateIdx(p, idReceiver);
 
-                // And not in the delegationChain
-                if (receiverDIdx == NOTFOUND) {
-                    idPledge = _undelegate(
-                        idPledge,
-                        amount,
-                        p.delegationChain.length - senderDIdx - 1
-                    );
-                    _appendDelegate(idPledge, amount, idReceiver);
-                    return;
-
-                // And part of the delegationChain and is after the sender, then
-                //  all of the other delegates after the sender are removed and
-                //  the receiver is appended at the end of the delegationChain
-                } else if (receiverDIdx > senderDIdx) {
+                // And not in the delegationChain or part of the delegationChain
+                // is after the sender, then all of the other delegates after 
+                // the sender are removed and the receiver is appended at the 
+                // end of the delegationChain
+                if (receiverDIdx == NOTFOUND || receiverDIdx > senderDIdx) {
                     idPledge = _undelegate(
                         idPledge,
                         amount,
@@ -259,7 +250,6 @@ contract LiquidPledgingBase is AragonApp, LiquidPledgingStorage, PledgeAdmins, P
                 // And is already part of the delegate chain but is before the
                 //  sender, then the sender and all of the other delegates after
                 //  the RECEIVER are removed from the delegationChain
-                //TODO Check for Game Theory issues (from Arthur) this allows the sender to sort of go komakosi and remove himself and the delegates between himself and the receiver... should this authority be allowed?
                 _undelegate(
                     idPledge,
                     amount,
