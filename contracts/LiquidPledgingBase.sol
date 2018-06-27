@@ -458,6 +458,7 @@ contract LiquidPledgingBase is AragonApp, LiquidPledgingStorage, PledgeAdmins, P
         require(pFrom.amount >= amount);
         pFrom.amount -= amount;
         pTo.amount += amount;
+        require(pTo.amount >= amount);
 
         Transfer(from, to, amount);
         _callPlugins(false, from, to, amount);
