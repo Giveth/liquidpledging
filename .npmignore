@@ -1,5 +1,6 @@
 js
 .babelrc
 !build
+build/contracts/solcStandard*
 .vscode
 .idea
