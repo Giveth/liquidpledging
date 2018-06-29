@@ -49,7 +49,6 @@ contract LPFactory is LPConstants, DAOFactory(new Kernel(), new ACL(), 0) {
 
         acl.createPermission(_root, address(v), hatchCallerRole, _root);
         acl.createPermission(_root, address(lp), pluginManagerRole, _root);
-        // TODO: set pledgeAdminRole manager to 0x0? maybe it doesn't matter b/c it can be recreated by _root anyways
 
         acl.grantPermission(_root, address(kernel), appManagerRole);
         acl.grantPermission(_root, address(acl), permRole);
