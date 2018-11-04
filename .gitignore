@@ -1,3 +1,13 @@
+.embark
+chains.json
+config/production/password
+config/livenet/password
+config/development/devpassword
+config/development/password
+config/privatenet/password
+config/testnet/password
+coverage
+dist
 build/
 lib/
 node_modules/
