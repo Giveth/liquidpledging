@@ -4,8 +4,8 @@ module.exports = {
     // Blockchain node to deploy the contracts
     deployment: {
       host: "localhost", // Host of the blockchain node
-      port: 8546, // Port of the blockchain node
-      type: "ws" // Type of connection (ws or rpc),
+      port: 8545, // Port of the blockchain node
+      type: "rpc" // Type of connection (ws or rpc),
       // Accounts to use instead of the default account to populate your wallet
       /*,accounts: [
         {
@@ -37,16 +37,53 @@ module.exports = {
         // fromIndex: 0,
         // args: [100]
       },
-      LiquidPledgingMock: {
-
-      },
+      LiquidPledgingMock: {deploy: false},
       LPFactory: {
+        deploy: false,
         args: {
           _vaultBase: "$LPVault",
           _lpBase: "$LiquidPledgingMock"
         }
       },
       RecoveryVault: {},
+
+      
+      ACL: { deploy: false },
+      ACLHelpers: { deploy: false },
+      AppStorage: { deploy: false },
+      AragonApp: { deploy: false },
+      EtherTokenConstant: { deploy: false },
+      Initializable: { deploy: false },
+      IsContract: { deploy: false },
+      ACLSyntaxSugar: { deploy: false },
+      AppProxyPinned: { deploy: false },
+      AppProxyUpgradeable: { deploy: false },
+      EVMScriptRegistry: { deploy: false },
+      EVMScriptRunner: { deploy: false },
+      EVMScriptRegistryConstants: { deploy: false },
+      ScriptHelpers: { deploy: false },
+      CallsScript: { deploy: false },
+      DelegateScript: { deploy: false },
+      DeployDelegateScript: { deploy: false },
+      AppProxyFactory: { deploy: false },
+      DAOFactory: { deploy: false },
+      EVMScriptRegistryFactory: { deploy: false },
+      Kernel: { deploy: false },
+      KernelProxy: { deploy: false },
+      KernelConstants: { deploy: false },
+      KernelStorage: { deploy: false },
+      LPConstants: { deploy: false },
+      LiquidPledgingACLHelpers: { deploy: false },
+      LiquidPledging: { deploy: false },
+      LiquidPledgingBase: { deploy: false },
+      LiquidPledgingPlugins: { deploy: false },
+      LiquidPledgingStorage: { deploy: false },
+      PledgeAdmins: { deploy: false },
+      Pledges: { deploy: false },
+      StandardToken: { deploy: false },
+      TestSimpleDelegatePlugin: { deploy: false },
+      TestSimpleDelegatePluginFactory: { deploy: false },
+      TestSimpleProjectPluginFactory: { deploy: false },
     }
   },
 
