@@ -7,10 +7,10 @@ module.exports = async web3 => {
 
   const baseVault = await LPVault.new(web3);
   const baseLP = await test.LiquidPledgingMock.new(web3, {
-    gas: 6700000,
+    gas: 7900000,
   });
   const lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address, {
-    gas: 6700000,
+    gas: 7900000,
   });
 
   const recoveryVault = (await RecoveryVault.new(web3)).$address;

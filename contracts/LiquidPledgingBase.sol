@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.25;
 
 /*
     Copyright 2017, Jordi Baylina
@@ -460,7 +460,7 @@ contract LiquidPledgingBase is AragonApp, LiquidPledgingStorage, PledgeAdmins, P
         pTo.amount += amount;
         require(pTo.amount >= amount);
 
-        Transfer(from, to, amount);
+        emit Transfer(from, to, amount);
         _callPlugins(false, from, to, amount);
     }
 

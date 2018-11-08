@@ -26,7 +26,7 @@ describe('LPVault test', function() {
 
   before(async () => {
     testrpc = TestRPC.server({
-      gasLimit: 6700000,
+      gasLimit: 7900000,
       total_accounts: 10,
     });
 
@@ -50,9 +50,9 @@ describe('LPVault test', function() {
   it('Should deploy LPVault contract', async function() {
     const baseVault = await LPVault.new(web3);
     const baseLP = await LiquidPledgingMock.new(web3, {
-      gas: 6700000,
+      gas: 7900000,
     });
-    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address, { gas: 6700000 });
+    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address, { gas: 7900000 });
 
     const r = await lpFactory.newLP(accounts[0], recoveryVault);
 

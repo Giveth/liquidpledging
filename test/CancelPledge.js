@@ -29,7 +29,7 @@ describe('LiquidPledging cancelPledge normal scenario', function() {
 
   before(async () => {
     ganache = Ganache.server({
-      gasLimit: 6700000,
+      gasLimit: 7900000,
       total_accounts: 10,
     });
 

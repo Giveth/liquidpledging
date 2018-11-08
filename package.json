@@ -9,9 +9,11 @@
   },
   "scripts": {
     "test": "npm run build && mocha --harmony",
-    "compile:sol": "solcpiler --solc-version v0.4.18+commit.9cf6e910 -i './contracts/**/*.sol' ./node_modules/@aragon/os/contracts/{kernel/Kernel.sol,acl/ACL.sol,apps/AppProxyUpgradeable.sol} --output-sol-dir build/contracts",
+    "compile:sol": "npm run compile:sol:contracts && npm run compile:sol:factory",
+    "compile:sol:contracts": "solcpiler --solc-version v0.4.25+commit.59dbf8f1 -i './contracts/**/*.sol' !./contracts/LPFactory.sol --output-sol-dir build/contracts",
+    "compile:sol:factory": "solcpiler --solc-version v0.4.24+commit.e67f0147 -i './contracts/LPFactory.sol' ./node_modules/@aragon/os/contracts/{kernel/Kernel.sol,acl/ACL.sol,apps/AppProxyUpgradeable.sol} --output-sol-dir build/contracts",
     "compile:js": "babel -d lib/ js/",
-    "compile": "npm run compile:sol &&  npm run compile:js",
+    "compile": "npm run compile:sol && npm run compile:js",
     "build": "npm run compile",
     "prepublish": "npm run build"
   },
@@ -50,7 +52,7 @@
   },
   "homepage": "https://github.com/Giveth/liquidpledging#readme",
   "dependencies": {
-    "@aragon/os": "3.1.9",
+    "@aragon/os": "4.0.1",
     "async": "^2.4.0",
     "chai": "^4.1.0",
     "eth-contract-class": "^0.0.12"

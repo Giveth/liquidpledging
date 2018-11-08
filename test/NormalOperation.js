@@ -37,7 +37,7 @@ describe('LiquidPledging test', function() {
 
   before(async () => {
     ganache = Ganache.server({
-      gasLimit: 6700000,
+      gasLimit: 7900000,
       total_accounts: 11,
     });
 
@@ -65,9 +65,9 @@ describe('LiquidPledging test', function() {
   it('Should deploy LiquidPledging contract', async () => {
     const baseVault = await LPVault.new(web3);
     const baseLP = await LiquidPledgingMock.new(web3, {
-      gas: 6700000,
+      gas: 7900000,
     });
-    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address, { gas: 6700000 });
+    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address, { gas: 7900000 });
 
     const r = await lpFactory.newLP(accounts[0], recoveryVault);
 

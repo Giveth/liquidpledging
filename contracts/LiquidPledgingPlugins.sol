@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.25;
 
 /*
     Copyright 2017, Jordi Baylina, RJ Ewing
@@ -25,7 +25,10 @@ import "./LiquidPledgingACLHelpers.sol";
 
 contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgingACLHelpers {
 
-    bytes32 constant public PLUGIN_MANAGER_ROLE = keccak256("PLUGIN_MANAGER_ROLE");
+    // bytes32 constant public PLUGIN_MANAGER_ROLE = keccak256("PLUGIN_MANAGER_ROLE");
+    bytes32 constant public PLUGIN_MANAGER_ROLE = 0xd3c76383116f5940be0ff28f44aa486f936c612285d02d30e852699826c34d26;
+
+    string internal constant ERROR_INVALID_PLUGIN = "LIQUIDPLEDGING_PLUGIN_NOT_WHITELISTED";
 
     /**
     * @dev adds an instance of a plugin to the whitelist
@@ -67,8 +70,8 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
     * @dev enable/disable the plugin whitelist.
     * @notice you better know what you're doing if you are going to disable it
     */
-    function useWhitelist(bool useWhitelist) external auth(PLUGIN_MANAGER_ROLE) {
-        whitelistDisabled = !useWhitelist;
+    function useWhitelist(bool shouldUseWhitelist) external auth(PLUGIN_MANAGER_ROLE) {
+        whitelistDisabled = !shouldUseWhitelist;
     }
 
     /**

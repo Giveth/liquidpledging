@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.25;
 
 /*
     Copyright 2017, Jordi Baylina
@@ -99,9 +99,9 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
     /// @param _automatic If true, payments will confirm instantly, if false
     ///  the training wheels are put on and the owner must manually approve 
     ///  every payment
-    function setAutopay(bool _automatic) external authP(SET_AUTOPAY_ROLE, arr(_automatic)) {
+    function setAutopay(bool _automatic) external auth(SET_AUTOPAY_ROLE) {
         autoPay = _automatic;
-        AutoPaySet(autoPay);
+        emit AutoPaySet(autoPay);
     }
 
     /// @notice If `autoPay == true` the transfer happens automatically `else` the `owner`
@@ -126,7 +126,7 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
         payments[idPayment].token = _token;
         payments[idPayment].amount = _amount;
 
-        AuthorizePayment(idPayment, _ref, _dest, _token, _amount);
+        emit AuthorizePayment(idPayment, _ref, _dest, _token, _amount);
 
         if (autoPay) {
             _doConfirmPayment(idPayment);
@@ -200,7 +200,7 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
         ERC20 token = ERC20(p.token);
         require(token.transfer(p.dest, p.amount)); // Transfers token to dest
 
-        ConfirmPayment(_idPayment, p.ref);
+        emit ConfirmPayment(_idPayment, p.ref);
     }
 
     /// @notice Cancels a pending payment (internal function)
@@ -214,6 +214,6 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
 
         liquidPledging.cancelPayment(uint64(p.ref), p.amount);
 
-        CancelPayment(_idPayment, p.ref);
+        emit CancelPayment(_idPayment, p.ref);
     }
 }

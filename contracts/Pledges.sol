@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.25;
 
 /*
     Copyright 2017, Jordi Baylina, RJ Ewing
@@ -97,7 +97,7 @@ contract Pledges is AragonApp, LiquidPledgingStorage {
         PledgeState state
     ) internal returns (uint64)
     {
-        bytes32 hPledge = keccak256(delegationChain, owner, intendedProject, commitTime, oldPledge, token, state);
+        bytes32 hPledge = keccak256(abi.encodePacked(delegationChain, owner, intendedProject, commitTime, oldPledge, token, state));
         uint64 id = hPledge2idx[hPledge];
         if (id > 0) {
             return id;
