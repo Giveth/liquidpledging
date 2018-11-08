@@ -3,9 +3,9 @@ module.exports = {
   default: {
     // Blockchain node to deploy the contracts
     deployment: {
-      host: "localhost", // Host of the blockchain node
-      port: 8545, // Port of the blockchain node
-      type: "rpc" // Type of connection (ws or rpc),
+      host: 'localhost', // Host of the blockchain node
+      port: 8546, // Port of the blockchain node
+      type: 'ws', // Type of connection (ws or rpc),
       // Accounts to use instead of the default account to populate your wallet
       /*,accounts: [
         {
@@ -27,90 +27,61 @@ module.exports = {
     },
     // order of connections the dapp should connect to
     dappConnection: [
-      "$WEB3",  // uses pre existing web3 object if available (e.g in Mist)
-      "ws://localhost:8546",
-      "http://localhost:8545"
+      '$WEB3', // uses pre existing web3 object if available (e.g in Mist)
+      'ws://localhost:8546',
+      'http://localhost:8545',
     ],
-    gas: "auto",
-    contracts: {
-      LPVault: {
-        // fromIndex: 0,
-        // args: [100]
-      },
-      LiquidPledgingMock: {deploy: false},
-      LPFactory: {
-        deploy: false,
-        args: {
-          _vaultBase: "$LPVault",
-          _lpBase: "$LiquidPledgingMock"
-        }
-      },
-      RecoveryVault: {},
 
-      
-      ACL: { deploy: false },
-      ACLHelpers: { deploy: false },
-      AppStorage: { deploy: false },
-      AragonApp: { deploy: false },
-      EtherTokenConstant: { deploy: false },
-      Initializable: { deploy: false },
-      IsContract: { deploy: false },
-      ACLSyntaxSugar: { deploy: false },
-      AppProxyPinned: { deploy: false },
-      AppProxyUpgradeable: { deploy: false },
-      EVMScriptRegistry: { deploy: false },
-      EVMScriptRunner: { deploy: false },
-      EVMScriptRegistryConstants: { deploy: false },
-      ScriptHelpers: { deploy: false },
-      CallsScript: { deploy: false },
-      DelegateScript: { deploy: false },
-      DeployDelegateScript: { deploy: false },
-      AppProxyFactory: { deploy: false },
-      DAOFactory: { deploy: false },
-      EVMScriptRegistryFactory: { deploy: false },
-      Kernel: { deploy: false },
-      KernelProxy: { deploy: false },
-      KernelConstants: { deploy: false },
-      KernelStorage: { deploy: false },
-      LPConstants: { deploy: false },
-      LiquidPledgingACLHelpers: { deploy: false },
-      LiquidPledging: { deploy: false },
-      LiquidPledgingBase: { deploy: false },
-      LiquidPledgingPlugins: { deploy: false },
-      LiquidPledgingStorage: { deploy: false },
-      PledgeAdmins: { deploy: false },
-      Pledges: { deploy: false },
-      StandardToken: { deploy: false },
-      TestSimpleDelegatePlugin: { deploy: false },
-      TestSimpleDelegatePluginFactory: { deploy: false },
-      TestSimpleProjectPluginFactory: { deploy: false },
-    }
+    gas: 'auto',
+
+    // Strategy for the deployment of the contracts:
+    // - implicit will try to deploy all the contracts located inside the contracts directory
+    //            or the directory configured for the location of the contracts. This is default one
+    //            when not specified
+    // - explicit will only attempt to deploy the contracts that are explicity specified inside the
+    //            contracts section.
+    strategy: 'explicit',
+
+    contracts: {},
   },
 
   // default environment, merges with the settings in default
   // assumed to be the intended environment by `embark run`
   development: {
     dappConnection: [
-      "ws://localhost:8546",
-      "http://localhost:8545",
-      "$WEB3"  // uses pre existing web3 object if available (e.g in Mist)
-    ]
+      'ws://localhost:8546',
+      'http://localhost:8545',
+      '$WEB3', // uses pre existing web3 object if available (e.g in Mist)
+    ],
+    contracts: {
+      LPVault: {},
+      LiquidPledgingMock: {},
+      RecoveryVault: {},
+      LPFactory: {
+        deploy: false,
+        // gas: "8000000",
+        args: {
+          _vaultBase: '$LPVault',
+          _lpBase: '$LiquidPledgingMock',
+        },
+      },
+
+      // contracts for testing
+      StandardToken: {},
+    },
   },
 
   // merges with the settings in default
   // used with "embark run privatenet"
-  privatenet: {
-  },
+  privatenet: {},
 
   // merges with the settings in default
   // used with "embark run testnet"
-  testnet: {
-  },
+  testnet: {},
 
   // merges with the settings in default
   // used with "embark run livenet"
-  livenet: {
-  },
+  livenet: {},
 
   // you can name an environment with specific settings and then specify with
   // "embark run custom_name" or "embark blockchain custom_name"

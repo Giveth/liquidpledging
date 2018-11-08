@@ -1,13 +1,13 @@
 {
   "contracts": ["contracts/**"],
-  "app": {
-  },
+  "app": {},
   "buildDir": "dist/",
   "config": {
     "contracts": "config/contracts.js",
     "blockchain": "config/blockchain.js",
     "storage": false,
-    "communication": "config/communication.js",
+    "namesystem": false,
+    "communication": false,
     "webserver": false
   },
   "versions": {
