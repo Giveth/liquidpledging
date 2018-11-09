@@ -30,7 +30,6 @@ contract LPFactory is LPConstants {
 
         bytes32 appManagerRole = kernel.APP_MANAGER_ROLE();
 
-        // TODO can I move this to _setPermissions?
         acl.createPermission(this, address(kernel), appManagerRole, this);
 
         ILPVault v = ILPVault(kernel.newAppInstance(VAULT_APP_ID, vaultBase));
@@ -42,11 +41,6 @@ contract LPFactory is LPConstants {
         // set the recoveryVault to the escapeHatchDestination
         kernel.setApp(kernel.APP_ADDR_NAMESPACE(), kernel.recoveryVaultAppId(), _escapeHatchDestination);
 
-        _setPermissions(_root, acl, kernel, v, lp);
-    }
-
-    function _setPermissions(address _root, IACL acl, IKernel kernel, ILPVault v, ILiquidPledging lp) internal {
-        bytes32 appManagerRole = kernel.APP_MANAGER_ROLE();
         bytes32 permRole = acl.CREATE_PERMISSIONS_ROLE();
         bytes32 hatchCallerRole = v.ESCAPE_HATCH_CALLER_ROLE();
         bytes32 pluginManagerRole = lp.PLUGIN_MANAGER_ROLE();
