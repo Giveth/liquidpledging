@@ -1,7 +1,5 @@
 pragma solidity ^0.4.0;
 
-// This is an extended version of aragon/os/acl/IACL.sol which includes all of the
-// functions we need to not have to rely on aragon/os pinned solidity version
 interface ILPVault {
     function ESCAPE_HATCH_CALLER_ROLE() external pure returns (bytes32);
 

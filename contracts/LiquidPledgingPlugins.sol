@@ -21,9 +21,8 @@ pragma solidity ^0.4.25;
 
 import "@aragon/os/contracts/apps/AragonApp.sol";
 import "./LiquidPledgingStorage.sol";
-import "./LiquidPledgingACLHelpers.sol";
 
-contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgingACLHelpers {
+contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage {
 
     // bytes32 constant public PLUGIN_MANAGER_ROLE = keccak256("PLUGIN_MANAGER_ROLE");
     bytes32 constant public _PLUGIN_MANAGER_ROLE = 0xd3c76383116f5940be0ff28f44aa486f936c612285d02d30e852699826c34d26;
