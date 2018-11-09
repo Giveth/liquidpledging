@@ -1,13 +1,8 @@
 pragma solidity ^0.4.25;
 
 import "./ILiquidPledgingPlugin.sol";
+import "./ILPVault.sol";
 
-/// @dev This is an interface for `LPVault` which serves as a secure storage for
-///  the ETH that backs the Pledges, only after `LiquidPledging` authorizes
-///  payments can Pledges be converted for ETH
-interface ILPVault {
-    function authorizePayment(bytes32 _ref, address _dest, address _token, uint _amount) external;
-}
 
 /// This contract contains all state variables used in LiquidPledging contracts
 /// This is done to have everything in 1 location, b/c state variable layout

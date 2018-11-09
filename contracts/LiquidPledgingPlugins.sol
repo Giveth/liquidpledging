@@ -26,14 +26,14 @@ import "./LiquidPledgingACLHelpers.sol";
 contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgingACLHelpers {
 
     // bytes32 constant public PLUGIN_MANAGER_ROLE = keccak256("PLUGIN_MANAGER_ROLE");
-    bytes32 constant public PLUGIN_MANAGER_ROLE = 0xd3c76383116f5940be0ff28f44aa486f936c612285d02d30e852699826c34d26;
+    bytes32 constant public _PLUGIN_MANAGER_ROLE = 0xd3c76383116f5940be0ff28f44aa486f936c612285d02d30e852699826c34d26;
 
     string internal constant ERROR_INVALID_PLUGIN = "LIQUIDPLEDGING_PLUGIN_NOT_WHITELISTED";
 
     /**
     * @dev adds an instance of a plugin to the whitelist
     */
-    function addValidPluginInstance(address addr) auth(PLUGIN_MANAGER_ROLE) external {
+    function addValidPluginInstance(address addr) auth(_PLUGIN_MANAGER_ROLE) external {
         pluginInstanceWhitelist[addr] = true;
     }
 
@@ -42,11 +42,11 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
     * @notice Proxy contracts should never be added using this method. Each individual
     *         proxy instance should be added by calling `addValidPluginInstance`
     */
-    function addValidPluginContract(bytes32 contractHash) auth(PLUGIN_MANAGER_ROLE) public {
+    function addValidPluginContract(bytes32 contractHash) auth(_PLUGIN_MANAGER_ROLE) public {
         pluginContractWhitelist[contractHash] = true;
     }
 
-    function addValidPluginContracts(bytes32[] contractHashes) external auth(PLUGIN_MANAGER_ROLE) {
+    function addValidPluginContracts(bytes32[] contractHashes) external auth(_PLUGIN_MANAGER_ROLE) {
         for (uint8 i = 0; i < contractHashes.length; i++) {
             addValidPluginContract(contractHashes[i]);
         }
@@ -55,14 +55,14 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
     /**
     * @dev removes a contract from the plugin whitelist
     */
-    function removeValidPluginContract(bytes32 contractHash) external authP(PLUGIN_MANAGER_ROLE, arr(contractHash)) {
+    function removeValidPluginContract(bytes32 contractHash) external authP(_PLUGIN_MANAGER_ROLE, arr(contractHash)) {
         pluginContractWhitelist[contractHash] = false;
     }
 
     /**
     * @dev removes an instance of a plugin to the whitelist
     */
-    function removeValidPluginInstance(address addr) external authP(PLUGIN_MANAGER_ROLE, arr(addr)) {
+    function removeValidPluginInstance(address addr) external authP(_PLUGIN_MANAGER_ROLE, arr(addr)) {
         pluginInstanceWhitelist[addr] = false;
     }
 
@@ -70,7 +70,7 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
     * @dev enable/disable the plugin whitelist.
     * @notice you better know what you're doing if you are going to disable it
     */
-    function useWhitelist(bool shouldUseWhitelist) external auth(PLUGIN_MANAGER_ROLE) {
+    function useWhitelist(bool shouldUseWhitelist) external auth(_PLUGIN_MANAGER_ROLE) {
         whitelistDisabled = !shouldUseWhitelist;
     }
 
@@ -109,4 +109,9 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage, LiquidPledgi
         }
         return keccak256(o_code);
     }
+
+    // we provide a pure function here to satisfy the ILiquidPledging interface
+    // the compiler will generate this function for public constant variables, but will not 
+    // recognize that the interface has been satisfied and thus will not generate the bytecode
+    function PLUGIN_MANAGER_ROLE() external pure returns (bytes32) { return _PLUGIN_MANAGER_ROLE; }
 }

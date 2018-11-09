@@ -3,9 +3,10 @@
 const Ganache = require('ganache-cli');
 const Web3 = require('web3');
 const { assert } = require('chai');
-const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../index');
+const { Kernel, ACL, test } = require('../index');
+const deployLP = require('./helpers/deployLP');
 
-const { StandardTokenTest, assertFail, LiquidPledgingMock, RecoveryVault } = test;
+const { StandardTokenTest, assertFail } = test;
 const { utils } = Web3;
 
 const printState = async liquidPledgingState => {
@@ -45,7 +46,6 @@ describe('LiquidPledging test', function() {
 
     web3 = new Web3('http://localhost:8545');
     accounts = await web3.eth.getAccounts();
-    giver1 = accounts[1];
     delegate1 = accounts[2];
     adminProject1 = accounts[3];
     adminProject2 = accounts[4];
@@ -53,7 +53,6 @@ describe('LiquidPledging test', function() {
     delegate2 = accounts[6];
     giver2 = accounts[7];
     adminProject3 = accounts[8];
-    recoveryVault = (await RecoveryVault.new(web3)).$address;
     escapeHatchCaller = accounts[10];
   });
 
@@ -63,25 +62,18 @@ describe('LiquidPledging test', function() {
   });
 
   it('Should deploy LiquidPledging contract', async () => {
-    const baseVault = await LPVault.new(web3);
-    const baseLP = await LiquidPledgingMock.new(web3, {
-      gas: 7900000,
-    });
-    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address, { gas: 7900000 });
-
-    const r = await lpFactory.newLP(accounts[0], recoveryVault);
-
-    const vaultAddress = r.events.DeployVault.returnValues.vault;
-    vault = new LPVault(web3, vaultAddress);
-
-    const lpAddress = r.events.DeployLiquidPledging.returnValues.liquidPledging;
-    liquidPledging = new LiquidPledgingMock(web3, lpAddress);
+    const deployment = await deployLP(web3);
+    giver1 = deployment.giver1;
+    vault = deployment.vault;
+    liquidPledging = deployment.liquidPledging;
+    liquidPledgingState = deployment.liquidPledgingState;
+    recoveryVault = deployment.recoveryVault;
 
     assert.isAbove(Number(await vault.getInitializationBlock()), 0);
     assert.isAbove(Number(await liquidPledging.getInitializationBlock()), 0);
+  });
 
-    liquidPledgingState = new LiquidPledgingState(liquidPledging);
-
+  it('Should setup LiquidPledging contract', async () => {
     // set permissions
     const kernel = new Kernel(web3, await liquidPledging.kernel());
     acl = new ACL(web3, await kernel.acl());

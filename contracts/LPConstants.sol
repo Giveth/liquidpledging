@@ -1,8 +1,6 @@
 pragma solidity ^0.4.24;
 
-import "@aragon/os/contracts/kernel/KernelConstants.sol";
-
-contract LPConstants is KernelAppIds {
+contract LPConstants {
     // bytes32 constant public VAULT_APP_ID = keccak256("vault");
     bytes32 constant public VAULT_APP_ID = 0x23c14fceac7676b670aa56866076586ea1ce15ddcf19208ec6346cf748dffbee;
     // bytes32 constant public LP_APP_ID = keccak256("liquidPledging");

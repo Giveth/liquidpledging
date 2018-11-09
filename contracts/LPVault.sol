@@ -24,24 +24,23 @@ pragma solidity ^0.4.25;
 ///  be a safe place to store funds equipped with optional variable time delays
 ///  to allow for an optional escapeHatch to be implemented in case of issues;
 ///  future versions of this contract will be enabled for tokens
-import "./LiquidPledgingACLHelpers.sol";
 import "@aragon/os/contracts/apps/AragonApp.sol";
+import "./ILiquidPledging.sol";
+import "./ILPVault.sol";
 
-/// @dev `LiquidPledging` is a basic interface to allow the `LPVault` contract
-///  to confirm and cancel payments in the `LiquidPledging` contract.
-contract ILiquidPledging {
-    function confirmPayment(uint64 idPledge, uint amount) public;
-    function cancelPayment(uint64 idPledge, uint amount) public;
-}
 
 /// @dev `LPVault` is a higher level contract built off of the `Escapable`
 ///  contract that holds funds for the liquid pledging system.
-contract LPVault is AragonApp, LiquidPledgingACLHelpers {
+contract LPVault is ILPVault, AragonApp {
 
-    bytes32 constant public CONFIRM_PAYMENT_ROLE = keccak256("CONFIRM_PAYMENT_ROLE");
-    bytes32 constant public CANCEL_PAYMENT_ROLE = keccak256("CANCEL_PAYMENT_ROLE");
-    bytes32 constant public SET_AUTOPAY_ROLE = keccak256("SET_AUTOPAY_ROLE");
-    bytes32 constant public ESCAPE_HATCH_CALLER_ROLE = keccak256("ESCAPE_HATCH_CALLER_ROLE");
+    // bytes32 constant public _CONFIRM_PAYMENT_ROLE = keccak256("CONFIRM_PAYMENT_ROLE");
+    bytes32 constant public _CONFIRM_PAYMENT_ROLE = 0xe8d376fd78e6f5f651a4bd073ee95d38284b2e197d7a9e6aad3a164cdbd7153f;
+    // bytes32 constant public _CANCEL_PAYMENT_ROLE = keccak256("CANCEL_PAYMENT_ROLE");
+    bytes32 constant public _CANCEL_PAYMENT_ROLE = 0xe4de6c9a7465378b041e537fffee313ab2189e2b84c50d3c50009e36c08411db;
+    // bytes32 constant public _SET_AUTOPAY_ROLE = keccak256("SET_AUTOPAY_ROLE");
+    bytes32 constant public _SET_AUTOPAY_ROLE = 0xbde66017e8446645910062da94d2713ea718e2ed728af167a4286b7fb283e30e;
+    // bytes32 constant public _ESCAPE_HATCH_CALLER_ROLE = keccak256("ESCAPE_HATCH_CALLER_ROLE");
+    bytes32 constant public _ESCAPE_HATCH_CALLER_ROLE = 0x5cfc63e96cb331fc218d6862d4ebcdb7abc1c4800aecb569045bebab5aa4a47a;
 
     event AutoPaySet(bool autoPay);
     event EscapeFundsCalled(address token, uint amount);
@@ -99,7 +98,7 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
     /// @param _automatic If true, payments will confirm instantly, if false
     ///  the training wheels are put on and the owner must manually approve 
     ///  every payment
-    function setAutopay(bool _automatic) external auth(SET_AUTOPAY_ROLE) {
+    function setAutopay(bool _automatic) external auth(_SET_AUTOPAY_ROLE) {
         autoPay = _automatic;
         emit AutoPaySet(autoPay);
     }
@@ -142,7 +141,7 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
     /// @param _idPayment Array lookup for the payment.
     function confirmPayment(uint _idPayment) public {
         Payment storage p = payments[_idPayment];
-        require(canPerform(msg.sender, CONFIRM_PAYMENT_ROLE, arr(_idPayment, p.amount)));
+        require(canPerform(msg.sender, _CONFIRM_PAYMENT_ROLE, arr(_idPayment, p.amount)));
         _doConfirmPayment(_idPayment);
     }
 
@@ -178,13 +177,21 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
     * @return bool whether the app allows the recovery
     */
     function allowRecoverability(address token) public view returns (bool) {
-        return canPerform(msg.sender, ESCAPE_HATCH_CALLER_ROLE, arr(token));
+        return canPerform(msg.sender, _ESCAPE_HATCH_CALLER_ROLE, arr(token));
     }
 
     /// @return The total number of payments that have ever been authorized
     function nPayments() external view returns (uint) {
         return payments.length;
     }
+
+    // we provide a pure function here to satisfy the ILPVault interface
+    // the compiler will generate this function for public constant variables, but will not 
+    // recognize that the interface has been satisfied and thus will not generate the bytecode
+    function CONFIRM_PAYMENT_ROLE() external pure returns (bytes32) { return _CONFIRM_PAYMENT_ROLE; }
+    function CANCEL_PAYMENT_ROLE() external pure returns (bytes32) { return _CANCEL_PAYMENT_ROLE; }
+    function SET_AUTOPAY_ROLE() external pure returns (bytes32) { return _SET_AUTOPAY_ROLE; }
+    function ESCAPE_HATCH_CALLER_ROLE() external pure returns (bytes32) { return _ESCAPE_HATCH_CALLER_ROLE; }
 
     /// @notice Transfers ETH according to the data held within the specified
     ///  payment id (internal function)
@@ -205,7 +212,7 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
 
     /// @notice Cancels a pending payment (internal function)
     /// @param _idPayment id number for the payment    
-    function _doCancelPayment(uint _idPayment) internal authP(CANCEL_PAYMENT_ROLE, arr(_idPayment)) {
+    function _doCancelPayment(uint _idPayment) internal authP(_CANCEL_PAYMENT_ROLE, arr(_idPayment)) {
         require(_idPayment < payments.length);
         Payment storage p = payments[_idPayment];
         require(p.state == PaymentStatus.Pending);

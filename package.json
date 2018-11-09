@@ -9,11 +9,10 @@
   },
   "scripts": {
     "test": "npm run build && mocha --harmony",
-    "compile:sol": "npm run compile:sol:contracts && npm run compile:sol:factory",
-    "compile:sol:contracts": "solcpiler --solc-version v0.4.25+commit.59dbf8f1 -i './contracts/**/*.sol' !./contracts/LPFactory.sol --output-sol-dir build/contracts",
-    "compile:sol:factory": "solcpiler --solc-version v0.4.24+commit.e67f0147 -i './contracts/LPFactory.sol' ./node_modules/@aragon/os/contracts/{kernel/Kernel.sol,acl/ACL.sol,apps/AppProxyUpgradeable.sol} --output-sol-dir build/contracts",
+    "compile:sol": "solcpiler --solc-version v0.4.25+commit.59dbf8f1 -i './contracts/**/*.sol' --output-sol-dir build/contracts",
+    "compile:sol:external": "solcpiler --solc-version v0.4.24+commit.e67f0147 -i ./node_modules/@aragon/os/contracts/{kernel/Kernel.sol,acl/ACL.sol,apps/AppProxyUpgradeable.sol,factory/DAOFactory.sol} --output-sol-dir build/contracts",
     "compile:js": "babel -d lib/ js/",
-    "compile": "npm run compile:sol && npm run compile:js",
+    "compile": "npm run compile:sol && npm run compile:sol:external && npm run compile:js",
     "build": "npm run compile",
     "prepublish": "npm run build"
   },

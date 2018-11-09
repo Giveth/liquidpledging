@@ -4,6 +4,7 @@ const LPFactoryArtifact = require('../build/LPFactory.json');
 const LiquidPledgingArtifact = require('../build/LiquidPledging.json');
 const LPVaultArtifact = require('../build/LPVault.json');
 const KernelArtifact = require('../build/Kernel.json');
+const DAOFactoryArtifact = require('../build/DAOFactory.json');
 const ACLArtifact = require('../build/ACL.json');
 const AppProxyUpgradeableArtifact = require('../build/AppProxyUpgradeable.json');
 const StandardTokenTestAtifact = require('../build/StandardToken.json');
@@ -23,6 +24,10 @@ module.exports = {
   LPVault: generateClass(
     LPVaultArtifact.compilerOutput.abi,
     LPVaultArtifact.compilerOutput.evm.bytecode.object,
+  ),
+  DAOFactory: generateClass (
+    DAOFactoryArtifact.compilerOutput.abi,
+    DAOFactoryArtifact.compilerOutput.evm.bytecode.object,
   ),
   Kernel: generateClass(
     KernelArtifact.compilerOutput.abi,

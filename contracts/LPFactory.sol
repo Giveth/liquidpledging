@@ -1,43 +1,38 @@
-pragma solidity 0.4.24;
+pragma solidity ^0.4.25;
 
-import "@aragon/os/contracts/factory/DAOFactory.sol";
-// import "./LPVault.sol";
-// import "./ILiquidPledging.sol";
+import "./lib/aragon/IDAOFactory.sol";
+import "./lib/aragon/IACL.sol";
 import "./LPConstants.sol";
-
-contract ILiquidPledging {
-    // bytes32 constant public PLUGIN_MANAGER_ROLE = keccak256("PLUGIN_MANAGER_ROLE");
-    bytes32 constant public PLUGIN_MANAGER_ROLE = 0xd3c76383116f5940be0ff28f44aa486f936c612285d02d30e852699826c34d26;
-    function initialize(address _vault) public; 
-}
-
-contract ILPVault {
-    bytes32 constant public ESCAPE_HATCH_CALLER_ROLE = keccak256("ESCAPE_HATCH_CALLER_ROLE");
-    function initialize(address _vault) public; 
-}
+import "./ILiquidPledging.sol";
+import "./ILPVault.sol";
 
 
-contract LPFactory is LPConstants, DAOFactory(new Kernel(true), new ACL(), EVMScriptRegistryFactory(0)) {
+contract LPFactory is LPConstants {
     bytes32 public constant RECOVERY_VAULT_ID = keccak256("recoveryVault");
+
+    IDAOFactory public daoFactory;
     address public vaultBase;
     address public lpBase;
 
     event DeployVault(address vault);
     event DeployLiquidPledging(address liquidPledging);
 
-    constructor(address _vaultBase, address _lpBase) public {
+    constructor(IDAOFactory _daoFactory, address _vaultBase, address _lpBase) public {
+        require(address(_daoFactory) != 0);
         require(_vaultBase != 0);
         require(_lpBase != 0);
+        daoFactory = _daoFactory;
         vaultBase = _vaultBase;
         lpBase = _lpBase;
     }
 
     function newLP(address _root, address _escapeHatchDestination) external {
-        Kernel kernel = newDAO(this);
-        ACL acl = ACL(kernel.acl());
+        IKernel kernel = daoFactory.newDAO(this);
+        IACL acl = IACL(kernel.acl());
 
         bytes32 appManagerRole = kernel.APP_MANAGER_ROLE();
 
+        // TODO can I move this to _setPermissions?
         acl.createPermission(this, address(kernel), appManagerRole, this);
 
         ILPVault v = ILPVault(kernel.newAppInstance(VAULT_APP_ID, vaultBase));
@@ -54,7 +49,7 @@ contract LPFactory is LPConstants, DAOFactory(new Kernel(true), new ACL(), EVMSc
         _setPermissions(_root, acl, kernel, v, lp);
     }
 
-    function _setPermissions(address _root, ACL acl, Kernel kernel, ILPVault v, ILiquidPledging lp) internal {
+    function _setPermissions(address _root, IACL acl, IKernel kernel, ILPVault v, ILiquidPledging lp) internal {
         bytes32 appManagerRole = kernel.APP_MANAGER_ROLE();
         bytes32 permRole = acl.CREATE_PERMISSIONS_ROLE();
         bytes32 hatchCallerRole = v.ESCAPE_HATCH_CALLER_ROLE();
