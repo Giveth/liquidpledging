@@ -8,8 +8,6 @@ import "./ILPVault.sol";
 
 
 contract LPFactory is LPConstants {
-    bytes32 public constant RECOVERY_VAULT_ID = keccak256("recoveryVault");
-
     IDAOFactory public daoFactory;
     address public vaultBase;
     address public lpBase;
@@ -37,14 +35,12 @@ contract LPFactory is LPConstants {
 
         ILPVault v = ILPVault(kernel.newAppInstance(VAULT_APP_ID, vaultBase));
         // deploy & register the lp instance w/ the kernel
-        // ILiquidPledging lp = ILiquidPledging(kernel.newAppInstance(LP_APP_ID, lpBase, 0x0, true));
-        ILiquidPledging lp = ILiquidPledging(kernel.newAppInstance(LP_APP_ID, lpBase));
+        ILiquidPledging lp = ILiquidPledging(kernel.newAppInstance(LP_APP_ID, lpBase, "", true));
         v.initialize(address(lp));
         lp.initialize(address(v));
 
         // set the recoveryVault to the escapeHatchDestination
-        kernel.setRecoveryVaultAppId(RECOVERY_VAULT_ID);
-        kernel.setApp(kernel.APP_ADDR_NAMESPACE(), RECOVERY_VAULT_ID, _escapeHatchDestination);
+        kernel.setApp(kernel.APP_ADDR_NAMESPACE(), kernel.recoveryVaultAppId(), _escapeHatchDestination);
 
         _setPermissions(_root, acl, kernel, v, lp);
     }
