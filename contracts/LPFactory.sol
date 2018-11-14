@@ -1,7 +1,7 @@
 pragma solidity ^0.4.25;
 
 import "./lib/aragon/IDAOFactory.sol";
-import "./lib/aragon/IACL.sol";
+import "./lib/aragon/IACLEnhanced.sol";
 import "./LPConstants.sol";
 import "./ILiquidPledging.sol";
 import "./ILPVault.sol";
@@ -25,8 +25,8 @@ contract LPFactory is LPConstants {
     }
 
     function newLP(address _root, address _escapeHatchDestination) external {
-        IKernel kernel = daoFactory.newDAO(this);
-        IACL acl = IACL(kernel.acl());
+        IKernelEnhanced kernel = daoFactory.newDAO(this);
+        IACLEnhanced acl = IACLEnhanced(kernel.acl());
 
         bytes32 appManagerRole = kernel.APP_MANAGER_ROLE();
 
