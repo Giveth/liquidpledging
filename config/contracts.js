@@ -58,15 +58,42 @@ module.exports = {
       LiquidPledgingMock: {},
       RecoveryVault: {},
       LPFactory: {
-        args: {
-          _vaultBase: '$LPVault',
-          _lpBase: '$LiquidPledgingMock',
-        },
+        args: ['$LPVault', '$LiquidPledgingMock'],
+        // args: {
+          // _vaultBase: '$LPVault',
+          // _lpBase: '$LiquidPledgingMock',
+        // },
       },
 
       // contracts for testing
       StandardToken: {},
     },
+
+    // afterDeploy: [
+    //   `console.log('we deployed here')`,
+    //   `embark.logger.info('we deployed here')`,
+    //   `LPFactory.methods.newLP("$accounts[0]", "$RecoveryVault").send({ gas: 7000000 })
+    //     .then(({ events }) => { 
+    //       console.log('method ran');
+    //       global.LiquidPledging = new web3.eth.Contract(LiquidPledgingMockAbi, events.DeployLiquidPledging.returnValues.liquidPledging);
+    //       global.LPVault = new web3.eth.Contract(LPVaultAbi, events.DeployVault.returnValues.vault);
+    //       StandardToken.methods.mint(accounts[1], web3.utils.toWei('1000')).send();
+    //       StandardToken.methods.approve(global.LiquidPledging.address, '0xFFFFFFFFFFFFFFFF').send({ from: "$accounts[1]" });
+    //   })`
+      // .catch(err => console.log('error', err))
+      // `,
+    // `web3.eth.getAccounts().then(accounts => {
+    //   return LPFactory.methods.newLP(accounts[0], "$RecoveryVault").send({ gas: 7000000 })
+    //     .then(({ events }) => { 
+    //       global.LiquidPledging = new web3.eth.Contract(LiquidPledgingMockAbi, events.DeployLiquidPledging.returnValues.liquidPledging);
+    //       global.LPVault = new web3.eth.Contract(LPVaultAbi, events.DeployVault.returnValues.vault);
+    //       StandardToken.methods.mint(accounts[1], web3.utils.toWei('1000')).send();
+    //       StandardToken.methods.approve(global.LiquidPledging.address, '0xFFFFFFFFFFFFFFFF').send({ from: accounts[1] });
+    //     });
+    // })
+    // .catch(err => console.log('error', err))
+    // `,
+    // ],
   },
 
   // merges with the settings in default

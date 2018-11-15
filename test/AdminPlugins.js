@@ -6,10 +6,10 @@ const chai = require('chai');
 const { test } = require('../index');
 const deployLP = require('./helpers/deployLP');
 
-const { compilerOutput } = require('../build/TestSimpleProjectPluginFactory.json');
-const simpleProjectPluginFactoryAbi = compilerOutput.abi;
-const simpleProjectPluginFactoryByteCode = compilerOutput.evm.bytecode.object;
-const simpleProjectPluginRuntimeByteCode = '0x' + require('../build/TestSimpleProjectPlugin.json').compilerOutput.evm.deployedBytecode.object;
+const compilerOutput = require('../dist/contracts/TestSimpleProjectPluginFactory.json');
+const simpleProjectPluginFactoryAbi = compilerOutput.abiDefinition;
+const simpleProjectPluginFactoryByteCode = compilerOutput.code;
+const simpleProjectPluginRuntimeByteCode = '0x' + require('../dist/contracts/TestSimpleProjectPlugin.json').code;
 const assert = chai.assert;
 
 const { assertFail } = test;

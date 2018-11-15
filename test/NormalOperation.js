@@ -1,5 +1,6 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
+const generateClass = require('eth-contract-class').default;
 const Ganache = require('ganache-cli');
 const Web3 = require('web3');
 const { assert } = require('chai');
@@ -13,11 +14,34 @@ const printState = async liquidPledgingState => {
   console.log(JSON.stringify(st, null, 2));
 };
 
+
+// const _RecoveryVault =  embark.require('Embark/contracts/RecoveryVault');
+// const RecoveryVault = ge
+// const _LPVault =  embark.require('Embark/contracts/LPVault');
+// const _LiquidPledgingMock =  embark.require('Embark/contracts/LiquidPledgingMock');
+
+let accounts;
+
+config({
+  // contracts: {
+  //   RecoveryVault: {},
+  //   LPVault: {},
+  //   LiquidPledgingMock: {}
+
+    // "SimpleStorage": {
+      // args: [100],
+      // onDeploy: ["SimpleStorage.methods.setRegistar(web3.eth.defaultAccount).send()"] // example
+    // }
+  // }
+}, (err, theAccounts) => {
+  accounts = theAccounts;
+});
+
 describe('LiquidPledging test', function() {
   this.timeout(0);
   let ganache;
-  let web3;
-  let accounts;
+  // let web3;
+  // let accounts;
   let liquidPledging;
   let liquidPledgingState;
   let vault;
@@ -36,15 +60,15 @@ describe('LiquidPledging test', function() {
   let giver2Token;
 
   before(async () => {
-    ganache = Ganache.server({
-      gasLimit: 6700000,
-      total_accounts: 11,
-    });
+    // ganache = Ganache.server({
+    //   gasLimit: 6700000,
+    //   total_accounts: 11,
+    // });
 
-    ganache.listen(8545, '127.0.0.1');
+    // ganache.listen(8545, '127.0.0.1');
 
-    web3 = new Web3('http://localhost:8545');
-    accounts = await web3.eth.getAccounts();
+    // web3 = new Web3('http://localhost:8545');
+    // accounts = await web3.eth.getAccounts();
     giver1 = accounts[1];
     delegate1 = accounts[2];
     adminProject1 = accounts[3];
@@ -55,12 +79,14 @@ describe('LiquidPledging test', function() {
     adminProject3 = accounts[8];
     recoveryVault = (await RecoveryVault.new(web3)).$address;
     escapeHatchCaller = accounts[10];
+
+    // baseLP = new LPVault(web3, _LPVault)
   });
 
-  after(done => {
-    ganache.close();
-    done();
-  });
+  // after(done => {
+  //   ganache.close();
+  //   done();
+  // });
 
   it('Should deploy LiquidPledging contract', async () => {
     const baseVault = await LPVault.new(web3);
