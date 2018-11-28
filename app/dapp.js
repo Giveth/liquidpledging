@@ -21,7 +21,12 @@ class App extends React.Component {
 
   render() {
     return (
-      <div>Hello world!</div>
+      <div>
+        <div>Hello world!</div>
+      </div>
     )
   }
 }
+
+
+export default App;
