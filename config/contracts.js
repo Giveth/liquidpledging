@@ -53,20 +53,27 @@ module.exports = {
       'http://localhost:8545',
       '$WEB3', // uses pre existing web3 object if available (e.g in Mist)
     ],
+    strategy: 'explicit',
     contracts: {
       LPVault: {},
       LiquidPledgingMock: {},
       RecoveryVault: {},
       LPFactory: {
-        args: ['$LPVault', '$LiquidPledgingMock'],
+        args: ['$LPVault', '$LiquidPledgingMock']
         // args: {
-          // _vaultBase: '$LPVault',
-          // _lpBase: '$LiquidPledgingMock',
+        //   _vaultBase: '$LPVault',
+         //  _lpBase: '$LiquidPledgingMock',
         // },
       },
 
       // contracts for testing
       StandardToken: {},
+      Kernel: {
+        file: "@aragon/os/contracts/kernel/Kernel.sol"
+      },
+      ACL: {
+        file: "@aragon/os/contracts/acl/ACL.sol"
+      }
     },
 
     // afterDeploy: [
