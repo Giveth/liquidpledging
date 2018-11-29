@@ -49,9 +49,9 @@ module.exports = {
   // assumed to be the intended environment by `embark run`
   development: {
     dappConnection: [
+      '$WEB3', // uses pre existing web3 object if available (e.g in Mist)
       'ws://localhost:8546',
       'http://localhost:8545',
-      '$WEB3', // uses pre existing web3 object if available (e.g in Mist)
     ],
     strategy: 'explicit',
     contracts: {
