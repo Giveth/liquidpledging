@@ -51,9 +51,11 @@
   "homepage": "https://github.com/Giveth/liquidpledging#readme",
   "dependencies": {
     "@aragon/os": "3.1.9",
+    "@material-ui/core": "^3.6.0",
     "async": "^2.4.0",
     "chai": "^4.1.0",
     "eth-contract-class": "^0.0.12",
+    "formik": "^1.3.2",
     "react": "^16.6.3",
     "react-dom": "^16.6.3"
   }
