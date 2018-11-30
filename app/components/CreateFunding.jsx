@@ -9,9 +9,9 @@ import Snackbar from '@material-ui/core/Snackbar';
 import MenuItem from '@material-ui/core/MenuItem';
 import web3 from 'Embark/web3';
 import { MySnackbarContentWrapper } from './base/SnackBars';
-import { currencies, TOKEN_ICON_API } from '../utils/currencies'
+import { currencies, TOKEN_ICON_API, getTokenLabel } from '../utils/currencies'
 
-const { addGiver } = LiquidPledgingMock.methods
+const { donate } = LiquidPledgingMock.methods
 const hoursToSeconds = hours => hours * 60 * 60
 const addFunderSucessMsg = response => {
   const { events: { GiverAdded: { returnValues: { idGiver } } } } = response
@@ -20,20 +20,21 @@ const addFunderSucessMsg = response => {
 
 const CreateFunding = () => (
   <Formik
-    initialValues={{ funderId: '', receiverId: '', tokenAddress : '' }}
+    initialValues={{ funderId: '', receiverId: '', tokenAddress : '', amount: '' }}
     onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
-      const { funderId, receiverId, tokenAddress } = values
+      const { funderId, receiverId, tokenAddress, amount } = values
       const account = await web3.eth.getCoinbase()
-      const args = [funderId, receiverId, tokenAddress, 0]
-      addGiver(...args)
+      const args = [funderId, receiverId, tokenAddress, web3.utils.toWei(amount, 'ether')]
+      console.log({args, donate, LiquidPledgingMock})
+      donate(...args)
         .estimateGas({ from: account })
         .then(async gas => {
-          addGiver(...args)
+          donate(...args)
             .send({ from: account, gas: gas + 100 })
             .then(res => {
               console.log({res})
               setStatus({
-                snackbar: { variant: 'success', message: addFunderSucessMsg(res) }
+                snackbar: { variant: 'success', message: 'funding provided!' }
               })
             })
             .catch(e => {
@@ -102,7 +103,17 @@ const CreateFunding = () => (
             </MenuItem>
           ))}
         </TextField>
-        {/* TODO ADD Amount TextField */}
+        <TextField
+          id="amount"
+          name="amount"
+          label={`Amount of ${getTokenLabel(values.tokenAddress) || 'tokens'} to provide`}
+          placeholder="Amount of tokens to provide"
+          margin="normal"
+          variant="outlined"
+          onChange={handleChange}
+          onBlur={handleBlur}
+          value={values.amount || ''}
+        />
         <Button variant="contained" color="primary" type="submit">
           PROVIDE FUNDING
         </Button>
