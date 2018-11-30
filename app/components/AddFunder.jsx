@@ -18,11 +18,11 @@ const addFunderSucessMsg = response => {
 
 const AddFunder = () => (
   <Formik
-    initialValues={{ funderName: '', funderProfile: '', commitTime : '' }}
+    initialValues={{ funderName: '', funderDescription: '', commitTime : '' }}
     onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
-      const { funderName, funderProfile, commitTime } = values;
+      const { funderName, funderDescription, commitTime } = values;
       const account = await web3.eth.getCoinbase();
-      const args = [funderName, funderProfile, commitTime, 0];
+      const args = [funderName, funderDescription, commitTime, 0];
       addGiver(...args)
         .estimateGas({ from: account })
         .then(async gas => {
@@ -67,15 +67,15 @@ const AddFunder = () => (
           value={values.funderName || ''}
         />
         <TextField
-          id="funderProfile"
-          name="funderProfile"
-          label="Funder Profile URL or IPFS Hash"
-          placeholder="Funder Profile URL or IPFS Hash"
+          id="funderDescription"
+          name="funderDescription"
+          label="Funder Description (URL or IPFS Hash)"
+          placeholder="Funder Description (URL or IPFS Hash)"
           margin="normal"
           variant="outlined"
           onChange={handleChange}
           onBlur={handleBlur}
-          value={values.funderProfile || ''}
+          value={values.funderDescription || ''}
         />
         <TextField
           id="commitTime"
@@ -90,7 +90,7 @@ const AddFunder = () => (
           value={values.commitTime || ''}
         />
         <Button variant="contained" color="primary" type="submit">
-          ADD FUNDER
+          ADD FUNDER PROFILE
         </Button>
         {status && <Snackbar
                      anchorOrigin={{
