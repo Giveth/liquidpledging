@@ -4,6 +4,7 @@ import LPVault from 'Embark/contracts/LPVault';
 import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock';
 import web3 from "Embark/web3";
 import AddFunder from './components/AddFunder';
+import CreateFunding from './components/CreateFunding';
 
 const { getNetworkType } = web3.eth.net;
 
@@ -26,6 +27,7 @@ class App extends React.Component {
     return (
       <div>
         <AddFunder />
+        <CreateFunding />
       </div>
     )
   }
