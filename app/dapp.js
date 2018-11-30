@@ -3,7 +3,7 @@ import EmbarkJS from 'Embark/EmbarkJS';
 import LPVault from 'Embark/contracts/LPVault';
 import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock';
 import web3 from "Embark/web3";
-import Giving from './components/Giving';
+import AddFunder from './components/AddFunder';
 
 const { getNetworkType } = web3.eth.net;
 
@@ -16,7 +16,6 @@ class App extends React.Component {
   componentDidMount(){
     EmbarkJS.onReady(async (err) => {
       getNetworkType().then(network => {
-        //TODO add window.ethereum.enable();
         const { environment } = EmbarkJS
         this.setState({ network, environment })
       });
@@ -26,7 +25,7 @@ class App extends React.Component {
   render() {
     return (
       <div>
-        <Giving />
+        <AddFunder />
       </div>
     )
   }

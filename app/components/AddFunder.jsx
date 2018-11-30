@@ -9,16 +9,14 @@ import web3 from "Embark/web3";
 
 const { addGiver, numberOfPledgeAdmins, getPledgeAdmin } = LiquidPledgingMock.methods;
 const hoursToSeconds = hours => hours * 60 * 60;
-const createGiver = async (name, url, commitTime) => {
-}
 
-const Giving = () => (
+const AddFunder = () => (
   <Formik
-  initialValues={{ giverName: '', giverProfile: '', commitTime : '' }}
+  initialValues={{ funderName: '', funderProfile: '', commitTime : '' }}
   onSubmit={async (values, { setSubmitting, resetForm }) => {
-    const { giverName, giverProfile, commitTime } = values;
+    const { funderName, funderProfile, commitTime } = values;
     const account = await web3.eth.getCoinbase();
-    const args = [giverName, giverProfile, commitTime, 0];
+    const args = [funderName, funderProfile, commitTime, 0];
     addGiver(...args)
       .estimateGas({ from: account })
       .then(async gas => {
@@ -40,26 +38,26 @@ const Giving = () => (
   }) => (
     <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
       <TextField
-        id="giverName"
-        name="giverName"
-        label="Giver Name"
-        placeholder="Giver Name"
+        id="funderName"
+        name="funderName"
+        label="Funder Name"
+        placeholder="Funder Name"
         margin="normal"
         variant="outlined"
         onChange={handleChange}
         onBlur={handleBlur}
-        value={values.giverName || ''}
+        value={values.funderName || ''}
       />
       <TextField
-        id="giverProfile"
-        name="giverProfile"
-        label="Giver Profile URL or IPFS Hash"
-        placeholder="Giver Profile URL or IPFS Hash"
+        id="funderProfile"
+        name="funderProfile"
+        label="Funder Profile URL or IPFS Hash"
+        placeholder="Funder Profile URL or IPFS Hash"
         margin="normal"
         variant="outlined"
         onChange={handleChange}
         onBlur={handleBlur}
-        value={values.giverProfile || ''}
+        value={values.funderProfile || ''}
       />
       <TextField
         id="commitTime"
@@ -68,17 +66,17 @@ const Giving = () => (
         placeholder="Commit time in hours"
         margin="normal"
         variant="outlined"
-        helperText="The length of time in hours the Giver has to veto when the delegates pledge funds to a project"
+        helperText="The length of time in hours the Funder has to veto when the delegates pledge funds to a project"
         onChange={handleChange}
         onBlur={handleBlur}
         value={values.commitTime || ''}
       />
       <Button variant="contained" color="primary" type="submit">
-        ADD GIVER
+        ADD FUNDER
       </Button>
     </form>
   )}
       </Formik>
 )
 
-export default Giving;
+export default AddFunder;
