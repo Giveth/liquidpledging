@@ -1,7 +1,5 @@
 import React from 'react';
 import { Formik } from 'formik';
-import EmbarkJS from 'Embark/EmbarkJS';
-import LPVault from 'Embark/contracts/LPVault';
 import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
@@ -9,20 +7,20 @@ import Snackbar from '@material-ui/core/Snackbar';
 import web3 from "Embark/web3";
 import { MySnackbarContentWrapper } from './base/SnackBars';
 
-const { addGiver, numberOfPledgeAdmins, getPledgeAdmin } = LiquidPledgingMock.methods;
-const hoursToSeconds = hours => hours * 60 * 60;
+const { addGiver } = LiquidPledgingMock.methods
+const hoursToSeconds = hours => hours * 60 * 60
 const addFunderSucessMsg = response => {
-  const { events: { GiverAdded: { returnValues: { idGiver } } } } = response;
-  return `Funder created with ID of ${idGiver}`;
+  const { events: { GiverAdded: { returnValues: { idGiver } } } } = response
+  return `Funder created with ID of ${idGiver}`
 }
 
 const AddFunder = () => (
   <Formik
     initialValues={{ funderName: '', funderDescription: '', commitTime : '' }}
     onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
-      const { funderName, funderDescription, commitTime } = values;
-      const account = await web3.eth.getCoinbase();
-      const args = [funderName, funderDescription, commitTime, 0];
+      const { funderName, funderDescription, commitTime } = values
+      const account = await web3.eth.getCoinbase()
+      const args = [funderName, funderDescription, hoursToSeconds(commitTime), 0]
       addGiver(...args)
         .estimateGas({ from: account })
         .then(async gas => {
@@ -112,4 +110,4 @@ const AddFunder = () => (
   </Formik>
 )
 
-export default AddFunder;
+export default AddFunder
