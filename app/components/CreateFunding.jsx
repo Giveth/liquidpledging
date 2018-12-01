@@ -25,24 +25,19 @@ const CreateFunding = () => (
       const { funderId, receiverId, tokenAddress, amount } = values
       const account = await web3.eth.getCoinbase()
       const args = [funderId, receiverId, tokenAddress, web3.utils.toWei(amount, 'ether')]
-      console.log({args, donate, LiquidPledgingMock})
       donate(...args)
-        .estimateGas({ from: account })
-        .then(async gas => {
-          donate(...args)
-            .send({ from: account, gas: gas + 100 })
-            .then(res => {
-              console.log({res})
-              setStatus({
-                snackbar: { variant: 'success', message: 'funding provided!' }
-              })
-            })
-            .catch(e => {
-              console.log({e})
-              setStatus({
-                snackbar: { variant: 'error', message: 'There was an error' }
-              })
-            })
+        .send({ from: account })
+        .then(res => {
+          console.log({res})
+          setStatus({
+            snackbar: { variant: 'success', message: 'funding provided!' }
+          })
+        })
+        .catch(e => {
+          console.log({e})
+          setStatus({
+            snackbar: { variant: 'error', message: 'There was an error' }
+          })
         })
     }}
   >

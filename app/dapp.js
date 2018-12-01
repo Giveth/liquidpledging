@@ -3,8 +3,10 @@ import EmbarkJS from 'Embark/EmbarkJS';
 import LPVault from 'Embark/contracts/LPVault';
 import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock';
 import web3 from "Embark/web3";
+import Divider from '@material-ui/core/Divider';
 import AddFunder from './components/AddFunder';
 import CreateFunding from './components/CreateFunding';
+import { initVaultAndLP } from './utils/initialize';
 
 const { getNetworkType } = web3.eth.net;
 
@@ -16,9 +18,12 @@ class App extends React.Component {
 
   componentDidMount(){
     EmbarkJS.onReady(async (err) => {
-      getNetworkType().then(network => {
+      getNetworkType().then(async network => {
         const { environment } = EmbarkJS
+        const needsInit = Number(await LiquidPledgingMock.methods.getInitializationBlock().call())
+                        + Number(await LPVault.methods.getInitializationBlock().call())
         this.setState({ network, environment })
+        if (!needsInit) initVaultAndLP(LiquidPledgingMock, LPVault)
       });
     });
   }
@@ -27,6 +32,7 @@ class App extends React.Component {
     return (
       <div>
         <AddFunder />
+        <Divider variant="middle" />
         <CreateFunding />
       </div>
     )
