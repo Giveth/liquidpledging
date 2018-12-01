@@ -28,7 +28,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     uint constant MAX_INTERPROJECT_LEVEL = 20;
 
     // Events
-    event GiverAdded(uint64 indexed idGiver, string url);
+    event GiverAdded(uint64 indexed idGiver, address indexed addr, string url);
     event GiverUpdated(uint64 indexed idGiver, string url);
     event DelegateAdded(uint64 indexed idDelegate, string url);
     event DelegateUpdated(uint64 indexed idDelegate, string url);
@@ -88,7 +88,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
                 url)
         );
 
-        GiverAdded(idGiver, url);
+        GiverAdded(idGiver, addr, url);
     }
 
     /// @notice Updates a Giver's info to change the address, name, url, or

@@ -8,6 +8,7 @@ import Button from '@material-ui/core/Button';
 import AddFunder from './components/AddFunder';
 import CreateFunding from './components/CreateFunding';
 import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval, getLpAllowance } from './utils/initialize'
+import { getUserFundProfiles } from './utils/events';
 
 const { getNetworkType } = web3.eth.net;
 
@@ -21,13 +22,15 @@ class App extends React.Component {
     EmbarkJS.onReady(async (err) => {
       getNetworkType().then(async network => {
         const { environment } = EmbarkJS
-        const needsInit = await vaultPledgingNeedsInit();
-        const lpAllowance = await getLpAllowance();
+        const needsInit = await vaultPledgingNeedsInit()
+        const lpAllowance = await getLpAllowance()
+        const fundProfiles = await getUserFundProfiles()
         this.setState({
           network,
           environment,
           needsInit: needsInit === 0,
-          lpAllowance
+          lpAllowance,
+          fundProfiles
         })
       });
     });
