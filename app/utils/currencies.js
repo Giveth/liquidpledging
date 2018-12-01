@@ -16,7 +16,8 @@ export const currencies = [
   },
   {
     value: '0xd8a512EBD6fd82f44dFFD968EEB0835265497d20',
-    label: 'Standard Token'
+    label: 'Standard Token',
+    icon: '🤔',
   }
 ]
 

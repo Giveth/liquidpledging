@@ -6,7 +6,7 @@ import web3 from "Embark/web3";
 import Divider from '@material-ui/core/Divider';
 import AddFunder from './components/AddFunder';
 import CreateFunding from './components/CreateFunding';
-import { initVaultAndLP } from './utils/initialize';
+import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval } from './utils/initialize'
 
 const { getNetworkType } = web3.eth.net;
 
@@ -20,9 +20,11 @@ class App extends React.Component {
     EmbarkJS.onReady(async (err) => {
       getNetworkType().then(async network => {
         const { environment } = EmbarkJS
-        const needsInit = Number(await LiquidPledgingMock.methods.getInitializationBlock().call())
-                        + Number(await LPVault.methods.getInitializationBlock().call())
+        const needsInit = await vaultPledgingNeedsInit();
         this.setState({ network, environment })
+
+        //methods during testing to help setup
+        if (environment === 'development') standardTokenApproval()
         if (!needsInit) initVaultAndLP(LiquidPledgingMock, LPVault)
       });
     });

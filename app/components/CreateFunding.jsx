@@ -90,11 +90,11 @@ const CreateFunding = () => (
         >
           {currencies.map(option => (
             <MenuItem style={{ display: 'flex', alignItems: 'center' }} key={option.value} value={option.value}>
-              <img
+              {option.icon || <img
                 src={option.img || `${TOKEN_ICON_API}/${option.value}.png`}
                 style={{ width: '3%', marginRight: '3%' }}
-              />
-              {option.label}
+              />}
+                {option.label}
             </MenuItem>
           ))}
         </TextField>
