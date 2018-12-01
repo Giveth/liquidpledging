@@ -4,9 +4,10 @@ import LPVault from 'Embark/contracts/LPVault';
 import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock';
 import web3 from "Embark/web3";
 import Divider from '@material-ui/core/Divider';
+import Button from '@material-ui/core/Button';
 import AddFunder from './components/AddFunder';
 import CreateFunding from './components/CreateFunding';
-import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval } from './utils/initialize'
+import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval, getLpAllowance } from './utils/initialize'
 
 const { getNetworkType } = web3.eth.net;
 
@@ -21,21 +22,30 @@ class App extends React.Component {
       getNetworkType().then(async network => {
         const { environment } = EmbarkJS
         const needsInit = await vaultPledgingNeedsInit();
-        this.setState({ network, environment })
-
-        //methods during testing to help setup
-        if (environment === 'development') standardTokenApproval()
-        if (!needsInit) initVaultAndLP(LiquidPledgingMock, LPVault)
+        const lpAllowance = await getLpAllowance();
+        this.setState({
+          network,
+          environment,
+          needsInit: needsInit === 0,
+          lpAllowance
+        })
       });
     });
   }
 
   render() {
+    const { needsInit, lpAllowance } = this.state;
     return (
       <div>
         <AddFunder />
         <Divider variant="middle" />
         <CreateFunding />
+        {needsInit && <Button variant="outlined" color="secondary" onClick={initVaultAndLP}>
+          Initialize Contracts
+        </Button>}
+        <Button variant="outlined" color="primary" onClick={standardTokenApproval}>
+          GIVE VAULT TOKEN APPROVAL
+        </Button>
       </div>
     )
   }

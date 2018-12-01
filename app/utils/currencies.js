@@ -1,3 +1,5 @@
+import StandardToken from 'Embark/contracts/StandardToken'
+
 export const TOKEN_ICON_API = 'https://raw.githubusercontent.com/TrustWallet/tokens/master/images'
 export const TOKEN_COIN_API = 'https://raw.githubusercontent.com/TrustWallet/tokens/master/coins'
 export const currencies = [
@@ -15,7 +17,7 @@ export const currencies = [
     label: 'DAI',
   },
   {
-    value: '0xd8a512EBD6fd82f44dFFD968EEB0835265497d20',
+    value: StandardToken._address,
     label: 'Standard Token',
     icon: '🤔',
   }
