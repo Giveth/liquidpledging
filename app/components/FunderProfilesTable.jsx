@@ -16,7 +16,7 @@ const FunderProfilesTable = ({ data }) => (
         { title: 'Name', field: 'name' },
         { title: 'Url', field: 'url' },
         { title: 'Commit Time', field: 'commitTime', type: 'numeric' },
-        { title: 'cancel', field: 'canceled' }
+        { title: 'Canceled', field: 'canceled' }
       ]}
       data={data.map(formatField)}
       title="Funding Profiles"

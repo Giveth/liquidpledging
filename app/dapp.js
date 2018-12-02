@@ -9,7 +9,7 @@ import AddFunder from './components/AddFunder';
 import CreateFunding from './components/CreateFunding';
 import FunderProfilesTable from './components/FunderProfilesTable.jsx'
 import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval, getLpAllowance } from './utils/initialize'
-import { getUserFundProfiles } from './utils/events';
+import { getUserFundProfiles, formatFundProfileEvent } from './utils/events';
 
 const { getNetworkType } = web3.eth.net;
 
@@ -37,12 +37,24 @@ class App extends React.Component {
     });
   }
 
+  appendFundProfile = async event => {
+    const formattedEvent = await formatFundProfileEvent(event)
+    this.setState((state) => {
+      const { fundProfiles } = state;
+      return {
+        ...state,
+        fundProfiles: [ ...fundProfiles, formattedEvent ]
+      }
+    })
+  }
+
   render() {
     const { needsInit, lpAllowance, fundProfiles } = this.state;
+    const { appendFundProfile } = this;
     return (
       <div>
         {fundProfiles && <FunderProfilesTable data={fundProfiles} />}
-        <AddFunder />
+        <AddFunder appendFundProfile={appendFundProfile} />
         <Divider variant="middle" />
         <CreateFunding />
         {needsInit && <Button variant="outlined" color="secondary" onClick={initVaultAndLP}>

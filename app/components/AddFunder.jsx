@@ -5,7 +5,7 @@ import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Snackbar from '@material-ui/core/Snackbar';
 import web3 from "Embark/web3";
-import { MySnackbarContentWrapper } from './base/SnackBars';
+import { MySnackbarContentWrapper } from './base/SnackBars'
 
 const { addGiver } = LiquidPledgingMock.methods
 const hoursToSeconds = hours => hours * 60 * 60
@@ -14,7 +14,7 @@ const addFunderSucessMsg = response => {
   return `Funder created with ID of ${idGiver}`
 }
 
-const AddFunder = () => (
+const AddFunder = ({ appendFundProfile }) => (
   <Formik
     initialValues={{ funderName: '', funderDescription: '', commitTime : '' }}
     onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
@@ -27,7 +27,7 @@ const AddFunder = () => (
           addGiver(...args)
             .send({ from: account, gas: gas + 100 })
             .then(res => {
-              console.log({res})
+              appendFundProfile(res.events.GiverAdded)
               setStatus({
                 snackbar: { variant: 'success', message: addFunderSucessMsg(res) }
               })
