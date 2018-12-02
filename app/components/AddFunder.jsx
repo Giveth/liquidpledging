@@ -56,8 +56,8 @@ const AddFunder = () => (
         <TextField
           id="funderName"
           name="funderName"
-          label="Funder Name"
-          placeholder="Funder Name"
+          label="Funding Name"
+          placeholder="Funding Name"
           margin="normal"
           variant="outlined"
           onChange={handleChange}
@@ -67,8 +67,8 @@ const AddFunder = () => (
         <TextField
           id="funderDescription"
           name="funderDescription"
-          label="Funder Description (URL or IPFS Hash)"
-          placeholder="Funder Description (URL or IPFS Hash)"
+          label="Description (URL or IPFS Hash)"
+          placeholder="Description (URL or IPFS Hash)"
           margin="normal"
           variant="outlined"
           onChange={handleChange}
@@ -88,7 +88,7 @@ const AddFunder = () => (
           value={values.commitTime || ''}
         />
         <Button variant="contained" color="primary" type="submit">
-          ADD FUNDER PROFILE
+          ADD FUNDING PROFILE
         </Button>
         {status && <Snackbar
                      anchorOrigin={{

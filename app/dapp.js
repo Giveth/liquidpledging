@@ -7,6 +7,7 @@ import Divider from '@material-ui/core/Divider';
 import Button from '@material-ui/core/Button';
 import AddFunder from './components/AddFunder';
 import CreateFunding from './components/CreateFunding';
+import FunderProfilesTable from './components/FunderProfilesTable.jsx'
 import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval, getLpAllowance } from './utils/initialize'
 import { getUserFundProfiles } from './utils/events';
 
@@ -37,9 +38,10 @@ class App extends React.Component {
   }
 
   render() {
-    const { needsInit, lpAllowance } = this.state;
+    const { needsInit, lpAllowance, fundProfiles } = this.state;
     return (
       <div>
+        {fundProfiles && <FunderProfilesTable data={fundProfiles} />}
         <AddFunder />
         <Divider variant="middle" />
         <CreateFunding />
