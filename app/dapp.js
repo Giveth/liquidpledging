@@ -11,7 +11,7 @@ import FunderProfilesTable from './components/FunderProfilesTable'
 import PledgesTable from './components/PledgesTable'
 import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval, getLpAllowance } from './utils/initialize'
 import { getProfileEvents, formatFundProfileEvent } from './utils/events';
-import { getAllPledges } from './utils/pledges';
+import { getAllPledges, appendToExistingPledges } from './utils/pledges';
 
 const { getNetworkType } = web3.eth.net;
 
@@ -52,16 +52,21 @@ class App extends React.Component {
     })
   }
 
+  appendPledges = () => {
+    const { allPledges } = this.state
+    appendToExistingPledges(allPledges, this.setState)
+  }
+
   render() {
     const { needsInit, lpAllowance, fundProfiles, allPledges } = this.state;
-    const { appendFundProfile } = this;
+    const { appendFundProfile, appendPledges } = this;
     return (
       <div>
         {allPledges && <PledgesTable data={allPledges} />}
         {fundProfiles && <FunderProfilesTable data={fundProfiles} />}
         <AddFunder appendFundProfile={appendFundProfile} />
         <Divider variant="middle" />
-        <CreateFunding />
+        <CreateFunding refreshTable={appendPledges} />
         {needsInit && <Button variant="outlined" color="secondary" onClick={initVaultAndLP}>
           Initialize Contracts
         </Button>}

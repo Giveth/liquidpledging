@@ -18,7 +18,7 @@ const addFunderSucessMsg = response => {
   return `Funder created with ID of ${idGiver}`
 }
 
-const CreateFunding = () => (
+const CreateFunding = ({ refreshTable }) => (
   <Formik
     initialValues={{ funderId: '', receiverId: '', tokenAddress : '', amount: '' }}
     onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
@@ -32,6 +32,7 @@ const CreateFunding = () => (
           setStatus({
             snackbar: { variant: 'success', message: 'funding provided!' }
           })
+          refreshTable()
         })
         .catch(e => {
           console.log({e})
@@ -91,10 +92,10 @@ const CreateFunding = () => (
           {currencies.map(option => (
             <MenuItem style={{ display: 'flex', alignItems: 'center' }} key={option.value} value={option.value}>
               {option.icon || <img
-                src={option.img || `${TOKEN_ICON_API}/${option.value}.png`}
-                style={{ width: '3%', marginRight: '3%' }}
+                                src={option.img || `${TOKEN_ICON_API}/${option.value}.png`}
+                                style={{ width: '3%', marginRight: '3%' }}
               />}
-                {option.label}
+              {option.label}
             </MenuItem>
           ))}
         </TextField>
