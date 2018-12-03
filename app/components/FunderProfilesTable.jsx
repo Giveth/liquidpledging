@@ -12,10 +12,11 @@ const FunderProfilesTable = ({ data }) => (
   <Fragment>
     <MaterialTable
       columns={[
-        { title: 'Profile Id', field: 'idGiver', type: 'numeric' },
+        { title: 'Profile Id', field: 'idProfile', type: 'numeric' },
         { title: 'Name', field: 'name' },
         { title: 'Url', field: 'url' },
         { title: 'Commit Time', field: 'commitTime', type: 'numeric' },
+        { title: 'Type', field: 'type' },
         { title: 'Canceled', field: 'canceled' }
       ]}
       data={data.map(formatField)}

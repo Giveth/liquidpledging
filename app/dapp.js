@@ -9,7 +9,7 @@ import AddFunder from './components/AddFunder';
 import CreateFunding from './components/CreateFunding';
 import FunderProfilesTable from './components/FunderProfilesTable.jsx'
 import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval, getLpAllowance } from './utils/initialize'
-import { getUserFundProfiles, formatFundProfileEvent } from './utils/events';
+import { getProfileEvents, formatFundProfileEvent } from './utils/events';
 
 const { getNetworkType } = web3.eth.net;
 
@@ -25,7 +25,7 @@ class App extends React.Component {
         const { environment } = EmbarkJS
         const needsInit = await vaultPledgingNeedsInit()
         const lpAllowance = await getLpAllowance()
-        const fundProfiles = await getUserFundProfiles()
+        const fundProfiles = await getProfileEvents()
         this.setState({
           network,
           environment,
