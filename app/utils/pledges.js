@@ -11,7 +11,6 @@ export const formatPledge = async (pledgePromise, idx) => {
 
 export const getAllPledges = async (start = 1) => {
   const numPledges = await numberOfPledges().call()
-  console.log({numPledges})
   const pledges = []
   for (let i = start; i <= numPledges; i++) {
     pledges.push(getPledge(i).call())

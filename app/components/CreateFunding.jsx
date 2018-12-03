@@ -53,7 +53,7 @@ const CreateFunding = ({ refreshTable }) => (
        setStatus,
        status
     }) => (
-      <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
+      <form autoComplete="off" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column' }}>
         <TextField
           id="funderId"
           name="funderId"
