@@ -10,10 +10,11 @@ import DialogContentText from '@material-ui/core/DialogContentText'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import { getTokenLabel } from '../utils/currencies'
 import { toWei } from '../utils/conversions'
+import { FundingContext } from '../context'
 
 const { transfer } = LiquidPledgingMock.methods
 
-const TransferDialog = ({ row, handleClose }) => (
+const TransferDialog = ({ row, handleClose, transferPledgeAmounts }) => (
   <Formik
     initialValues={{}}
     onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
@@ -23,13 +24,15 @@ const TransferDialog = ({ row, handleClose }) => (
       transfer(...args)
         .send()
         .then(res => {
-          console.log({res})
+          const { events: { Transfer: { returnValues } } } = res
+          transferPledgeAmounts(returnValues)
           handleClose()
 
         })
         .catch(e => {
           console.log({e})
         })
+        .finally(() => { resetForm() })
     }}
   >
     {({

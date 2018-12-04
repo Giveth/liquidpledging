@@ -26,9 +26,32 @@ export const appendToExistingPledges = async (pledges, setState) => {
     setState((state) => ({
       ...state,
       allPledges: {
-        ...state.pledges,
+        ...state.allPledges,
         ...newPledges
       }
     }))
   }
+}
+
+export const transferBetweenPledges = (setState, tx) => {
+  const { from, to, amount } = tx
+  setState((state) => {
+    const { allPledges } = state;
+    const updatedPledges = allPledges.map(pledge => {
+      if (pledge.id === Number(from)) {
+        pledge.amount = (BigInt(pledge.amount) - BigInt(amount)).toString()
+        return pledge
+      }
+      if (pledge.id === Number(to)) {
+        pledge.amount = (BigInt(pledge.amount) + BigInt(amount)).toString()
+        return pledge
+      }
+      return pledge
+    })
+    console.log({updatedPledges, tx})
+    return {
+      ...state,
+      allPledges: [ ...updatedPledges ]
+    }
+  })
 }

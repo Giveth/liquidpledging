@@ -11,7 +11,8 @@ import FunderProfilesTable from './components/FunderProfilesTable'
 import PledgesTable from './components/PledgesTable'
 import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval, getLpAllowance } from './utils/initialize'
 import { getProfileEvents, formatFundProfileEvent } from './utils/events';
-import { getAllPledges, appendToExistingPledges } from './utils/pledges';
+import { getAllPledges, appendToExistingPledges, transferBetweenPledges } from './utils/pledges';
+import { FundingContext } from './context'
 
 const { getNetworkType } = web3.eth.net;
 
@@ -57,23 +58,30 @@ class App extends React.Component {
     appendToExistingPledges(allPledges, this.setState)
   }
 
+  transferPledgeAmounts = tx => {
+    transferBetweenPledges(this.setState.bind(this), tx)
+  }
+
   render() {
     const { needsInit, lpAllowance, fundProfiles, allPledges } = this.state;
-    const { appendFundProfile, appendPledges } = this;
+    const { appendFundProfile, appendPledges, transferPledgeAmounts } = this
+    const fundingContext = { transferPledgeAmounts }
     return (
-      <div>
-        {allPledges && <PledgesTable data={allPledges} />}
-        {fundProfiles && <FunderProfilesTable data={fundProfiles} />}
-        <AddFunder appendFundProfile={appendFundProfile} />
-        <Divider variant="middle" />
-        <CreateFunding refreshTable={appendPledges} />
-        {needsInit && <Button variant="outlined" color="secondary" onClick={initVaultAndLP}>
-          Initialize Contracts
-        </Button>}
-        <Button variant="outlined" color="primary" onClick={standardTokenApproval}>
-          GIVE VAULT TOKEN APPROVAL
-        </Button>
-      </div>
+      <FundingContext.Provider value={fundingContext}>
+        <div>
+          {allPledges && <PledgesTable data={allPledges} transferPledgeAmounts={transferPledgeAmounts} />}
+          {fundProfiles && <FunderProfilesTable data={fundProfiles} />}
+          <AddFunder appendFundProfile={appendFundProfile} />
+          <Divider variant="middle" />
+          <CreateFunding refreshTable={appendPledges} />
+          {needsInit && <Button variant="outlined" color="secondary" onClick={initVaultAndLP}>
+            Initialize Contracts
+          </Button>}
+          <Button variant="outlined" color="primary" onClick={standardTokenApproval}>
+            GIVE VAULT TOKEN APPROVAL
+          </Button>
+        </div>
+      </FundingContext.Provider>
     )
   }
 }

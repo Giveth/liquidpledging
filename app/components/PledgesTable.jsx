@@ -27,11 +27,15 @@ class PledgesTable extends PureComponent {
   }
 
   render() {
-    const { data } = this.props
+    const { data, transferPledgeAmounts } = this.props
     const { row } = this.state
     return (
       <Fragment>
-        <TransferDialog row={row} handleClose={this.handleClose} />
+        <TransferDialog
+          row={row}
+          handleClose={this.handleClose}
+          transferPledgeAmounts={transferPledgeAmounts}
+        />
         <MaterialTable
           columns={[
             { title: 'Pledge Id', field: 'id', type: 'numeric' },
@@ -50,7 +54,6 @@ class PledgesTable extends PureComponent {
               tooltip: 'Transfer funds',
               onClick: (event, rowData) => {
                 this.handleClickOpen(rowData)
-                console.log({event, rowData})
               }
             }
           ]}
