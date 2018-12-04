@@ -1,5 +1,6 @@
 import React from 'react'
 import { Formik } from 'formik'
+import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock'
 import Button from '@material-ui/core/Button'
 import TextField from '@material-ui/core/TextField'
 import Dialog from '@material-ui/core/Dialog'
@@ -8,12 +9,27 @@ import DialogContent from '@material-ui/core/DialogContent'
 import DialogContentText from '@material-ui/core/DialogContentText'
 import DialogTitle from '@material-ui/core/DialogTitle'
 import { getTokenLabel } from '../utils/currencies'
+import { toWei } from '../utils/conversions'
+
+const { transfer } = LiquidPledgingMock.methods
 
 const TransferDialog = ({ row, handleClose }) => (
   <Formik
     initialValues={{}}
     onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
-      //TODO add submit handling using transfer from LiquidPledgingMock
+      const { owner, id } = row
+      const { amount, idReceiver } = values
+      const args = [owner, id, toWei(amount.toString()), idReceiver]
+      transfer(...args)
+        .send()
+        .then(res => {
+          console.log({res})
+          handleClose()
+
+        })
+        .catch(e => {
+          console.log({e})
+        })
     }}
   >
     {({
@@ -23,6 +39,7 @@ const TransferDialog = ({ row, handleClose }) => (
        handleChange,
        handleBlur,
        handleSubmit,
+       submitForm,
        setFieldValue,
        setStatus,
        status
@@ -36,7 +53,7 @@ const TransferDialog = ({ row, handleClose }) => (
           <DialogTitle id="form-dialog-title">Transfer Funds</DialogTitle>
           <DialogContent>
             <DialogContentText>
-              {`Transfer ${values.amount || ''}  ${values.amount ? getTokenLabel(row[6]) : ''} from Pledge ${row.id} ${values.idReceiver ? 'to' : ''} ${values.idReceiver || ''}`}
+              {`Transfer ${values.amount || ''}  ${values.amount ? getTokenLabel(row[6]) : ''} from Pledge ${row.id} ${values.idReceiver ? 'to Giver/Delegate/Project' : ''} ${values.idReceiver || ''}`}
             </DialogContentText>
             <TextField
               autoFocus
@@ -54,7 +71,6 @@ const TransferDialog = ({ row, handleClose }) => (
               value={values.amount || ''}
             />
             <TextField
-              autoFocus
               margin="normal"
               id="idReceiver"
               name="idReceiver"
@@ -73,8 +89,8 @@ const TransferDialog = ({ row, handleClose }) => (
             <Button onClick={handleClose} color="primary">
               Cancel
             </Button>
-            <Button onClick={handleClose} color="primary" type="submit">
-              Subscribe
+            <Button onClick={submitForm} color="primary" type="submit">
+              Transfer
             </Button>
           </DialogActions>
         </Dialog>
