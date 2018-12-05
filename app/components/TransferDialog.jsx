@@ -24,6 +24,7 @@ const TransferDialog = ({ row, handleClose, transferPledgeAmounts }) => (
       transfer(...args)
         .send()
         .then(res => {
+          console.log({res})
           const { events: { Transfer: { returnValues } } } = res
           transferPledgeAmounts(returnValues)
           handleClose()

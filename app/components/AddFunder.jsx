@@ -8,14 +8,31 @@ import Snackbar from '@material-ui/core/Snackbar'
 import web3 from 'Embark/web3'
 import { MySnackbarContentWrapper } from './base/SnackBars'
 
-const { addGiver, addDelegate } = LiquidPledgingMock.methods
+const { addGiver, addDelegate, addProject } = LiquidPledgingMock.methods
 const FUNDER = 'FUNDER'
 const DELEGATE = 'DELEGATE'
+const PROJECT = 'PROJECT'
 const helperText = {
   [FUNDER]: 'The length of time in hours the Funder has to veto when the delegates pledge funds to a project',
-  [DELEGATE]: 'The length of time in hours the Delegate can be vetoed. Whenever this delegate is in a delegate chain the time allowed to veto any event must be greater than or equal to this time'
+  [DELEGATE]: 'The length of time in hours the Delegate can be vetoed. Whenever this delegate is in a delegate chain the time allowed to veto any event must be greater than or equal to this time',
+  [PROJECT]: 'The length of time the Project has to veto when the project delegates to another delegate and they pledge those funds to a project'
 }
-const adminProfiles = [FUNDER, DELEGATE]
+const funderNameLabel = {
+  [FUNDER]: 'Funding',
+  [DELEGATE]: 'Delegate',
+  [PROJECT]: 'Project'
+}
+const buttonLabel = {
+  [FUNDER]: 'FUNDING',
+  [DELEGATE]: 'DELEGATE',
+  [PROJECT]: 'PROJECT'
+}
+const sendFns = {
+  [FUNDER]: addGiver,
+  [DELEGATE]: addDelegate,
+  [PROJECT]: addProject
+}
+const adminProfiles = [FUNDER, DELEGATE, PROJECT]
 const hoursToSeconds = hours => hours * 60 * 60
 const addFunderSucessMsg = response => {
   const { events: { GiverAdded: { returnValues: { idGiver } } } } = response
@@ -25,27 +42,40 @@ const addDelegateSucessMsg = response => {
   const { events: { DelegateAdded: { returnValues: { idDelegate } } } } = response
   return `Delegate created with ID of ${idDelegate}`
 }
+const addProjectSucessMsg = response => {
+  const { events: { DelegateAdded: { returnValues: { idProject } } } } = response
+  return `Project created with ID of ${idProject}`
+}
+const successMsg = {
+  [FUNDER]: addFunderSucessMsg,
+  [DELEGATE]: addDelegateSucessMsg,
+  [PROJECT]: addProjectSucessMsg
+}
 
 const AddFunder = ({ appendFundProfile }) => (
   <Formik
-    initialValues={{ funderName: '', funderDescription: '', commitTime : '' }}
+    initialValues={{ adminType: FUNDER, funderName: '', funderDescription: '', commitTime : '' }}
     onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
       const { adminType, funderName, funderDescription, commitTime } = values
       const account = await web3.eth.getCoinbase()
-      const args = [funderName, funderDescription, hoursToSeconds(commitTime), 0]
+      //TODO add field for parent project
+      const args = adminType === PROJECT
+                 ? [funderName, funderDescription, account, 0, hoursToSeconds(commitTime), 0]
+                 : [funderName, funderDescription, hoursToSeconds(commitTime), 0]
       const isFunder = adminType === FUNDER
-      const sendFn = isFunder ? addGiver : addDelegate
+      const sendFn = sendFns[adminType]
       sendFn(...args)
         .estimateGas({ from: account })
         .then(async gas => {
           sendFn(...args)
             .send({ from: account, gas: gas + 100 })
             .then(res => {
+              console.log({res})
               if (isFunder) appendFundProfile(res.events.GiverAdded)
               setStatus({
                 snackbar: {
                   variant: 'success',
-                  message: isFunder ? addFunderSucessMsg(res) : addDelegateSucessMsg(res)
+                  message: successMsg[adminType](res)
                 }
               })
             })
@@ -91,8 +121,8 @@ const AddFunder = ({ appendFundProfile }) => (
         <TextField
           id="funderName"
           name="funderName"
-          label={`${values.adminType === FUNDER ? 'Funding' : 'Delegate'} Name`}
-          placeholder={`${values.adminType === FUNDER ? 'Funding' : 'Delegate'} Name`}
+          label={`${funderNameLabel[values.adminType]} Name`}
+          placeholder={`${funderNameLabel[values.adminType]} Name`}
           margin="normal"
           variant="outlined"
           onChange={handleChange}
@@ -123,7 +153,7 @@ const AddFunder = ({ appendFundProfile }) => (
           value={values.commitTime || ''}
         />
         <Button variant="contained" color="primary" type="submit">
-          {`ADD ${values.adminType === FUNDER ? 'FUNDING' : 'DELEGATE'} PROFILE`}
+          {`ADD ${buttonLabel[values.adminType]} PROFILE`}
         </Button>
         {status && <Snackbar
                      anchorOrigin={{
