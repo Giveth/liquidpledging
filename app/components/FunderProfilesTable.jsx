@@ -15,6 +15,7 @@ const FunderProfilesTable = ({ data }) => (
         { title: 'Profile Id', field: 'idProfile', type: 'numeric' },
         { title: 'Name', field: 'name' },
         { title: 'Url', field: 'url' },
+        { title: 'Admin Address', field: 'addr'},
         { title: 'Commit Time', field: 'commitTime', type: 'numeric' },
         { title: 'Type', field: 'type' },
         { title: 'Canceled', field: 'canceled' }

@@ -43,7 +43,7 @@ const addDelegateSucessMsg = response => {
   return `Delegate created with ID of ${idDelegate}`
 }
 const addProjectSucessMsg = response => {
-  const { events: { DelegateAdded: { returnValues: { idProject } } } } = response
+  const { events: { ProjectAdded: { returnValues: { idProject } } } } = response
   return `Project created with ID of ${idProject}`
 }
 const successMsg = {
