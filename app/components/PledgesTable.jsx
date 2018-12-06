@@ -3,6 +3,7 @@ import MaterialTable from 'material-table'
 import { toEther } from '../utils/conversions'
 import { getTokenLabel } from '../utils/currencies'
 import TransferDialog from './TransferDialog'
+import WithdrawCard from './table/WithdrawCard'
 
 const convertToHours = seconds => seconds / 60 / 60
 const projectText = project => project === '0' ? 'N/A' : project
@@ -26,9 +27,11 @@ class PledgesTable extends PureComponent {
     this.setState({ row: false });
   }
 
+  clearRowData = () => this.setState({ rowData: null })
+
   render() {
     const { data, transferPledgeAmounts } = this.props
-    const { row } = this.state
+    const { row, rowData } = this.state
     return (
       <Fragment>
         <TransferDialog
@@ -55,9 +58,18 @@ class PledgesTable extends PureComponent {
               onClick: (event, rowData) => {
                 this.handleClickOpen(rowData)
               }
+            },
+            {
+              icon: 'attach_money',
+              tooltip: 'Request Withdrawl',
+              onClick: (event, rowData) => {
+                console.log({rowData})
+                this.setState({ rowData })
+              }
             }
           ]}
         />
+        {rowData && <WithdrawCard  rowData={rowData} clearRowData={this.clearRowData} />}
       </Fragment>
     )
   }
