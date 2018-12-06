@@ -11,7 +11,11 @@ import TextField from '@material-ui/core/TextField'
 import indigo from '@material-ui/core/colors/indigo'
 import blueGrey from '@material-ui/core/colors/blueGrey'
 import Collapse from '@material-ui/core/Collapse'
+import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock'
 import { getTokenLabel } from '../../utils/currencies'
+import { toWei } from '../../utils/conversions'
+
+const { withdraw } = LiquidPledgingMock.methods
 
 const styles = {
   card: {
@@ -54,6 +58,19 @@ class Withdraw extends PureComponent {
       <Formik
         initialValues={{}}
         onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
+          const { amount } = values
+          const args = [rowData.id, toWei(amount)]
+          withdraw(...args)
+            .send()
+            .then(res => {
+              console.log({res})
+            })
+            .catch(e => {
+              console.log({e})
+            })
+            .finally(() => {
+              this.close()
+            })
         }}
       >
         {({
