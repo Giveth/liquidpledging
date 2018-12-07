@@ -1,5 +1,8 @@
 import React, { Fragment, memo } from 'react'
 import MaterialTable from 'material-table'
+import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock'
+
+const { cancelProject } = LiquidPledgingMock.methods
 
 const convertToHours = seconds => seconds / 60 / 60
 const cancelText = canceled => canceled ? 'Yes' : 'No'
@@ -8,7 +11,7 @@ const formatField = field => ({
   commitTime: convertToHours(field.commitTime),
   canceled: cancelText(field.canceled)
 })
-const FunderProfilesTable = ({ data }) => (
+const FunderProfilesTable = ({ data, cancelFundProfile }) => (
   <Fragment>
     <MaterialTable
       columns={[
@@ -22,6 +25,20 @@ const FunderProfilesTable = ({ data }) => (
       ]}
       data={data.map(formatField)}
       title="Funding Profiles"
+      actions={[
+        {
+          icon: 'cancel',
+          tooltip: 'Cancel',
+          onClick: (event, rowData) => {
+            cancelProject(rowData.idProfile)
+              .send()
+              .then(res => {
+                console.log({res})
+                cancelFundProfile(rowData.idProfile)
+              })
+          }
+        }
+      ]}
     />
   </Fragment>
 )

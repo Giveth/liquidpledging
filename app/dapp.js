@@ -13,6 +13,7 @@ import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval, getLpAll
 import { getProfileEvents, formatFundProfileEvent } from './utils/events';
 import { getAllPledges, appendToExistingPledges, transferBetweenPledges } from './utils/pledges';
 import { FundingContext } from './context'
+import { cancelProfile } from './utils/fundProfiles'
 
 const { getNetworkType } = web3.eth.net;
 
@@ -62,15 +63,19 @@ class App extends React.Component {
     transferBetweenPledges(this.setState.bind(this), tx)
   }
 
+  cancelFundProfile = id => {
+    this.setState((state) => cancelProfile(state, id))
+  }
+
   render() {
     const { needsInit, lpAllowance, fundProfiles, allPledges } = this.state;
-    const { appendFundProfile, appendPledges, transferPledgeAmounts } = this
+    const { appendFundProfile, appendPledges, transferPledgeAmounts, cancelFundProfile } = this
     const fundingContext = { transferPledgeAmounts }
     return (
       <FundingContext.Provider value={fundingContext}>
         <div>
           {allPledges && <PledgesTable data={allPledges} transferPledgeAmounts={transferPledgeAmounts} />}
-          {fundProfiles && <FunderProfilesTable data={fundProfiles} />}
+          {fundProfiles && <FunderProfilesTable data={fundProfiles} cancelFundProfile={cancelFundProfile}/>}
           <AddFunder appendFundProfile={appendFundProfile} />
           <Divider variant="middle" />
           <CreateFunding refreshTable={appendPledges} />
