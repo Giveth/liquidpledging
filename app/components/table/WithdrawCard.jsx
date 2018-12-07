@@ -12,10 +12,12 @@ import indigo from '@material-ui/core/colors/indigo'
 import blueGrey from '@material-ui/core/colors/blueGrey'
 import Collapse from '@material-ui/core/Collapse'
 import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock'
+import LPVault from 'Embark/contracts/LPVault'
 import { getTokenLabel } from '../../utils/currencies'
 import { toWei } from '../../utils/conversions'
 
 const { withdraw } = LiquidPledgingMock.methods
+const { confirmPayment } = LPVault.methods
 
 const styles = {
   card: {
@@ -54,13 +56,15 @@ class Withdraw extends PureComponent {
   render() {
     const { classes, rowData } = this.props
     const { show } = this.state
+    const isPaying = rowData[7] === "1"
     return (
       <Formik
         initialValues={{}}
         onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
           const { amount } = values
-          const args = [rowData.id, toWei(amount)]
-          withdraw(...args)
+          const args = isPaying ? [rowData.id] : [rowData.id, toWei(amount)]
+          const sendFn = isPaying ? confirmPayment : withdraw
+          sendFn(...args)
             .send()
             .then(res => {
               console.log({res})
@@ -88,10 +92,10 @@ class Withdraw extends PureComponent {
             <form autoComplete="off" onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', marginBottom: '0px' }}>
               <Card className={classes.card} elevation={0}>
                 <CardContent>
-                  <Typography variant="h5" component="h2">
-                    {`Withdraw ${values.amount || ''}  ${values.amount ? getTokenLabel(rowData[6]) : ''} from Pledge ${rowData.id}`}
+                  <Typography variant="h6" component="h2">
+                    {`${isPaying ? 'Confirm' : ''} Withdraw${isPaying ? 'al' : ''} ${values.amount || ''}  ${values.amount ? getTokenLabel(rowData[6]) : ''} from Pledge ${rowData.id}`}
                   </Typography>
-                  <TextField
+                  {!isPaying && <TextField
                     className={classes.amount}
                     id="amount"
                     name="amount"
@@ -102,11 +106,11 @@ class Withdraw extends PureComponent {
                     onChange={handleChange}
                     onBlur={handleBlur}
                     value={values.amount || ''}
-                  />
+                  />}
                 </CardContent>
                 <CardActions>
-                  <Button size="large" variant="outlined" onClick={this.close}>Cancel</Button>
-                  <Button size="large" variant="outlined" color="primary" type="submit">Withdraw</Button>
+                  <Button size="large" onClick={this.close}>Cancel</Button>
+                  <Button size="large" color="primary" type="submit">{isPaying ? 'Confirm' : 'Withdraw'}</Button>
                 </CardActions>
               </Card>
             </form>

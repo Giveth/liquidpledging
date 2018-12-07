@@ -7,12 +7,18 @@ import WithdrawCard from './table/WithdrawCard'
 
 const convertToHours = seconds => seconds / 60 / 60
 const projectText = project => project === '0' ? 'N/A' : project
+const pledgeStateMap = {
+  0: 'Pledged',
+  1: 'Paying',
+  2: 'Paid'
+}
 const formatField = field => ({
   ...field,
   commitTime: convertToHours(field.commitTime),
   amount: toEther(field.amount),
   token: getTokenLabel(field.token),
-  intendedProject: projectText(field.intendedProject)
+  intendedProject: projectText(field.intendedProject),
+  pledgeState: pledgeStateMap[field.pledgeState]
 })
 class PledgesTable extends PureComponent {
   state = {
@@ -48,6 +54,7 @@ class PledgesTable extends PureComponent {
             { title: 'Commit Time', field: 'commitTime', type: 'numeric' },
             { title: 'Number of Delegates', field: 'nDelegates', type: 'numeric' },
             { title: 'Intended Project', field: 'intendedProject' },
+            { title: 'Pledge State', field: 'pledgeState' },
           ]}
           data={data.map(formatField)}
           title="Pledges"
@@ -69,7 +76,7 @@ class PledgesTable extends PureComponent {
             }
           ]}
         />
-        {rowData && <WithdrawCard  rowData={rowData} clearRowData={this.clearRowData} />}
+        {rowData && <WithdrawCard rowData={rowData} clearRowData={this.clearRowData} />}
       </Fragment>
     )
   }

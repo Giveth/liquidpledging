@@ -306,7 +306,7 @@ describe('LiquidPledging test', function() {
     assert.equal(res7.commitTime, 0);
     assert.equal(res7.oldPledge, 2);
     assert.equal(res7.token, giver1Token.$address);
-    assert.equal(res7.pledgeState, 2); // Pending
+    assert.equal(res7.pledgeState, 2); // Paid
   });
   it('Admin of the project1 should be able to cancel project1', async () => {
     await liquidPledging.cancelProject(3, { from: adminProject1, $extraGas: 100000 });
