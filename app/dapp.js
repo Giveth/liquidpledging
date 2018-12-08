@@ -21,24 +21,31 @@ class App extends React.Component {
   constructor(props) {
     super(props)
   }
-  state = { admin: false };
+  state = {
+    lpAllowance: 0,
+    fundProfiles: [],
+    allPledges: [],
+    needsInit: true
+  };
 
   componentDidMount(){
     EmbarkJS.onReady(async (err) => {
       getNetworkType().then(async network => {
         const { environment } = EmbarkJS
-        const needsInit = await vaultPledgingNeedsInit()
-        const lpAllowance = await getLpAllowance()
-        const fundProfiles = await getProfileEvents()
-        const allPledges = await getAllPledges()
-        this.setState({
-          network,
-          environment,
-          needsInit: needsInit === 0,
-          lpAllowance,
-          fundProfiles,
-          allPledges
-        })
+        const isInitialized = await vaultPledgingNeedsInit()
+        if (!!isInitialized) {
+          const lpAllowance = await getLpAllowance()
+          const fundProfiles = await getProfileEvents()
+          const allPledges = await getAllPledges()
+          this.setState({
+            network,
+            environment,
+            needsInit: false,
+            lpAllowance,
+            fundProfiles,
+            allPledges
+          })
+        }
       });
     });
   }
@@ -74,8 +81,8 @@ class App extends React.Component {
     return (
       <FundingContext.Provider value={fundingContext}>
         <div>
-          {allPledges && <PledgesTable data={allPledges} transferPledgeAmounts={transferPledgeAmounts} />}
-          {fundProfiles && <FunderProfilesTable data={fundProfiles} cancelFundProfile={cancelFundProfile}/>}
+          {!!allPledges.length && <PledgesTable data={allPledges} transferPledgeAmounts={transferPledgeAmounts} />}
+          {!!fundProfiles.length && <FunderProfilesTable data={fundProfiles} cancelFundProfile={cancelFundProfile}/>}
           <AddFunder appendFundProfile={appendFundProfile} />
           <Divider variant="middle" />
           <CreateFunding refreshTable={appendPledges} />
