@@ -1,18 +1,18 @@
 import LPVault from 'Embark/contracts/LPVault'
 import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock'
 import StandardToken from 'Embark/contracts/StandardToken'
-import web3 from "Embark/web3"
+import web3 from 'Embark/web3'
 
 export const initVaultAndLP = async () => {
-  const vaultInit = await LPVault.methods.initialize(LiquidPledgingMock._address).send()
-  console.log(vaultInit)
   const lpInit = await LiquidPledgingMock.methods.initialize(LPVault._address).send()
   console.log(lpInit)
+  const vaultInit = await LPVault.methods.initialize(LiquidPledgingMock._address).send()
+  console.log(vaultInit)
 }
 
 export const vaultPledgingNeedsInit = async () => {
-  const needsInit = Number(await LiquidPledgingMock.methods.getInitializationBlock().call())
-        + Number(await LPVault.methods.getInitializationBlock().call())
+  const needsInit = !!Number(await LiquidPledgingMock.methods.getInitializationBlock().call())
+        && !!Number(await LPVault.methods.getInitializationBlock().call())
   return needsInit
 }
 
