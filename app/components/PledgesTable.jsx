@@ -12,9 +12,14 @@ const pledgeStateMap = {
   1: 'Paying',
   2: 'Paid'
 }
+const convertToDatetime = commitTime => {
+  if (Number(commitTime) === 0) return 0
+  const date = new Date(commitTime * 1000)
+  return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`
+}
 const formatField = field => ({
   ...field,
-  commitTime: convertToHours(field.commitTime),
+  commitTime: convertToDatetime(field.commitTime),
   amount: toEther(field.amount),
   token: getTokenLabel(field.token),
   intendedProject: projectText(field.intendedProject),

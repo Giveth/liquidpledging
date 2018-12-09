@@ -18,9 +18,9 @@ const TransferDialog = ({ row, handleClose, transferPledgeAmounts }) => (
   <Formik
     initialValues={{}}
     onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
-      const { owner, id } = row
-      const { amount, idReceiver } = values
-      const args = [owner, id, toWei(amount.toString()), idReceiver]
+      const { id } = row
+      const { idSender, amount, idReceiver } = values
+      const args = [idSender, id, toWei(amount.toString()), idReceiver]
       transfer(...args)
         .send()
         .then(res => {
@@ -28,7 +28,6 @@ const TransferDialog = ({ row, handleClose, transferPledgeAmounts }) => (
           const { events: { Transfer: { returnValues } } } = res
           transferPledgeAmounts(returnValues)
           handleClose()
-
         })
         .catch(e => {
           console.log({e})
@@ -73,6 +72,20 @@ const TransferDialog = ({ row, handleClose, transferPledgeAmounts }) => (
               onChange={handleChange}
               onBlur={handleBlur}
               value={values.amount || ''}
+            />
+            <TextField
+              margin="normal"
+              id="idSender"
+              name="idSender"
+              label="Profile Id to send from"
+              placeholder="Profile Id to send from"
+              variant="outlined"
+              type="number"
+              autoComplete="off"
+              fullWidth
+              onChange={handleChange}
+              onBlur={handleBlur}
+              value={values.idSender || ''}
             />
             <TextField
               margin="normal"
