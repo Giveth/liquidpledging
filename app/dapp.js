@@ -14,6 +14,7 @@ import { getProfileEvents, formatFundProfileEvent } from './utils/events';
 import { getAllPledges, appendToExistingPledges, transferBetweenPledges } from './utils/pledges';
 import { FundingContext } from './context'
 import { cancelProfile } from './utils/fundProfiles'
+import SetMockedTime from './components/SetMockedTime'
 
 const { getNetworkType } = web3.eth.net;
 
@@ -34,6 +35,7 @@ class App extends React.Component {
         const { environment } = EmbarkJS
         const isInitialized = await vaultPledgingNeedsInit()
         if (!!isInitialized) {
+          console.log('mock_time:', await LiquidPledgingMock.mock_time.call())
           const lpAllowance = await getLpAllowance()
           const fundProfiles = await getProfileEvents()
           const allPledges = await getAllPledges()
@@ -92,6 +94,7 @@ class App extends React.Component {
           <Button variant="outlined" color="primary" onClick={standardTokenApproval}>
             GIVE VAULT TOKEN APPROVAL
           </Button>
+          <SetMockedTime />
         </div>
       </FundingContext.Provider>
     )

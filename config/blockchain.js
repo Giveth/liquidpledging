@@ -25,7 +25,7 @@ module.exports = {
     mineWhenNeeded: true, // Uses our custom script (if isDev is false) to mine only when needed
     nodiscover: true, // Disables the peer discovery mechanism (manual peer addition)
     maxpeers: 0, // Maximum number of network peers (network disabled if set to 0) (default: 25)
-    proxy: false, // Proxy is used to present meaningful information about transactions
+    proxy: true, // Proxy is used to present meaningful information about transactions
     targetGasLimit: 8000000, // Target gas limit sets the artificial target gas floor for the blocks to mine
     simulatorMnemonic: "example exile argue silk regular smile grass bomb merge arm assist farm", // Mnemonic  used by the simulator to generate a wallet
     simulatorBlocktime: 0, // Specify blockTime in seconds for automatic mining. Default is 0 and no auto-mining.
