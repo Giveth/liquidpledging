@@ -12,14 +12,18 @@ const pledgeStateMap = {
   1: 'Paying',
   2: 'Paid'
 }
-const convertToDatetime = commitTime => {
+const convertToDatetime = (field, fundProfiles) => {
+  const { commitTime, id } = field
+  const profile = fundProfiles[id - 1]
+  //TODO fix - add commitTime from funder and delegates to get actual dateTime
   if (Number(commitTime) === 0) return 0
-  const date = new Date(commitTime * 1000)
+  const time = Number(commitTime) + Number(profile.commitTime)
+  const date = new Date(time * 1000)
   return `${date.toLocaleDateString()} ${date.toLocaleTimeString()}`
 }
-const formatField = field => ({
+const formatField = (field, fundProfiles) => ({
   ...field,
-  commitTime: convertToDatetime(field.commitTime),
+  commitTime: convertToDatetime(field, fundProfiles),
   amount: toEther(field.amount),
   token: getTokenLabel(field.token),
   intendedProject: projectText(field.intendedProject),
@@ -41,7 +45,7 @@ class PledgesTable extends PureComponent {
   clearRowData = () => this.setState({ rowData: null })
 
   render() {
-    const { data, transferPledgeAmounts } = this.props
+    const { data, transferPledgeAmounts, fundProfiles } = this.props
     const { row, rowData } = this.state
     return (
       <Fragment>
@@ -61,7 +65,7 @@ class PledgesTable extends PureComponent {
             { title: 'Intended Project', field: 'intendedProject' },
             { title: 'Pledge State', field: 'pledgeState' },
           ]}
-          data={data.map(formatField)}
+          data={data.map((f) => formatField(f, fundProfiles))}
           title="Pledges"
           actions={[
             {

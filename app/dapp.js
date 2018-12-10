@@ -81,7 +81,7 @@ class App extends React.Component {
     return (
       <FundingContext.Provider value={fundingContext}>
         <div>
-          {!!allPledges.length && <PledgesTable data={allPledges} transferPledgeAmounts={transferPledgeAmounts} />}
+          {!!allPledges.length && <PledgesTable data={allPledges} transferPledgeAmounts={transferPledgeAmounts} fundProfiles={fundProfiles} />}
           {!!fundProfiles.length && <FunderProfilesTable data={fundProfiles} cancelFundProfile={cancelFundProfile}/>}
           <AddFunder appendFundProfile={appendFundProfile} />
           <Divider variant="middle" />
