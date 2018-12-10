@@ -24,9 +24,13 @@ const CreateFunding = ({ refreshTable }) => (
     onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
       const { funderId, receiverId, tokenAddress, amount } = values
       const account = await web3.eth.getCoinbase()
-      const args = [funderId, receiverId, tokenAddress, web3.utils.toWei(amount, 'ether')]
-      donate(...args)
-        .send({ from: account })
+      const args = [funderId, receiverId, tokenAddress, web3.utils.toWei(amount, 'ether')];
+      
+      const toSend =  donate(...args);
+
+      const estimateGas = await toSend.estimateGas();
+     
+      toSend.send({ from: account, gas: estimateGas + 2000 })
         .then(res => {
           console.log({res})
           setStatus({

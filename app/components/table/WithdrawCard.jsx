@@ -64,8 +64,12 @@ class Withdraw extends PureComponent {
           const { amount } = values
           const args = isPaying ? [rowData.id] : [rowData.id, toWei(amount)]
           const sendFn = isPaying ? confirmPayment : withdraw
-          sendFn(...args)
-            .send()
+          
+          const toSend = sendFn(...args);
+
+          const estimateGas = await toSend.estimateGas();
+
+          toSend.send({gas: estimateGas + 1000})
             .then(res => {
               console.log({res})
             })

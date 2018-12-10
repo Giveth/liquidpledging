@@ -10,12 +10,12 @@ export const formatPledge = async (pledgePromise, idx) => {
 }
 
 export const getAllPledges = async (start = 1) => {
-  const numPledges = await numberOfPledges().call()
+  const numPledges = await LiquidPledgingMock.methods.numberOfPledges().call()
   const pledges = []
   for (let i = start; i <= numPledges; i++) {
     pledges.push(getPledge(i).call())
   }
-  return Promise.all(pledges.map(formatPledge))
+   return Promise.all(pledges.map(formatPledge))
 }
 
 export const appendToExistingPledges = async (pledges, setState) => {

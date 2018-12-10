@@ -4,9 +4,18 @@ import StandardToken from 'Embark/contracts/StandardToken'
 import web3 from 'Embark/web3'
 
 export const initVaultAndLP = async () => {
-  const lpInit = await LiquidPledgingMock.methods.initialize(LPVault._address).send()
+  let estimateGas;
+  let toSend;
+
+
+  toSend = LiquidPledgingMock.methods.initialize(LPVault._address);
+  estimateGas = await toSend.estimateGas();
+  const lpInit = await toSend.send({gas: estimateGas + 1000})
   console.log(lpInit)
-  const vaultInit = await LPVault.methods.initialize(LiquidPledgingMock._address).send()
+
+  toSend = LPVault.methods.initialize(LiquidPledgingMock._address);
+  estimateGas = await toSend.estimateGas();
+  const vaultInit = await toSend.send({gas: estimateGas + 1000})
   console.log(vaultInit)
 }
 
