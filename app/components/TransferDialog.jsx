@@ -21,8 +21,11 @@ const TransferDialog = ({ row, handleClose, transferPledgeAmounts }) => (
       const { id } = row
       const { idSender, amount, idReceiver } = values
       const args = [idSender, id, toWei(amount.toString()), idReceiver]
-      transfer(...args)
-        .send()
+      
+      const toSend = transfer(...args);
+      const estimatedGas = await toSend.estimateGas();
+      
+      toSend.send({gas: estimatedGas + 1000})
         .then(res => {
           console.log({res})
           const { events: { Transfer: { returnValues } } } = res
