@@ -15,6 +15,7 @@ import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock'
 import LPVault from 'Embark/contracts/LPVault'
 import { getTokenLabel } from '../../utils/currencies'
 import { toWei } from '../../utils/conversions'
+import { FundingContext } from '../../context'
 
 const { withdraw } = LiquidPledgingMock.methods
 const { confirmPayment } = LPVault.methods
@@ -58,27 +59,31 @@ class Withdraw extends PureComponent {
     const { show } = this.state
     const isPaying = rowData[7] === "1"
     return (
+      <FundingContext.Consumer>
+      {({ authorizedPayments }) =>
       <Formik
         initialValues={{}}
         onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
           const { amount } = values
-          const args = isPaying ? [rowData.id] : [rowData.id, toWei(amount)]
+          const paymentId = authorizedPayments.find(r => r.ref === rowData.id)['idPayment']
+          const args = isPaying ? [paymentId] : [paymentId, toWei(amount)]
           const sendFn = isPaying ? confirmPayment : withdraw
-          
-          const toSend = sendFn(...args);
-
-          const estimateGas = await toSend.estimateGas();
-
-          toSend.send({gas: estimateGas + 1000})
-            .then(res => {
-              console.log({res})
-            })
-            .catch(e => {
-              console.log({e})
-            })
-            .finally(() => {
-              this.close()
-            })
+          try {
+            const toSend = sendFn(...args);
+            const estimateGas = await toSend.estimateGas();
+            toSend.send({ gas: estimateGas + 1000 })
+                  .then(res => {
+                    console.log({res})
+                  })
+                  .catch(e => {
+                    console.log({e})
+                  })
+                  .finally(() => {
+                    this.close()
+                  })
+          } catch (error) {
+            console.log(error)
+          }
         }}
       >
         {({
@@ -121,6 +126,8 @@ class Withdraw extends PureComponent {
           </Collapse>
         )}
       </Formik>
+      }
+      </FundingContext.Consumer>
     )
   }
 }

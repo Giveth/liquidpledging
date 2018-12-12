@@ -10,7 +10,7 @@ import CreateFunding from './components/CreateFunding';
 import FunderProfilesTable from './components/FunderProfilesTable'
 import PledgesTable from './components/PledgesTable'
 import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval, getLpAllowance } from './utils/initialize'
-import { getProfileEvents, formatFundProfileEvent } from './utils/events';
+import { getProfileEvents, formatFundProfileEvent, getAuthorizedPayments } from './utils/events';
 import { getAllPledges, appendToExistingPledges, transferBetweenPledges } from './utils/pledges';
 import { FundingContext } from './context'
 import { cancelProfile } from './utils/fundProfiles'
@@ -39,13 +39,15 @@ class App extends React.Component {
           const lpAllowance = await getLpAllowance()
           const fundProfiles = await getProfileEvents()
           const allPledges = await getAllPledges()
+          const authorizedPayments = await getAuthorizedPayments()
           this.setState({
             network,
             environment,
             needsInit: false,
             lpAllowance,
             fundProfiles,
-            allPledges
+            allPledges,
+            authorizedPayments
           })
         }
       });
@@ -77,9 +79,9 @@ class App extends React.Component {
   }
 
   render() {
-    const { needsInit, lpAllowance, fundProfiles, allPledges } = this.state;
+    const { needsInit, lpAllowance, fundProfiles, allPledges, authorizedPayments } = this.state;
     const { appendFundProfile, appendPledges, transferPledgeAmounts, cancelFundProfile } = this
-    const fundingContext = { transferPledgeAmounts }
+    const fundingContext = { transferPledgeAmounts, authorizedPayments }
     return (
       <FundingContext.Provider value={fundingContext}>
         <div>
