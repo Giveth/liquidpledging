@@ -17,26 +17,27 @@ const { transfer } = LiquidPledgingMock.methods
 const TransferDialog = ({ row, handleClose, transferPledgeAmounts }) => (
   <Formik
     initialValues={{}}
-    onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
-      const { id } = row
-      const { idSender, amount, idReceiver } = values
-      const args = [idSender, id, toWei(amount.toString()), idReceiver]
-      
-      const toSend = transfer(...args);
-      const estimatedGas = await toSend.estimateGas();
-      
-      toSend.send({gas: estimatedGas + 1000})
-        .then(res => {
-          console.log({res})
-          const { events: { Transfer: { returnValues } } } = res
-          transferPledgeAmounts(returnValues)
-          handleClose()
-        })
-        .catch(e => {
-          console.log({e})
-        })
-        .finally(() => { resetForm() })
-    }}
+  onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
+    const { id } = row
+    const { idSender, amount, idReceiver } = values
+    const args = [idSender, id, toWei(amount.toString()), idReceiver]
+    const toSend = transfer(...args);
+    const estimatedGas = await toSend.estimateGas();
+
+    toSend.send({gas: estimatedGas + 1000})
+          .then(res => {
+            console.log({res})
+            const { events: { Transfer: { returnValues } } } = res
+            transferPledgeAmounts(returnValues)
+          })
+          .catch(e => {
+            console.log({e})
+          })
+          .finally(() => {
+            handleClose()
+            resetForm()
+          })
+  }}
   >
     {({
        values,
