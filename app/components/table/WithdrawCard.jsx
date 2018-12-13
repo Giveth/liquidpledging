@@ -65,7 +65,7 @@ class Withdraw extends PureComponent {
         initialValues={{}}
         onSubmit={async (values, { setSubmitting, resetForm, setStatus }) => {
           const { amount } = values
-          const paymentId = authorizedPayments.find(r => r.ref === rowData.id)['idPayment']
+          const paymentId = isPaying ? authorizedPayments.find(r => r.ref === rowData.id)['idPayment'] : rowData.id
           const args = isPaying ? [paymentId] : [paymentId, toWei(amount)]
           const sendFn = isPaying ? confirmPayment : withdraw
           try {

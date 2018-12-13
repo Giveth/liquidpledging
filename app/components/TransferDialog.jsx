@@ -51,7 +51,7 @@ const TransferDialog = ({ row, handleClose, transferPledgeAmounts }) => (
        setStatus,
        status
     }) => (
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} autoComplete="off">
         <Dialog
           open={!!row}
           onClose={handleClose}
@@ -70,7 +70,6 @@ const TransferDialog = ({ row, handleClose, transferPledgeAmounts }) => (
               label="Amount to transfer"
               placeholder="Amount to transfer"
               variant="outlined"
-              type="number"
               autoComplete="off"
               fullWidth
               onChange={handleChange}
