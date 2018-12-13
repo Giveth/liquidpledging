@@ -44,11 +44,12 @@ const getPastVaultEvents = async event => {
 const { getPledgeAdmin } = LiquidPledgingMock.methods
 export const formatFundProfileEvent = async event => {
   const lookup = lookups[event.event]
-  const { returnValues: { url } } = event
+  const { returnValues: { url, idProject } } = event
   const idProfile = event.returnValues[lookup.id]
   const { addr, commitTime, name, canceled } = await getPledgeAdmin(idProfile).call()
   return {
     idProfile,
+    idProject,
     url,
     commitTime,
     name,

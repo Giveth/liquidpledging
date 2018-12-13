@@ -19,9 +19,6 @@ import SetMockedTime from './components/SetMockedTime'
 const { getNetworkType } = web3.eth.net;
 
 class App extends React.Component {
-  constructor(props) {
-    super(props)
-  }
   state = {
     lpAllowance: 0,
     fundProfiles: [],
@@ -40,7 +37,9 @@ class App extends React.Component {
           const fundProfiles = await getProfileEvents()
           const allPledges = await getAllPledges()
           const authorizedPayments = await getAuthorizedPayments()
+          const account = await web3.eth.getCoinbase()
           this.setState({
+            account,
             network,
             environment,
             needsInit: false,
@@ -57,7 +56,7 @@ class App extends React.Component {
   appendFundProfile = async event => {
     const formattedEvent = await formatFundProfileEvent(event)
     this.setState((state) => {
-      const { fundProfiles } = state;
+      const { fundProfiles } = state
       return {
         ...state,
         fundProfiles: [ ...fundProfiles, formattedEvent ]
@@ -79,9 +78,9 @@ class App extends React.Component {
   }
 
   render() {
-    const { needsInit, lpAllowance, fundProfiles, allPledges, authorizedPayments } = this.state;
+    const { account, needsInit, lpAllowance, fundProfiles, allPledges, authorizedPayments } = this.state;
     const { appendFundProfile, appendPledges, transferPledgeAmounts, cancelFundProfile } = this
-    const fundingContext = { transferPledgeAmounts, authorizedPayments }
+    const fundingContext = { account, transferPledgeAmounts, authorizedPayments }
     return (
       <FundingContext.Provider value={fundingContext}>
         <div>
