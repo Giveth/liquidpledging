@@ -6,6 +6,7 @@ const AUTHORIZE_PAYMENT = 'AuthorizePayment'
 const GIVER_ADDED = 'GiverAdded'
 const DELEGATE_ADDED = 'DelegateAdded'
 const PROJECT_ADDED = 'ProjectAdded'
+const ALL_EVENTS = 'allEvents'
 const lookups = {
   [GIVER_ADDED]: {
     id: 'idGiver',
@@ -59,20 +60,31 @@ export const formatFundProfileEvent = async event => {
   }
 }
 
-const getPastEvents = async event => {
+const getPastEvents = async (event, raw = false) => {
   const events = await LiquidPledgingMock.getPastEvents(event, {
     addr: await web3.eth.getCoinbase(),
     fromBlock: 0,
     toBlock: 'latest'
   })
+  if (raw) return events
   const formattedEvents = await Promise.all(
     events.map(formatFundProfileEvent)
   )
   return formattedEvents
 }
+
+export const lpEventsSubscription = async () => {
+  //todo add on event handlers
+  const events = await LiquidPledgingMock.events.allEvents({
+    fromBlock: 0,
+    toBlock: 'latest'
+  })
+  return events
+}
 export const getFunderProfiles = async () => await getPastEvents(GIVER_ADDED)
 export const getDelegateProfiles = async () => await getPastEvents(DELEGATE_ADDED)
 export const getProjectProfiles = async () => await getPastEvents(PROJECT_ADDED)
+export const getAllLPEvents = async () => await getPastEvents(ALL_EVENTS, true)
 export const getAuthorizedPayments = async () => getPastVaultEvents(AUTHORIZE_PAYMENT)
 export const getProfileEvents = async () => {
   const [ funderProfiles, delegateProfiles, projectProfiles]
