@@ -2,6 +2,8 @@ import Cytoscape from 'cytoscape'
 import dagre from 'cytoscape-dagre'
 import React, { Fragment } from 'react'
 import CytoscapeComponent from 'react-cytoscapejs'
+import { uniq } from 'ramda'
+import { toEther } from '../utils/conversions'
 
 Cytoscape.use(dagre)
 const layout = { name: 'dagre' }
@@ -30,19 +32,32 @@ const stylesheet = [
   }
 ]
 
-const TransfersGraph = () => {
-  const elements = [
-    { data: { id: 'one', label: 'Node 1' } },
-    { data: { id: 'two', label: 'Node 2' } },
-    { data: { id: 'three', label: 'Node 3' } },
-    { data: { source: 'one', target: 'two', label: 'Edge from Node1 to Node2' } },
-    { data: { source: 'one', target: 'three', label: 'Edge from Node1 to Node3' } }
+const createElements = transfers => {
+  const nodes = []
+  const edges = []
+  transfers.forEach(transfer => {
+    const { returnValues: { amount, from, to } } = transfer
+    nodes.push({
+      data: { id: from === '0' ? 'Create Funding' : from, label: `Pledge Id ${from}` }
+    })
+    nodes.push({
+      data: { id: to, label: `Pledge Id ${to}` }
+    })
+    edges.push({
+      data: { source: from === '0' ? 'Create Funding' : from, target: to, label: toEther(amount) }
+    })
+  })
+  return [
+    ...uniq(nodes),
+    ...edges
   ]
+}
 
+const TransfersGraph = ({ transfers }) => {
   return (
     <Fragment>
       <CytoscapeComponent
-        elements={elements}
+        elements={createElements(transfers)}
         style={ { width: '100%', height: '600px', fontSize: '14px' } }
         stylesheet={stylesheet}
         layout={layout}

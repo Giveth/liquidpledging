@@ -10,13 +10,14 @@ import CreateFunding from './components/CreateFunding';
 import FunderProfilesTable from './components/FunderProfilesTable'
 import PledgesTable from './components/PledgesTable'
 import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval, getLpAllowance } from './utils/initialize'
-import { getProfileEvents, formatFundProfileEvent, getAuthorizedPayments } from './utils/events';
+import { getAllLPEvents, getProfileEvents, formatFundProfileEvent, getAuthorizedPayments } from './utils/events'
 import { getAllPledges, appendToExistingPledges, transferBetweenPledges } from './utils/pledges';
 import { FundingContext } from './context'
 import { cancelProfile } from './utils/fundProfiles'
 import SetMockedTime from './components/SetMockedTime'
+import TransfersGraph from './components/TransfersGraph'
 
-const { getNetworkType } = web3.eth.net;
+const { getNetworkType } = web3.eth.net
 
 class App extends React.Component {
   state = {
@@ -38,6 +39,8 @@ class App extends React.Component {
           const allPledges = await getAllPledges()
           const authorizedPayments = await getAuthorizedPayments()
           const account = await web3.eth.getCoinbase()
+          const allLpEvents = await getAllLPEvents()
+          const transfers = allLpEvents.filter(obj => obj.event === 'Transfer')
           this.setState({
             account,
             network,
@@ -46,7 +49,9 @@ class App extends React.Component {
             lpAllowance,
             fundProfiles,
             allPledges,
-            authorizedPayments
+            authorizedPayments,
+            allLpEvents,
+            transfers
           })
         }
       });
@@ -78,12 +83,13 @@ class App extends React.Component {
   }
 
   render() {
-    const { account, needsInit, lpAllowance, fundProfiles, allPledges, authorizedPayments } = this.state;
+    const { account, needsInit, lpAllowance, fundProfiles, allPledges, authorizedPayments, transfers } = this.state
     const { appendFundProfile, appendPledges, transferPledgeAmounts, cancelFundProfile } = this
     const fundingContext = { account, transferPledgeAmounts, authorizedPayments }
     return (
       <FundingContext.Provider value={fundingContext}>
         <div>
+          {transfers && <TransfersGraph transfers={transfers} />}
           {!!allPledges.length && <PledgesTable data={allPledges} transferPledgeAmounts={transferPledgeAmounts} fundProfiles={fundProfiles} />}
           {!!fundProfiles.length && <FunderProfilesTable data={fundProfiles} cancelFundProfile={cancelFundProfile}/>}
           <AddFunder appendFundProfile={appendFundProfile} />
