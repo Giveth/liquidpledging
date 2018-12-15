@@ -17,8 +17,9 @@ import ListItem from '@material-ui/core/ListItem';
 import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
+import FundsManagement from './FundsManagement'
 
-const drawerWidth = 240;
+const drawerWidth = 240
 
 const styles = theme => ({
   root: {
@@ -37,6 +38,9 @@ const styles = theme => ({
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen,
     }),
+  },
+  childrenShift: {
+    width: `calc(100% - ${drawerWidth}px)`
   },
   menuButton: {
     marginLeft: 12,
@@ -135,25 +139,25 @@ class PersistentDrawerLeft extends React.Component {
           <List>
             <ListItem button>
               <ListItemIcon><InboxIcon /></ListItemIcon>
-              <ListItemText primary='Dashboard' />
+              <ListItemText primary="Dashboard" />
             </ListItem>
           </List>
           <List>
             <ListItem button>
               <ListItemIcon><InboxIcon /></ListItemIcon>
-              <ListItemText primary='Insights' />
+              <ListItemText primary="Funds Management" />
             </ListItem>
           </List>
           <List>
             <ListItem button>
               <ListItemIcon><InboxIcon /></ListItemIcon>
-              <ListItemText primary='Funding Entry' />
+              <ListItemText primary="Insights" />
             </ListItem>
           </List>
           <List>
             <ListItem button>
               <ListItemIcon><InboxIcon /></ListItemIcon>
-              <ListItemText primary='Contract Admin' />
+              <ListItemText primary="Contract Admin" />
             </ListItem>
           </List>
           <Divider />
@@ -164,7 +168,12 @@ class PersistentDrawerLeft extends React.Component {
           })}
         >
           <div className={classes.drawerHeader} />
-          {this.props.children}
+          <div className={classNames(classes.appBar, {
+            [classes.childrenShift]: open,
+          })}>
+            <FundsManagement open={open} />
+            {this.props.children}
+          </div>
         </main>
       </div>
     );
@@ -176,4 +185,4 @@ PersistentDrawerLeft.propTypes = {
   theme: PropTypes.object.isRequired,
 };
 
-export default withStyles(styles, { withTheme: true })(PersistentDrawerLeft);
+export default withStyles(styles, { withTheme: true })(PersistentDrawerLeft)

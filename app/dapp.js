@@ -5,7 +5,6 @@ import LPVault from 'Embark/contracts/LPVault';
 import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock';
 import web3 from "Embark/web3";
 import Divider from '@material-ui/core/Divider';
-import Button from '@material-ui/core/Button';
 import AddFunder from './components/AddFunder';
 import CreateFunding from './components/CreateFunding';
 import FunderProfilesTable from './components/FunderProfilesTable'
@@ -15,7 +14,6 @@ import { getAllLPEvents, getAllVaultEvents, getProfileEvents, formatFundProfileE
 import { getAllPledges, appendToExistingPledges, transferBetweenPledges } from './utils/pledges';
 import { FundingContext } from './context'
 import { cancelProfile } from './utils/fundProfiles'
-import SetMockedTime from './components/SetMockedTime'
 import TransfersGraph from './components/TransfersGraph'
 import MainCointainer from './components/MainCointainer'
 import ContractAdmin from './components/ContractAdmin'
@@ -90,16 +88,14 @@ class App extends React.Component {
   render() {
     const { account, needsInit, lpAllowance, fundProfiles, allPledges, authorizedPayments, transfers, allVaultEvents } = this.state
     const { appendFundProfile, appendPledges, transferPledgeAmounts, cancelFundProfile } = this
-    const fundingContext = { account, transferPledgeAmounts, authorizedPayments, needsInit, initVaultAndLP, standardTokenApproval, }
+    const fundingContext = { allPledges, account, transferPledgeAmounts, authorizedPayments, cancelFundProfile, fundProfiles, needsInit, initVaultAndLP, standardTokenApproval }
     return (
       <FundingContext.Provider value={fundingContext}>
         <Router>
           <MainCointainer>
-            <div style={{ display: 'flex', flexDirection: 'column', width: '95vw' }}>
-              {transfers && <TransfersGraph transfers={transfers} vaultEvents={allVaultEvents} />}
-              {!!allPledges.length && <PledgesTable data={allPledges} transferPledgeAmounts={transferPledgeAmounts} fundProfiles={fundProfiles} />}
-              {!!fundProfiles.length && <FunderProfilesTable data={fundProfiles} cancelFundProfile={cancelFundProfile}/>}
-            </div>
+              {false &&transfers && <TransfersGraph transfers={transfers} vaultEvents={allVaultEvents} />}
+              {false && !!allPledges.length && <PledgesTable data={allPledges} transferPledgeAmounts={transferPledgeAmounts} fundProfiles={fundProfiles} />}
+              {false && !!fundProfiles.length && <FunderProfilesTable data={fundProfiles} cancelFundProfile={cancelFundProfile}/>}
             <AddFunder appendFundProfile={appendFundProfile} />
             <Divider variant="middle" />
             <CreateFunding refreshTable={appendPledges} />
