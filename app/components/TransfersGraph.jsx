@@ -1,10 +1,11 @@
 import Cytoscape from 'cytoscape'
 import dagre from 'cytoscape-dagre'
-import React, { Fragment, memo } from 'react'
+import React, { Fragment } from 'react'
 import CytoscapeComponent from 'react-cytoscapejs'
 import { uniq } from 'ramda'
 import { toEther } from '../utils/conversions'
 import { getTokenLabel } from '../utils/currencies'
+import { FundingContext } from '../context'
 
 Cytoscape.use(dagre)
 const layout = { name: 'dagre' }
@@ -68,17 +69,21 @@ const createElements = (transfers, vaultEvents) => {
   ]
 }
 
-const TransfersGraph = ({ transfers, vaultEvents }) => {
+const TransfersGraph = () => {
   return (
-    <Fragment>
-      <CytoscapeComponent
-        elements={createElements(transfers, vaultEvents)}
-        style={ { width: '100%', height: '600px', fontSize: '14px' } }
-        stylesheet={stylesheet}
-        layout={layout}
-      />
-    </Fragment>
+    <FundingContext.Consumer>
+      {({ transfers, vaultEvents }) =>
+        <Fragment>
+          <CytoscapeComponent
+            elements={createElements(transfers, vaultEvents)}
+            style={ { width: '100%', height: '600px', fontSize: '14px' } }
+            stylesheet={stylesheet}
+            layout={layout}
+          />
+        </Fragment>
+      }
+    </FundingContext.Consumer>
   )
 }
 
-export default memo(TransfersGraph)
+export default TransfersGraph
