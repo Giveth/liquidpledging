@@ -1,4 +1,5 @@
-import React from 'react';
+import React from 'react'
+import { HashRouter as Router, Route, Link, Switch } from 'react-router-dom'
 import EmbarkJS from 'Embark/EmbarkJS';
 import LPVault from 'Embark/contracts/LPVault';
 import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock';
@@ -17,6 +18,7 @@ import { cancelProfile } from './utils/fundProfiles'
 import SetMockedTime from './components/SetMockedTime'
 import TransfersGraph from './components/TransfersGraph'
 import MainCointainer from './components/MainCointainer'
+import ContractAdmin from './components/ContractAdmin'
 
 const { getNetworkType } = web3.eth.net
 
@@ -88,24 +90,22 @@ class App extends React.Component {
   render() {
     const { account, needsInit, lpAllowance, fundProfiles, allPledges, authorizedPayments, transfers, allVaultEvents } = this.state
     const { appendFundProfile, appendPledges, transferPledgeAmounts, cancelFundProfile } = this
-    const fundingContext = { account, transferPledgeAmounts, authorizedPayments }
+    const fundingContext = { account, transferPledgeAmounts, authorizedPayments, needsInit, initVaultAndLP, standardTokenApproval, }
     return (
       <FundingContext.Provider value={fundingContext}>
-        <MainCointainer>
-          {transfers && <TransfersGraph transfers={transfers} vaultEvents={allVaultEvents} />}
-          {!!allPledges.length && <PledgesTable data={allPledges} transferPledgeAmounts={transferPledgeAmounts} fundProfiles={fundProfiles} />}
-          {!!fundProfiles.length && <FunderProfilesTable data={fundProfiles} cancelFundProfile={cancelFundProfile}/>}
-          <AddFunder appendFundProfile={appendFundProfile} />
-          <Divider variant="middle" />
-          <CreateFunding refreshTable={appendPledges} />
-          {needsInit && <Button variant="outlined" color="secondary" onClick={initVaultAndLP}>
-            Initialize Contracts
-          </Button>}
-          <Button variant="outlined" color="primary" onClick={standardTokenApproval}>
-            GIVE VAULT TOKEN APPROVAL
-          </Button>
-          <SetMockedTime />
-        </MainCointainer>
+        <Router>
+          <MainCointainer>
+            <div style={{ display: 'flex', flexDirection: 'column', width: '95vw' }}>
+              {transfers && <TransfersGraph transfers={transfers} vaultEvents={allVaultEvents} />}
+              {!!allPledges.length && <PledgesTable data={allPledges} transferPledgeAmounts={transferPledgeAmounts} fundProfiles={fundProfiles} />}
+              {!!fundProfiles.length && <FunderProfilesTable data={fundProfiles} cancelFundProfile={cancelFundProfile}/>}
+            </div>
+            <AddFunder appendFundProfile={appendFundProfile} />
+            <Divider variant="middle" />
+            <CreateFunding refreshTable={appendPledges} />
+            <Route path="/admin" component={ContractAdmin} />
+          </MainCointainer>
+        </Router>
       </FundingContext.Provider>
     )
   }
