@@ -1,4 +1,5 @@
 import React from 'react';
+import { HashRouter as Router, Route, Link, Switch } from 'react-router-dom'
 import PropTypes from 'prop-types';
 import classNames from 'classnames';
 import { withStyles } from '@material-ui/core/styles';
@@ -18,6 +19,7 @@ import ListItemIcon from '@material-ui/core/ListItemIcon';
 import ListItemText from '@material-ui/core/ListItemText';
 import InboxIcon from '@material-ui/icons/MoveToInbox';
 import FundsManagement from './FundsManagement'
+import ContractAdmin from './ContractAdmin'
 
 const drawerWidth = 240
 
@@ -79,6 +81,9 @@ const styles = theme => ({
     }),
     marginLeft: 0,
   },
+  link: {
+    textDecoration: 'none'
+  }
 });
 
 class PersistentDrawerLeft extends React.Component {
@@ -87,16 +92,16 @@ class PersistentDrawerLeft extends React.Component {
   };
 
   handleDrawerOpen = () => {
-    this.setState({ open: true });
+    this.setState({ open: true })
   };
 
   handleDrawerClose = () => {
-    this.setState({ open: false });
+    this.setState({ open: false })
   };
 
   render() {
-    const { classes, theme } = this.props;
-    const { open } = this.state;
+    const { classes, theme } = this.props
+    const { open } = this.state
 
     return (
       <div className={classes.root}>
@@ -143,10 +148,12 @@ class PersistentDrawerLeft extends React.Component {
             </ListItem>
           </List>
           <List>
-            <ListItem button>
-              <ListItemIcon><InboxIcon /></ListItemIcon>
-              <ListItemText primary="Funds Management" />
-            </ListItem>
+            <Link to="/funds-management/" className={classes.link}>
+              <ListItem button>
+                <ListItemIcon><InboxIcon /></ListItemIcon>
+                <ListItemText primary="Funds Management" />
+              </ListItem>
+            </Link>
           </List>
           <List>
             <ListItem button>
@@ -155,10 +162,12 @@ class PersistentDrawerLeft extends React.Component {
             </ListItem>
           </List>
           <List>
-            <ListItem button>
-              <ListItemIcon><InboxIcon /></ListItemIcon>
-              <ListItemText primary="Contract Admin" />
-            </ListItem>
+            <Link to="/admin/" className={classes.link}>
+              <ListItem button>
+                <ListItemIcon><InboxIcon /></ListItemIcon>
+                <ListItemText primary="Contract Admin" />
+              </ListItem>
+            </Link>
           </List>
           <Divider />
         </Drawer>
@@ -171,7 +180,8 @@ class PersistentDrawerLeft extends React.Component {
           <div className={classNames(classes.appBar, {
             [classes.childrenShift]: open,
           })}>
-            <FundsManagement open={open} />
+            <Route path="/funds-management" render={() => <FundsManagement open={open} />} />
+            <Route path="/admin" component={ContractAdmin} />
             {this.props.children}
           </div>
         </main>
