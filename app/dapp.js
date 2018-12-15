@@ -16,6 +16,7 @@ import { FundingContext } from './context'
 import { cancelProfile } from './utils/fundProfiles'
 import SetMockedTime from './components/SetMockedTime'
 import TransfersGraph from './components/TransfersGraph'
+import MainCointainer from './components/MainCointainer'
 
 const { getNetworkType } = web3.eth.net
 
@@ -90,7 +91,7 @@ class App extends React.Component {
     const fundingContext = { account, transferPledgeAmounts, authorizedPayments }
     return (
       <FundingContext.Provider value={fundingContext}>
-        <div>
+        <MainCointainer>
           {transfers && <TransfersGraph transfers={transfers} vaultEvents={allVaultEvents} />}
           {!!allPledges.length && <PledgesTable data={allPledges} transferPledgeAmounts={transferPledgeAmounts} fundProfiles={fundProfiles} />}
           {!!fundProfiles.length && <FunderProfilesTable data={fundProfiles} cancelFundProfile={cancelFundProfile}/>}
@@ -104,10 +105,10 @@ class App extends React.Component {
             GIVE VAULT TOKEN APPROVAL
           </Button>
           <SetMockedTime />
-        </div>
+        </MainCointainer>
       </FundingContext.Provider>
     )
   }
 }
 
-export default App;
+export default App
