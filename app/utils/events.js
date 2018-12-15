@@ -30,12 +30,13 @@ const formatVaultEvent = async event => {
   }
 }
 
-const getPastVaultEvents = async event => {
+const getPastVaultEvents = async (event, raw = false) => {
   const events = await LPVault.getPastEvents(event, {
     addr: await web3.eth.getCoinbase(),
     fromBlock: 0,
     toBlock: 'latest'
   })
+  if (raw) return events
   const formattedEvents = await Promise.all(
     events.map(formatVaultEvent)
   )
@@ -86,6 +87,7 @@ export const getDelegateProfiles = async () => await getPastEvents(DELEGATE_ADDE
 export const getProjectProfiles = async () => await getPastEvents(PROJECT_ADDED)
 export const getAllLPEvents = async () => await getPastEvents(ALL_EVENTS, true)
 export const getAuthorizedPayments = async () => getPastVaultEvents(AUTHORIZE_PAYMENT)
+export const getAllVaultEvents = async () => getPastVaultEvents(ALL_EVENTS,true)
 export const getProfileEvents = async () => {
   const [ funderProfiles, delegateProfiles, projectProfiles]
         = await Promise.all([getFunderProfiles(), getDelegateProfiles(), getProjectProfiles()])

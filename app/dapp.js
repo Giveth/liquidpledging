@@ -10,7 +10,7 @@ import CreateFunding from './components/CreateFunding';
 import FunderProfilesTable from './components/FunderProfilesTable'
 import PledgesTable from './components/PledgesTable'
 import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval, getLpAllowance } from './utils/initialize'
-import { getAllLPEvents, getProfileEvents, formatFundProfileEvent, getAuthorizedPayments } from './utils/events'
+import { getAllLPEvents, getAllVaultEvents, getProfileEvents, formatFundProfileEvent, getAuthorizedPayments } from './utils/events'
 import { getAllPledges, appendToExistingPledges, transferBetweenPledges } from './utils/pledges';
 import { FundingContext } from './context'
 import { cancelProfile } from './utils/fundProfiles'
@@ -40,6 +40,7 @@ class App extends React.Component {
           const authorizedPayments = await getAuthorizedPayments()
           const account = await web3.eth.getCoinbase()
           const allLpEvents = await getAllLPEvents()
+          const allVaultEvents = await getAllVaultEvents()
           const transfers = allLpEvents.filter(obj => obj.event === 'Transfer')
           this.setState({
             account,
@@ -51,6 +52,7 @@ class App extends React.Component {
             allPledges,
             authorizedPayments,
             allLpEvents,
+            allVaultEvents,
             transfers
           })
         }
@@ -83,13 +85,13 @@ class App extends React.Component {
   }
 
   render() {
-    const { account, needsInit, lpAllowance, fundProfiles, allPledges, authorizedPayments, transfers } = this.state
+    const { account, needsInit, lpAllowance, fundProfiles, allPledges, authorizedPayments, transfers, allVaultEvents } = this.state
     const { appendFundProfile, appendPledges, transferPledgeAmounts, cancelFundProfile } = this
     const fundingContext = { account, transferPledgeAmounts, authorizedPayments }
     return (
       <FundingContext.Provider value={fundingContext}>
         <div>
-          {transfers && <TransfersGraph transfers={transfers} />}
+          {transfers && <TransfersGraph transfers={transfers} vaultEvents={allVaultEvents} />}
           {!!allPledges.length && <PledgesTable data={allPledges} transferPledgeAmounts={transferPledgeAmounts} fundProfiles={fundProfiles} />}
           {!!fundProfiles.length && <FunderProfilesTable data={fundProfiles} cancelFundProfile={cancelFundProfile}/>}
           <AddFunder appendFundProfile={appendFundProfile} />
