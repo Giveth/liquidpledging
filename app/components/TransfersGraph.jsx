@@ -2,10 +2,11 @@ import Cytoscape from 'cytoscape'
 import dagre from 'cytoscape-dagre'
 import React, { Fragment } from 'react'
 import CytoscapeComponent from 'react-cytoscapejs'
-import { uniq } from 'ramda'
+import { uniq, isNil } from 'ramda'
 import { toEther } from '../utils/conversions'
 import { getTokenLabel } from '../utils/currencies'
 import { FundingContext } from '../context'
+
 
 Cytoscape.use(dagre)
 const layout = { name: 'dagre' }
@@ -36,6 +37,7 @@ const stylesheet = [
 
 const getAuthorizations = events => events.filter(event => event.event === 'AuthorizePayment')
 const createElements = (transfers, vaultEvents) => {
+  if (isNil(transfers) || isNil(vaultEvents)) return []
   const nodes = []
   const edges = []
   const authorizations = getAuthorizations(vaultEvents)
@@ -76,7 +78,7 @@ const TransfersGraph = () => {
         <Fragment>
           <CytoscapeComponent
             elements={createElements(transfers, vaultEvents)}
-            style={ { width: '100%', height: '600px', fontSize: '14px' } }
+            style={ { width: '800px', height: '100%', fontSize: '14px' } }
             stylesheet={stylesheet}
             layout={layout}
           />
