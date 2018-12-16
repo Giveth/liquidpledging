@@ -21,6 +21,7 @@ import InboxIcon from '@material-ui/icons/MoveToInbox';
 import FundsManagement from './FundsManagement'
 import ContractAdmin from './ContractAdmin'
 import TransferGraph from './TransfersGraph'
+import Dashboard from './Dashboard'
 
 const drawerWidth = 240
 
@@ -143,10 +144,12 @@ class PersistentDrawerLeft extends React.Component {
           </div>
           <Divider />
           <List>
-            <ListItem button>
-              <ListItemIcon><InboxIcon /></ListItemIcon>
-              <ListItemText primary="Dashboard" />
-            </ListItem>
+            <Link to="/dashboard" className={classes.link}>
+              <ListItem button>
+                <ListItemIcon><InboxIcon /></ListItemIcon>
+                <ListItemText primary="Dashboard" />
+              </ListItem>
+            </Link>
           </List>
           <List>
             <Link to="/funds-management/" className={classes.link}>
@@ -183,9 +186,12 @@ class PersistentDrawerLeft extends React.Component {
           <div className={classNames(classes.appBar, {
             [classes.childrenShift]: open,
           })}>
-            <Route path="/funds-management" render={() => <FundsManagement open={open} />} />
-            <Route path="/admin" component={ContractAdmin} />
-            <Route path="/insights" component={TransferGraph} />
+            <Switch>
+              <Route path="/(|dashboard)" component={Dashboard} />
+              <Route path="/admin" component={ContractAdmin} />
+              <Route path="/funds-management" render={() => <FundsManagement open={open} />} />
+              <Route path="/insights" component={TransferGraph} />
+            </Switch>
             {this.props.children}
           </div>
         </main>

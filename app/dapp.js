@@ -50,8 +50,8 @@ class App extends React.Component {
             transfers
           })
         }
-      });
-    });
+      })
+    })
   }
 
   appendFundProfile = async event => {
