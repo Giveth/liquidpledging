@@ -6,6 +6,7 @@ import { uniq, isNil } from 'ramda'
 import { toEther } from '../utils/conversions'
 import { getTokenLabel } from '../utils/currencies'
 import { FundingContext } from '../context'
+import { getAuthorizations } from '../selectors/vault'
 
 
 Cytoscape.use(dagre)
@@ -35,7 +36,6 @@ const stylesheet = [
   }
 ]
 
-const getAuthorizations = events => events.filter(event => event.event === 'AuthorizePayment')
 const createElements = (transfers, vaultEvents) => {
   if (isNil(transfers) || isNil(vaultEvents)) return []
   const nodes = []
