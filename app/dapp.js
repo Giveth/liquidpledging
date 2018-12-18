@@ -6,10 +6,11 @@ import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock';
 import web3 from 'Embark/web3'
 import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval, getLpAllowance } from './utils/initialize'
 import { getAllLPEvents, getAllVaultEvents, getProfileEvents, formatFundProfileEvent, getAuthorizedPayments } from './utils/events'
-import { getAllPledges, appendToExistingPledges, transferBetweenPledges } from './utils/pledges';
+import { getAllPledges, appendToExistingPledges, transferBetweenPledges } from './utils/pledges'
 import { FundingContext } from './context'
 import { cancelProfile } from './utils/fundProfiles'
 import MainCointainer from './components/MainCointainer'
+import { getTransfersMemo } from './selectors/pledging'
 
 const { getNetworkType } = web3.eth.net
 
@@ -18,7 +19,9 @@ class App extends React.Component {
     lpAllowance: 0,
     fundProfiles: [],
     allPledges: [],
-    needsInit: true
+    needsInit: true,
+    transfers: [],
+    allLpEvents: []
   };
 
   componentDidMount(){
@@ -35,7 +38,7 @@ class App extends React.Component {
           const account = await web3.eth.getCoinbase()
           const allLpEvents = await getAllLPEvents()
           const vaultEvents = await getAllVaultEvents()
-          const transfers = allLpEvents.filter(obj => obj.event === 'Transfer')
+          const transfers = getTransfersMemo({ allLpEvents })
           this.setState({
             account,
             network,
@@ -79,9 +82,9 @@ class App extends React.Component {
   }
 
   render() {
-    const { account, needsInit, lpAllowance, fundProfiles, allPledges, authorizedPayments, transfers, vaultEvents } = this.state
+    const { account, needsInit, lpAllowance, fundProfiles, allPledges, allLpEvents, authorizedPayments, transfers, vaultEvents } = this.state
     const { appendFundProfile, appendPledges, transferPledgeAmounts, cancelFundProfile } = this
-    const fundingContext = { allPledges, appendPledges, appendFundProfile, account, transferPledgeAmounts, authorizedPayments, cancelFundProfile, fundProfiles, needsInit, initVaultAndLP, standardTokenApproval, transfers, vaultEvents }
+    const fundingContext = { allPledges, allLpEvents, appendPledges, appendFundProfile, account, transferPledgeAmounts, authorizedPayments, cancelFundProfile, fundProfiles, needsInit, initVaultAndLP, standardTokenApproval, transfers, vaultEvents }
     return (
       <FundingContext.Provider value={fundingContext}>
         <Router>

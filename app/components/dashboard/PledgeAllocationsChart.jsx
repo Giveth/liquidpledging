@@ -2,9 +2,7 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import { withStyles } from '@material-ui/core/styles'
 import Card from '@material-ui/core/Card'
-import CardActions from '@material-ui/core/CardActions'
 import CardContent from '@material-ui/core/CardContent'
-import Button from '@material-ui/core/Button'
 import Typography from '@material-ui/core/Typography'
 import randomMC from 'random-material-color'
 import { Doughnut } from 'react-chartjs-2'
@@ -40,7 +38,7 @@ const pledgesChartData = pledges => {
     labels.push(
       `pledge ${id} - ${getTokenLabel(token)}`
     )
-    backgroundColor.push(randomMC.getColor({ text: `${id}` }))
+    backgroundColor.push(randomMC.getColor({ shades: ['300'], text: `${id}` }))
   })
   return {
     datasets: [

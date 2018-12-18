@@ -1,9 +1,11 @@
 import React from 'react'
-import InfoCard from './dashboard/InfoCard'
+import PledgeAllocationsChart from './dashboard/PledgeAllocationsChart'
+import FundingSummary from './dashboard/FundingSummary'
 
 const Dashboard = () => (
   <div>
-    <InfoCard title="Pledge Allocations" />
+    <FundingSummary title="Funding Summary" />
+    <PledgeAllocationsChart title="Pledge Allocations" />
   </div>
 )
 
