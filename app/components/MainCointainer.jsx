@@ -30,7 +30,6 @@ const styles = theme => ({
     display: 'flex',
   },
   appBar: {
-    backgroundColor: '#111735',
     transition: theme.transitions.create(['margin', 'width'], {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,
@@ -43,6 +42,9 @@ const styles = theme => ({
       easing: theme.transitions.easing.easeOut,
       duration: theme.transitions.duration.enteringScreen,
     }),
+  },
+  appBarBg: {
+    backgroundColor: '#111735'
   },
   childrenShift: {
     width: `calc(100% - ${drawerWidth}px)`
@@ -111,7 +113,7 @@ class PersistentDrawerLeft extends React.Component {
         <CssBaseline />
         <AppBar
           position="fixed"
-          className={classNames(classes.appBar, {
+          className={classNames(classes.appBar, classes.appBarBg, {
             [classes.appBarShift]: open,
           })}
         >
