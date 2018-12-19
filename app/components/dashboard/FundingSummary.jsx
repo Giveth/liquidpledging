@@ -4,6 +4,7 @@ import { withStyles } from '@material-ui/core/styles'
 import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
 import Typography from '@material-ui/core/Typography'
+import LinearProgress from '@material-ui/core/LinearProgress'
 import { FundingContext } from '../../context'
 import { getDepositWithdrawTotals } from '../../selectors/pledging'
 
@@ -27,8 +28,16 @@ const styles = {
   pos: {
     marginBottom: 12,
   },
+  linearColorPrimary: {
+    backgroundColor: '#b2dfdb',
+  },
+  linearBarColorPrimary: {
+    backgroundColor: '#00695c',
+  },
 }
 
+const getNet = (deposits, withdraws) => Number(deposits) - Number(withdraws)
+const getValue = (deposits, withdraws) => (getNet(deposits, withdraws) / Number(deposits)) * 100
 function SimpleCard(props) {
   const { classes, title } = props
 
@@ -50,15 +59,26 @@ function SimpleCard(props) {
                          <Typography variant="h5" component="h2">
                            {name}
                          </Typography>
-                         <Typography key={name + 'withdraw'} className={classes.pos} color="textSecondary">
-                           Funded: {deposits}
-                         </Typography>
-                         <Typography key={name + 'deposit'} className={classes.pos} color="textSecondary">
-                           Withdrawn: {withdraws}
-                         </Typography>
-                         <Typography key={name + 'total'} className={classes.pos} color="textSecondary">
-                           Net: {Number(deposits) - Number(withdraws)}
-                         </Typography>
+                         <CardContent>
+                           <Typography key={name + 'withdraw'} className={classes.pos} color="textSecondary">
+                             Funded: {deposits}
+                           </Typography>
+                           <Typography key={name + 'deposit'} className={classes.pos} color="textSecondary">
+                             Withdrawn: {withdraws}
+                           </Typography>
+                           <Typography key={name + 'total'} className={classes.pos} color="textSecondary">
+                             Net: {Number(deposits) - Number(withdraws)}
+                           </Typography>
+                           <LinearProgress
+                             classes={{
+                               colorPrimary: classes.linearColorPrimary,
+                               barColorPrimary: classes.linearBarColorPrimary,
+                             }}
+                             color="primary"
+                             variant="buffer"
+                             value={getValue(deposits, withdraws)}
+                             valueBuffer={100} />
+                         </CardContent>
                        </Card>
                      )
                    })}
