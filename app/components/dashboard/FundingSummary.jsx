@@ -34,6 +34,10 @@ const styles = {
   linearBarColorPrimary: {
     backgroundColor: '#00695c',
   },
+  titleText: {
+    textAlign: 'center',
+    paddingTop: '2rem'
+  }
 }
 
 const getNet = (deposits, withdraws) => Number(deposits) - Number(withdraws)
@@ -55,30 +59,39 @@ function SimpleCard(props) {
                      const [name, amounts] = token
                      const { deposits, withdraws } = amounts
                      return (
-                       <Card key={name} className={classes.fundingSummaries}>
-                         <Typography variant="h5" component="h2">
+                       <Card key={name}>
+                         <Typography variant="h5" className={classes.titleText}>
                            {name}
                          </Typography>
-                         <CardContent>
-                           <Typography key={name + 'withdraw'} className={classes.pos} color="textSecondary">
-                             Funded: {deposits}
+                         <CardContent className={classes.fundingSummaries}>
+                           <Typography variant="h3" >
+                             {deposits}
                            </Typography>
-                           <Typography key={name + 'deposit'} className={classes.pos} color="textSecondary">
-                             Withdrawn: {withdraws}
+                           <Typography variant="h6" key={name + 'withdraw'} className={classes.pos} color="textSecondary">
+                             Funded
                            </Typography>
-                           <Typography key={name + 'total'} className={classes.pos} color="textSecondary">
-                             Net: {Number(deposits) - Number(withdraws)}
+                           <Typography variant="h3">
+                             {withdraws}
                            </Typography>
-                           <LinearProgress
-                             classes={{
-                               colorPrimary: classes.linearColorPrimary,
-                               barColorPrimary: classes.linearBarColorPrimary,
-                             }}
-                             color="primary"
-                             variant="buffer"
-                             value={getValue(deposits, withdraws)}
-                             valueBuffer={100} />
+                           <Typography variant="h6" key={name + 'deposit'} className={classes.pos} color="textSecondary">
+                             Withdrawn
+                           </Typography>
+                           <Typography variant="h3">
+                             {Number(deposits) - Number(withdraws)}
+                           </Typography>
+                           <Typography variant="h6" key={name + 'total'} className={classes.pos} color="textSecondary">
+                             Net Remaining
+                           </Typography>
                          </CardContent>
+                         <LinearProgress
+                           classes={{
+                             colorPrimary: classes.linearColorPrimary,
+                             barColorPrimary: classes.linearBarColorPrimary,
+                           }}
+                           color="primary"
+                           variant="buffer"
+                           value={getValue(deposits, withdraws)}
+                           valueBuffer={100} />
                        </Card>
                      )
                    })}
