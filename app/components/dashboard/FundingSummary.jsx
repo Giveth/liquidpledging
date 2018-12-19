@@ -5,8 +5,7 @@ import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
 import Typography from '@material-ui/core/Typography'
 import { FundingContext } from '../../context'
-import { getDepositsTotal } from '../../selectors/pledging'
-import { getAuthorizations } from '../../selectors/vault'
+import { getDepositWithdrawTotals } from '../../selectors/pledging'
 
 const styles = {
   card: {
@@ -30,21 +29,31 @@ function SimpleCard(props) {
 
   return (
     <FundingContext.Consumer>
-      {({ allPledges, allLpEvents }) =>
+      {({ allPledges, allLpEvents, vaultEvents }) =>
         <Card className={classes.card}>
           <CardContent>
             <Typography variant="h5" component="h2">
               {title}
             </Typography>
             {!!allLpEvents &&
-             Object.entries(getDepositsTotal({ allLpEvents, allPledges })).map(deposit => {
-               const [name, amount] = deposit
-               return (
-                 <Typography key={name} className={classes.pos} color="textSecondary">
-                   Total Funded: {amount} {name}
-                 </Typography>
-               )
-             })}
+             Object.entries(getDepositWithdrawTotals({ allLpEvents, allPledges, vaultEvents }))
+                   .map(token => {
+                     const [name, amounts] = token
+                     const { deposits, withdraws } = amounts
+                     return (
+                       <div key={name}>
+                         <Typography key={name + 'withdraw'} className={classes.pos} color="textSecondary">
+                           Funded: {deposits} {name}
+                         </Typography>
+                         <Typography key={name + 'deposit'} className={classes.pos} color="textSecondary">
+                           Withdrawn: {withdraws} {name}
+                         </Typography>
+                         <Typography key={name + 'total'} className={classes.pos} color="textSecondary">
+                           Net: {Number(deposits) - Number(withdraws)} {name}
+                         </Typography>
+                       </div>
+                     )
+                   })}
           </CardContent>
         </Card>
       }

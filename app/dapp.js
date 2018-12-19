@@ -21,7 +21,8 @@ class App extends React.Component {
     allPledges: [],
     needsInit: true,
     transfers: [],
-    allLpEvents: []
+    allLpEvents: [],
+    vaultEvents: []
   };
 
   componentDidMount(){
