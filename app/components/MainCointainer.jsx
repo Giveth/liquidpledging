@@ -30,6 +30,7 @@ const styles = theme => ({
     display: 'flex',
   },
   appBar: {
+    backgroundColor: '#111735',
     transition: theme.transitions.create(['margin', 'width'], {
       easing: theme.transitions.easing.sharp,
       duration: theme.transitions.duration.leavingScreen,

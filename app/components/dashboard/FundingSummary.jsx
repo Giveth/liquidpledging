@@ -11,6 +11,11 @@ const styles = {
   card: {
     minWidth: 275,
   },
+  fundingSummaries: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'center'
+  },
   bullet: {
     display: 'inline-block',
     margin: '0 2px',
@@ -41,17 +46,20 @@ function SimpleCard(props) {
                      const [name, amounts] = token
                      const { deposits, withdraws } = amounts
                      return (
-                       <div key={name}>
+                       <Card key={name} className={classes.fundingSummaries}>
+                         <Typography variant="h5" component="h2">
+                           {name}
+                         </Typography>
                          <Typography key={name + 'withdraw'} className={classes.pos} color="textSecondary">
-                           Funded: {deposits} {name}
+                           Funded: {deposits}
                          </Typography>
                          <Typography key={name + 'deposit'} className={classes.pos} color="textSecondary">
-                           Withdrawn: {withdraws} {name}
+                           Withdrawn: {withdraws}
                          </Typography>
                          <Typography key={name + 'total'} className={classes.pos} color="textSecondary">
-                           Net: {Number(deposits) - Number(withdraws)} {name}
+                           Net: {Number(deposits) - Number(withdraws)}
                          </Typography>
-                       </div>
+                       </Card>
                      )
                    })}
           </CardContent>
