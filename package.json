@@ -9,6 +9,7 @@
   },
   "scripts": {
     "test": "npm run build && mocha --harmony",
+    "test-only": "mocha --harmony",
     "compile:sol": "solcpiler --solc-version v0.4.18+commit.9cf6e910 -i './contracts/**/*.sol' ./node_modules/@aragon/os/contracts/{kernel/Kernel.sol,acl/ACL.sol,apps/AppProxyUpgradeable.sol} --output-sol-dir build/contracts",
     "compile:js": "babel -d lib/ js/",
     "compile": "npm run compile:sol &&  npm run compile:js",

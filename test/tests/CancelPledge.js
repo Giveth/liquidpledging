@@ -3,8 +3,8 @@
 const Ganache = require('ganache-cli');
 const Web3 = require('web3');
 const { assert } = require('chai');
-const { test } = require('../index');
-const deployLP = require('./helpers/deployLP');
+const { test } = require('../../index');
+const deployLP = require('./../helpers/deployLP');
 
 const { assertFail } = test;
 

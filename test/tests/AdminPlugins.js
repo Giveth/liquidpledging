@@ -3,13 +3,13 @@
 const Ganache = require('ganache-cli');
 const Web3 = require('web3');
 const chai = require('chai');
-const { test } = require('../index');
-const deployLP = require('./helpers/deployLP');
+const { test } = require('../../index');
+const deployLP = require('./../helpers/deployLP');
 
-const { compilerOutput } = require('../build/TestSimpleProjectPluginFactory.json');
+const { compilerOutput } = require('../../build/TestSimpleProjectPluginFactory.json');
 const simpleProjectPluginFactoryAbi = compilerOutput.abi;
 const simpleProjectPluginFactoryByteCode = compilerOutput.evm.bytecode.object;
-const simpleProjectPluginRuntimeByteCode = '0x' + require('../build/TestSimpleProjectPlugin.json').compilerOutput.evm.deployedBytecode.object;
+const simpleProjectPluginRuntimeByteCode = '0x' + require('../../build/TestSimpleProjectPlugin.json').compilerOutput.evm.deployedBytecode.object;
 const assert = chai.assert;
 
 const { assertFail } = test;

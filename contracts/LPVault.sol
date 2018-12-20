@@ -197,8 +197,15 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
         p.state = PaymentStatus.Paid;
         liquidPledging.confirmPayment(uint64(p.ref), p.amount);
 
-        ERC20 token = ERC20(p.token);
-        require(token.transfer(p.dest, p.amount)); // Transfers token to dest
+        // transfer token or eth
+        if (p.token == ETH) {
+            require(this.balance >= p.amount);
+            p.dest.transfer(p.amount);  // Transfers ETH denominated in wei
+        } else {
+            ERC20 token = ERC20(p.token);
+            require(token.transfer(p.dest, p.amount)); // Transfers token to dest            
+        }
+
 
         ConfirmPayment(_idPayment, p.ref);
     }
@@ -216,4 +223,8 @@ contract LPVault is AragonApp, LiquidPledgingACLHelpers {
 
         CancelPayment(_idPayment, p.ref);
     }
+
+    /// @dev The fall back function allows ETH to be deposited into the LPVault
+    ///  through a simple send
+    function () public payable {}    
 }

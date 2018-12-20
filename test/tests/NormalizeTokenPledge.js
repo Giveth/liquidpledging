@@ -3,7 +3,7 @@
 const Ganache = require('ganache-cli');
 const Web3 = require('web3');
 const { assert } = require('chai');
-const deployLP = require('./helpers/deployLP');
+const deployLP = require('./../helpers/deployLP');
 
 const printState = async liquidPledgingState => {
   const st = await liquidPledgingState.getState();

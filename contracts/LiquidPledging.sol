@@ -27,6 +27,14 @@ import "./LiquidPledgingBase.sol";
 ///  to allow for expanded functionality.
 contract LiquidPledging is LiquidPledgingBase {
 
+    /// @notice Make a donation in Ether
+    function addGiverAndDonate(uint64 idReceiver)
+        public
+        payable
+    {
+        addGiverAndDonate(idReceiver, msg.sender, ETH, msg.value);
+    }
+
     /// Create a "giver" pledge admin for the sender & donate 
     /// @param idReceiver The Admin receiving the donation; can be any Admin:
     ///  the Giver themselves, another Giver, a Delegate or a Project
@@ -53,6 +61,14 @@ contract LiquidPledging is LiquidPledgingBase {
         donate(idGiver, idReceiver, token, amount);
     }
 
+    /// @notice Make a donation in Ether
+    function donate(uint64 idGiver, uint64 idReceiver)
+        public
+        payable
+    {
+        donate(idGiver, idReceiver, ETH, msg.value);
+    }
+
     /// @notice This is how value enters the system and how pledges are created;
     ///  the ether is sent to the vault, an pledge for the Giver is created (or
     ///  found), the amount of ETH donated in wei is added to the `amount` in
@@ -68,12 +84,16 @@ contract LiquidPledging is LiquidPledgingBase {
     {
         require(idGiver > 0); // prevent burning donations. idReceiver is checked in _transfer
         require(amount > 0);
-        require(token != 0x0);
 
         PledgeAdmin storage sender = _findAdmin(idGiver);
         require(sender.adminType == PledgeAdminType.Giver);
 
-        require(ERC20(token).transferFrom(msg.sender, address(vault), amount)); // transfer the token to the `vault`
+        // transfer ether or token
+        if (token == ETH) {
+            vault.transfer(amount);
+        } else {
+            require(ERC20(token).transferFrom(msg.sender, address(vault), amount)); // transfer the token to the `vault`
+        }
 
         uint64 idPledge = _findOrCreatePledge(
             idGiver,

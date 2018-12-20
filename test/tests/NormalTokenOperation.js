@@ -3,7 +3,7 @@
 const Ganache = require('ganache-cli');
 const Web3 = require('web3');
 const { assert } = require('chai');
-const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../index');
+const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../../index');
 
 const { StandardTokenTest, assertFail, LiquidPledgingMock, RecoveryVault } = test;
 const { utils } = Web3;
@@ -13,7 +13,7 @@ const printState = async liquidPledgingState => {
   console.log(JSON.stringify(st, null, 2));
 };
 
-describe('LiquidPledging test', function() {
+describe('LiquidPledging Token test', function() {
   this.timeout(0);
   let ganache;
   let web3;
@@ -121,6 +121,7 @@ describe('LiquidPledging test', function() {
     await giver1Token.approve(liquidPledging.$address, '0xFFFFFFFFFFFFFFFF', { from: giver1 });
     await giver2Token.approve(liquidPledging.$address, '0xFFFFFFFFFFFFFFFF', { from: giver2 });
   });
+
   it('Should create a giver', async () => {
     await liquidPledging.addGiver('Giver1', 'URLGiver1', 86400, 0, { from: giver1, gas: 1000000 });
 
@@ -133,7 +134,8 @@ describe('LiquidPledging test', function() {
     assert.equal(res[3], 'URLGiver1');
     assert.equal(res[4], 86400);
   });
-  it('Should make a donation', async () => {
+
+  it('Should make a donation in tokens', async () => {
     const r = await liquidPledging.donate(1, 1, giver1Token.$address, utils.toWei('1'), {
       from: giver1,
       $extraGas: 100000,
@@ -148,6 +150,7 @@ describe('LiquidPledging test', function() {
     assert.equal(vaultBal, web3.utils.toWei('1'));
     assert.equal(giver1Bal, web3.utils.toWei('999'));
   });
+
   it('Should create a delegate', async () => {
     await liquidPledging.addDelegate('Delegate1', 'URLDelegate1', 0, 0, { from: delegate1 });
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();

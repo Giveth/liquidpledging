@@ -7,6 +7,7 @@ import "./ILiquidPledgingPlugin.sol";
 ///  payments can Pledges be converted for ETH
 interface ILPVault {
     function authorizePayment(bytes32 _ref, address _dest, address _token, uint _amount) public;
+    function () public payable;
 }
 
 /// This contract contains all state variables used in LiquidPledging contracts

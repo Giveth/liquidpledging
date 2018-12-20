@@ -3,7 +3,7 @@
 const TestRPC = require('ganache-cli');
 const Web3 = require('web3');
 const { assert } = require('chai');
-const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../index');
+const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../../index');
 
 const { StandardTokenTest, assertFail, LiquidPledgingMock, RecoveryVault } = test;
 
@@ -64,6 +64,7 @@ describe('LPVault test', function() {
 
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
 
+
     // set permissions
     const kernel = new Kernel(web3, await liquidPledging.kernel());
     acl = new ACL(web3, await kernel.acl());
@@ -102,7 +103,7 @@ describe('LPVault test', function() {
     await token.approve(liquidPledging.$address, '0xFFFFFFFFFFFFFFFF', { from: giver1 });
   });
 
-  it('Should hold funds from liquidPledging', async function() {
+  it('Should hold funds from liquidPledging when donating tokens', async function() {
     await liquidPledging.addGiverAndDonate(2, token.$address, 10000, {
       from: giver1,
       $extraGas: 100000,
@@ -112,7 +113,19 @@ describe('LPVault test', function() {
     assert.equal(10000, balance);
   });
 
-  it('should restrict confirm payment to payments under specified amount', async function() {
+  it('Should hold funds from liquidPledging when donating ether', async function() {
+    await liquidPledging.addGiverAndDonate(2, {
+      value: 10000,
+      from: giver1,
+      $extraGas: 100000,
+    });
+
+    const balance = await web3.eth.getBalance(vault.$address);
+    assert.equal(10000, balance);
+  });
+
+
+  it('Should restrict confirm payment to payments under specified amount', async function() {
     await liquidPledging.withdraw(2, 300, { from: adminProject1, $extraGas: 200000 });
     await liquidPledging.withdraw(2, 700, { from: adminProject1, $extraGas: 200000 });
 
@@ -129,20 +142,38 @@ describe('LPVault test', function() {
     await vault.confirmPayment(0, { from: restrictedPaymentsConfirmer, $extraGas: 200000 });
   });
 
-  it('Only escapeHatchCaller role should be able to pull "escapeHatch"', async function() {
-    const preVaultBalance = await token.balanceOf(vault.$address);
+  it('Only escapeHatchCaller role should be able to pull "escapeHatch" to transfer tokens out', async function() {
+    const preVaultTokenBalance = await token.balanceOf(vault.$address);
 
     // transferToVault is a bit confusing, but is the name of the function in aragonOs
     // this is the escapeHatch and will transfer all funds to the recoveryVault
+
+    // Transfer tokens out
     await assertFail(vault.transferToVault(token.$address, { from: vaultOwner, gas: 6700000 }));
-    assert.equal(await token.balanceOf(vault.$address), preVaultBalance);
+    assert.equal(await token.balanceOf(vault.$address), preVaultTokenBalance);
 
     await vault.transferToVault(token.$address, { from: escapeHatchCaller, $extraGas: 100000 });
 
-    const vaultBalance = await token.balanceOf(vault.$address);
-    assert.equal(0, vaultBalance);
+    const vaultTokenBalance = await token.balanceOf(vault.$address);
+    assert.equal(0, vaultTokenBalance);
 
-    const recoveryVaultBalance = await token.balanceOf(recoveryVault);
-    assert.equal(preVaultBalance, recoveryVaultBalance);
+    const recoveryVaultTokenBalance = await token.balanceOf(recoveryVault);
+    assert.equal(preVaultTokenBalance, recoveryVaultTokenBalance);    
   });
+
+  it('Only escapeHatchCaller role should be able to pull "escapeHatch" to transfer Ether out', async function() {
+    const preVaultEthBalance = await web3.eth.getBalance(vault.$address);
+
+    // Transfer eth out
+    await assertFail(vault.transferToVault(0, { from: vaultOwner, gas: 6700000 }));
+    assert.equal(await web3.eth.getBalance(vault.$address), preVaultEthBalance);
+
+    await vault.transferToVault(0, { from: escapeHatchCaller, gas: 6700000 });
+
+    const vaultEtherBalance = await web3.eth.getBalance(vault.$address);
+    assert.equal(0, vaultEtherBalance);    
+
+    const recoveryVaultETHBalance = await web3.eth.getBalance(recoveryVault);
+    assert.equal(preVaultEthBalance, recoveryVaultETHBalance); 
+  });    
 });
