@@ -12,6 +12,9 @@ const styles = {
   card: {
     minWidth: 275,
   },
+  cardTitle: {
+    paddingBottom: '1rem'
+  },
   fundingSummaries: {
     display: 'flex',
     flexDirection: 'column',
@@ -50,7 +53,7 @@ function SimpleCard(props) {
       {({ allPledges, allLpEvents, vaultEvents }) =>
         <Card className={classes.card}>
           <CardContent>
-            <Typography variant="h5" component="h2">
+            <Typography variant="h5" className={classes.cardTitle}>
               {title}
             </Typography>
             {!!allLpEvents &&
@@ -64,6 +67,12 @@ function SimpleCard(props) {
                            {name}
                          </Typography>
                          <CardContent className={classes.fundingSummaries}>
+                           <Typography variant="h2">
+                             {Number(deposits) - Number(withdraws)}
+                           </Typography>
+                           <Typography variant="h5" key={name + 'total'} className={classes.pos} color="textSecondary">
+                             Remaining In Pledges
+                           </Typography>
                            <Typography variant="h3" >
                              {deposits}
                            </Typography>
@@ -76,12 +85,6 @@ function SimpleCard(props) {
                            <Typography variant="h6" key={name + 'deposit'} className={classes.pos} color="textSecondary">
                              Withdrawn
                            </Typography>
-                           <Typography variant="h3">
-                             {Number(deposits) - Number(withdraws)}
-                           </Typography>
-                           <Typography variant="h6" key={name + 'total'} className={classes.pos} color="textSecondary">
-                             Net Remaining
-                           </Typography>
                          </CardContent>
                          <LinearProgress
                            classes={{
@@ -91,7 +94,8 @@ function SimpleCard(props) {
                            color="primary"
                            variant="buffer"
                            value={getValue(deposits, withdraws)}
-                           valueBuffer={100} />
+                           valueBuffer={100}
+                         />
                        </Card>
                      )
                    })}

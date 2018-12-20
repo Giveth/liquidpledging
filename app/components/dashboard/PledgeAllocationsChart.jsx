@@ -4,11 +4,11 @@ import { withStyles } from '@material-ui/core/styles'
 import Card from '@material-ui/core/Card'
 import CardContent from '@material-ui/core/CardContent'
 import Typography from '@material-ui/core/Typography'
-import randomMC from 'random-material-color'
 import { Doughnut } from 'react-chartjs-2'
 import { FundingContext } from '../../context'
 import { toEther } from '../../utils/conversions'
 import { getTokenLabel } from '../../utils/currencies'
+import { getColor } from '../../utils/colorSchemes'
 
 const styles = {
   card: {
@@ -31,14 +31,14 @@ const pledgesChartData = pledges => {
   const data = []
   const labels = []
   const backgroundColor = []
-  pledges.forEach(pledge => {
+  pledges.forEach((pledge, idx) => {
     const { id, amount, token } = pledge
     const converted = toEther(amount)
     data.push(converted)
     labels.push(
       `pledge ${id} - ${getTokenLabel(token)}`
     )
-    backgroundColor.push(randomMC.getColor({ shades: ['300'], text: `${id}` }))
+    backgroundColor.push(getColor('Dark2-8', idx))
   })
   return {
     datasets: [
