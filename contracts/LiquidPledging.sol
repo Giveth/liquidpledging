@@ -27,13 +27,28 @@ import "./LiquidPledgingBase.sol";
 ///  to allow for expanded functionality.
 contract LiquidPledging is LiquidPledgingBase {
 
-    /// @notice Make a donation in Ether
+    /// @notice Make a donation in Ether, basically forwarding to addGiverAndDonate method,
+    ///  setting msg.sender as the "giver" of this donation
+    /// @param idReceiver The Admin receiving the donation; can be any Admin:
+    ///  the Giver themselves, another Giver, a Delegate or a Project    
     function addGiverAndDonate(uint64 idReceiver)
         public
         payable
     {
         addGiverAndDonate(idReceiver, msg.sender, ETH, msg.value);
     }
+
+    /// @notice Make a donation in Ether on behalf of another Giver
+    ///  basically forwarding to addGiverAndDonate method
+    /// @param idReceiver The Admin receiving the donation; can be any Admin:
+    ///  the Giver themselves, another Giver, a Delegate or a Project
+    /// @param donorAddress The address of the "giver" of this donation    
+    function addGiverAndDonate(uint64 idReceiver, address donorAddress)
+        public
+        payable
+    {
+        addGiverAndDonate(idReceiver, donorAddress, ETH, msg.value);
+    }    
 
     /// Create a "giver" pledge admin for the sender & donate 
     /// @param idReceiver The Admin receiving the donation; can be any Admin:
@@ -61,7 +76,11 @@ contract LiquidPledging is LiquidPledgingBase {
         donate(idGiver, idReceiver, token, amount);
     }
 
-    /// @notice Make a donation in Ether
+    /// @notice Make a donation in Ether, basically forwarding to donate method
+    ///  setting the msg.sender as the "giver" of the donation
+    /// @param idGiver The id of the Giver donating
+    /// @param idReceiver The Admin receiving the donation; can be any Admin:
+    ///  the Giver themselves, another Giver, a Delegate or a Project
     function donate(uint64 idGiver, uint64 idReceiver)
         public
         payable
@@ -70,7 +89,7 @@ contract LiquidPledging is LiquidPledgingBase {
     }
 
     /// @notice This is how value enters the system and how pledges are created;
-    ///  the ether is sent to the vault, an pledge for the Giver is created (or
+    ///  the ether is sent to the vault, a pledge for the Giver is created (or
     ///  found), the amount of ETH donated in wei is added to the `amount` in
     ///  the Giver's Pledge, and an LP transfer is done to the idReceiver for
     ///  the full amount
@@ -88,11 +107,11 @@ contract LiquidPledging is LiquidPledgingBase {
         PledgeAdmin storage sender = _findAdmin(idGiver);
         require(sender.adminType == PledgeAdminType.Giver);
 
-        // transfer ether or token
+        // transfer ether or token to the `vault`
         if (token == ETH) {
             vault.transfer(amount);
         } else {
-            require(ERC20(token).transferFrom(msg.sender, address(vault), amount)); // transfer the token to the `vault`
+            require(ERC20(token).transferFrom(msg.sender, address(vault), amount));
         }
 
         uint64 idPledge = _findOrCreatePledge(
