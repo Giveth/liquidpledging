@@ -1,7 +1,8 @@
 import React from 'react'
 import { HashRouter as Router, Route, Link, Switch } from 'react-router-dom'
-import EmbarkJS from 'Embark/EmbarkJS'
-import LPVault from 'Embark/contracts/LPVault'
+import EmbarkJS from 'Embark/EmbarkJS';
+import LPVault from 'Embark/contracts/LPVault';
+import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock';
 import web3 from 'Embark/web3'
 import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval, getLpAllowance } from './utils/initialize'
 import { getAllLPEvents, getAllVaultEvents, getProfileEvents, formatFundProfileEvent, getAuthorizedPayments } from './utils/events'
@@ -10,10 +11,8 @@ import { FundingContext } from './context'
 import { cancelProfile } from './utils/fundProfiles'
 import MainCointainer from './components/MainCointainer'
 import { getTransfersMemo } from './selectors/pledging'
-import { getLiquidPledgingContract } from './utils/contracts'
 
 const { getNetworkType } = web3.eth.net
-let LiquidPledging
 
 class App extends React.Component {
   state = {
@@ -30,11 +29,9 @@ class App extends React.Component {
     EmbarkJS.onReady(async (err) => {
       getNetworkType().then(async network => {
         const { environment } = EmbarkJS
-        LiquidPledging = getLiquidPledgingContract()
-        console.log({network, environment})
         const isInitialized = await vaultPledgingNeedsInit()
         if (!!isInitialized) {
-          console.log('mock_time:', await LiquidPledging.mock_time.call())
+          console.log('mock_time:', await LiquidPledgingMock.mock_time.call())
           const lpAllowance = await getLpAllowance()
           const fundProfiles = await getProfileEvents()
           const allPledges = await getAllPledges()
