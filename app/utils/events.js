@@ -1,4 +1,4 @@
-import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock'
+import LiquidPledging from 'Embark/contracts/LiquidPledging'
 import LPVault from 'Embark/contracts/LPVault'
 import web3 from 'Embark/web3'
 
@@ -43,7 +43,7 @@ const getPastVaultEvents = async (event, raw = false) => {
   return formattedEvents
 }
 
-const { getPledgeAdmin } = LiquidPledgingMock.methods
+const { getPledgeAdmin } = LiquidPledging.methods
 export const formatFundProfileEvent = async event => {
   const lookup = lookups[event.event]
   const { returnValues: { url, idProject } } = event
@@ -62,7 +62,7 @@ export const formatFundProfileEvent = async event => {
 }
 
 const getPastEvents = async (event, raw = false) => {
-  const events = await LiquidPledgingMock.getPastEvents(event, {
+  const events = await LiquidPledging.getPastEvents(event, {
     addr: await web3.eth.getCoinbase(),
     fromBlock: 0,
     toBlock: 'latest'
@@ -76,7 +76,7 @@ const getPastEvents = async (event, raw = false) => {
 
 export const lpEventsSubscription = async () => {
   //todo add on event handlers
-  const events = await LiquidPledgingMock.events.allEvents({
+  const events = await LiquidPledging.events.allEvents({
     fromBlock: 0,
     toBlock: 'latest'
   })

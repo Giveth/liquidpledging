@@ -2,7 +2,7 @@ import React from 'react';
 import { Formik } from 'formik';
 import EmbarkJS from 'Embark/EmbarkJS';
 import LPVault from 'Embark/contracts/LPVault';
-import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock';
+import LiquidPledging from 'Embark/contracts/LiquidPledging';
 import Button from '@material-ui/core/Button';
 import TextField from '@material-ui/core/TextField';
 import Snackbar from '@material-ui/core/Snackbar';
@@ -11,7 +11,7 @@ import web3 from 'Embark/web3';
 import { MySnackbarContentWrapper } from './base/SnackBars';
 import { currencies, TOKEN_ICON_API, getTokenLabel } from '../utils/currencies'
 
-const { donate } = LiquidPledgingMock.methods
+const { donate } = LiquidPledging.methods
 const hoursToSeconds = hours => hours * 60 * 60
 const addFunderSucessMsg = response => {
   const { events: { GiverAdded: { returnValues: { idGiver } } } } = response

@@ -2,7 +2,7 @@ import React from 'react'
 import { HashRouter as Router, Route, Link, Switch } from 'react-router-dom'
 import EmbarkJS from 'Embark/EmbarkJS';
 import LPVault from 'Embark/contracts/LPVault';
-import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock';
+import LiquidPledging from 'Embark/contracts/LiquidPledging'
 import web3 from 'Embark/web3'
 import { initVaultAndLP, vaultPledgingNeedsInit, standardTokenApproval, getLpAllowance } from './utils/initialize'
 import { getAllLPEvents, getAllVaultEvents, getProfileEvents, formatFundProfileEvent, getAuthorizedPayments } from './utils/events'
@@ -31,7 +31,7 @@ class App extends React.Component {
         const { environment } = EmbarkJS
         const isInitialized = await vaultPledgingNeedsInit()
         if (!!isInitialized) {
-          console.log('mock_time:', await LiquidPledgingMock.mock_time.call())
+          console.log('mock_time:', await LiquidPledging.mock_time.call())
           const lpAllowance = await getLpAllowance()
           const fundProfiles = await getProfileEvents()
           const allPledges = await getAllPledges()

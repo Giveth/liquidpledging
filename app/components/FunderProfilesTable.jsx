@@ -1,9 +1,9 @@
 import React, { Fragment, memo } from 'react'
 import MaterialTable from 'material-table'
-import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock'
+import LiquidPledging from 'Embark/contracts/LiquidPledging'
 import { FundingContext } from '../context'
 
-const { cancelProject } = LiquidPledgingMock.methods
+const { cancelProject } = LiquidPledging.methods
 
 const convertToHours = seconds => seconds / 60 / 60
 const cancelText = canceled => canceled ? 'Yes' : 'No'

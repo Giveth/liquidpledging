@@ -1,9 +1,9 @@
 import React from 'react'
 import { Formik } from 'formik'
-import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock'
+import LiquidPledging from 'Embark/contracts/LiquidPledging'
 import TextField from '@material-ui/core/TextField'
 
-const { setMockedTime } = LiquidPledgingMock.methods
+const { setMockedTime } = LiquidPledging.methods
 
 const SetMockedTime = () => (
   <Formik

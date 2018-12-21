@@ -1,6 +1,6 @@
-import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock'
+import LiquidPledging from 'Embark/contracts/LiquidPledging'
 
-const { getPledgeAdmin, numberOfPledges, getPledge } = LiquidPledgingMock.methods
+const { getPledgeAdmin, numberOfPledges, getPledge } = LiquidPledging.methods
 export const formatPledge = async (pledgePromise, idx) => {
   const pledge = await pledgePromise
   return {
@@ -10,7 +10,7 @@ export const formatPledge = async (pledgePromise, idx) => {
 }
 
 export const getAllPledges = async (start = 1) => {
-  const numPledges = await LiquidPledgingMock.methods.numberOfPledges().call()
+  const numPledges = await LiquidPledging.methods.numberOfPledges().call()
   const pledges = []
   for (let i = start; i <= numPledges; i++) {
     pledges.push(getPledge(i).call())

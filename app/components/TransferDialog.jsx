@@ -1,6 +1,6 @@
 import React from 'react'
 import { Formik } from 'formik'
-import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock'
+import LiquidPledging from 'Embark/contracts/LiquidPledging'
 import Button from '@material-ui/core/Button'
 import TextField from '@material-ui/core/TextField'
 import Dialog from '@material-ui/core/Dialog'
@@ -12,7 +12,7 @@ import { getTokenLabel } from '../utils/currencies'
 import { toWei } from '../utils/conversions'
 import { FundingContext } from '../context'
 
-const { transfer } = LiquidPledgingMock.methods
+const { transfer } = LiquidPledging.methods
 
 const TransferDialog = ({ row, handleClose, transferPledgeAmounts }) => (
   <Formik

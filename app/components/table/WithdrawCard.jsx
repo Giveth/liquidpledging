@@ -11,13 +11,13 @@ import TextField from '@material-ui/core/TextField'
 import indigo from '@material-ui/core/colors/indigo'
 import blueGrey from '@material-ui/core/colors/blueGrey'
 import Collapse from '@material-ui/core/Collapse'
-import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock'
+import LiquidPledging from 'Embark/contracts/LiquidPledging'
 import LPVault from 'Embark/contracts/LPVault'
 import { getTokenLabel } from '../../utils/currencies'
 import { toWei } from '../../utils/conversions'
 import { FundingContext } from '../../context'
 
-const { withdraw } = LiquidPledgingMock.methods
+const { withdraw } = LiquidPledging.methods
 const { confirmPayment } = LPVault.methods
 
 const styles = {

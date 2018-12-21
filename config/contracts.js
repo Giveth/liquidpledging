@@ -56,16 +56,16 @@ module.exports = {
     strategy: 'explicit',
     contracts: {
       LPVault: {},
-      LiquidPledgingMock: {},
+      LiquidPledging: {
+          instanceOf: 'LiquidPledgingMock'
+      },
       RecoveryVault: {},
       LPFactory: {
-        args: ['$LPVault', '$LiquidPledgingMock']
-        // args: {
-        //   _vaultBase: '$LPVault',
-         //  _lpBase: '$LiquidPledgingMock',
-        // },
+        args: {
+          _vaultBase: '$LPVault',
+          _lpBase: '$LiquidPledging',
+        },
       },
-
       // contracts for testing
       StandardToken: {},
       Kernel: {

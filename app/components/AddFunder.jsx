@@ -1,6 +1,6 @@
 import React from 'react'
 import { Formik } from 'formik'
-import LiquidPledgingMock from 'Embark/contracts/LiquidPledgingMock'
+import LiquidPledging from 'Embark/contracts/LiquidPledging'
 import Button from '@material-ui/core/Button'
 import MenuItem from '@material-ui/core/MenuItem'
 import TextField from '@material-ui/core/TextField'
@@ -8,7 +8,7 @@ import Snackbar from '@material-ui/core/Snackbar'
 import web3 from 'Embark/web3'
 import { MySnackbarContentWrapper } from './base/SnackBars'
 
-const { addGiver, addDelegate, addProject } = LiquidPledgingMock.methods
+const { addGiver, addDelegate, addProject } = LiquidPledging.methods
 const FUNDER = 'FUNDER'
 const DELEGATE = 'DELEGATE'
 const PROJECT = 'PROJECT'
