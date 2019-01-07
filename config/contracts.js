@@ -58,11 +58,10 @@ module.exports = {
       LiquidPledgingMock: {},
       RecoveryVault: {},
       LPFactory: {
-        args: ['$LPVault', '$LiquidPledgingMock'],
-        // args: {
-          // _vaultBase: '$LPVault',
-          // _lpBase: '$LiquidPledgingMock',
-        // },
+        args: {
+          _vaultBase: '$LPVault',
+          _lpBase: '$LiquidPledgingMock',
+        },
       },
 
       // contracts for testing

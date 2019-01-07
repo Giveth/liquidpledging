@@ -8,10 +8,10 @@ Welcome to the code for the liquidpledging contract, a new way to distribute don
 
 ## Table of content
 
-- [Getting Started](#getting-started)
-    - [Install](#install)
-    - [Requirements](#requirements)
-    - [Package](#package)
+- [Table of content](#table-of-content)
+  - [Install](#install)
+  - [Requirements](#requirements)
+  - [Package](#package)
 - [Run demo](#run-demo)
 - [Help](#help)
 
@@ -30,6 +30,12 @@ Welcome to the code for the liquidpledging contract, a new way to distribute don
 
 ### Requirements
 Make sure you have [NodeJS](https://nodejs.org/) (v8.4.0 or higher) and [npm](https://www.npmjs.com/) (5.4.1 or higher) installed.
+
+You will also need to install embark using yarn
+
+```
+yarn add git+https://git@github.com/embark-framework/embark.git#39d5e9f2 && git checkout package.json
+```
 
 ### Package
 The liquidpledging contract is published as an npm package for developer convenience. To include it as a dependency in your package.json run this from your apps root dirctory.

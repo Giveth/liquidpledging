@@ -1,7 +1,5 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const Ganache = require('ganache-cli');
-const Web3 = require('web3');
 const chai = require('chai');
 const { test } = require('../index');
 const deployLP = require('./helpers/deployLP');
@@ -9,39 +7,28 @@ const deployLP = require('./helpers/deployLP');
 const compilerOutput = require('../dist/contracts/TestSimpleProjectPluginFactory.json');
 const simpleProjectPluginFactoryAbi = compilerOutput.abiDefinition;
 const simpleProjectPluginFactoryByteCode = compilerOutput.code;
-const simpleProjectPluginRuntimeByteCode = '0x' + require('../dist/contracts/TestSimpleProjectPlugin.json').code;
+const simpleProjectPluginRuntimeByteCode =
+  '0x' + require('../dist/contracts/TestSimpleProjectPlugin.json').runtimeBytecode;
 const assert = chai.assert;
 
 const { assertFail } = test;
 
-const printState = async liquidPledgingState => {
-  const st = await liquidPledgingState.getState();
-  console.log(JSON.stringify(st, null, 2));
-};
+let accounts;
+
+config({}, (err, theAccounts) => {
+  accounts = theAccounts;
+});
 
 describe('LiquidPledging plugins test', function() {
   this.timeout(0);
 
-  let ganache;
-  let web3;
-  let accounts;
   let liquidPledging;
-  let liquidPledgingState;
   let vault;
   let giver1;
   let adminProject1;
   let adminDelegate1;
 
   before(async () => {
-    ganache = Ganache.server({
-      gasLimit: 6700000,
-      total_accounts: 10,
-    });
-
-    ganache.listen(8545, '127.0.0.1');
-
-    web3 = new Web3('http://localhost:8545');
-    accounts = await web3.eth.getAccounts();
     adminProject1 = accounts[2];
     adminDelegate1 = accounts[3];
 
@@ -52,13 +39,10 @@ describe('LiquidPledging plugins test', function() {
     liquidPledgingState = deployment.liquidPledgingState;
   });
 
-  after(done => {
-    ganache.close();
-    done();
-  });
-
   it('Should create create giver with no plugin', async function() {
-    await liquidPledging.addGiver('Giver1', '', 0, '0x0', { from: adminProject1 });
+    await liquidPledging.addGiver('Giver1', '', 0, '0x0000000000000000000000000000000000000000', {
+      from: adminProject1,
+    });
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 1);

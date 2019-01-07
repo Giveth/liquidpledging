@@ -1,7 +1,5 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const Ganache = require('ganache-cli');
-const Web3 = require('web3');
 const { assert } = require('chai');
 const deployLP = require('./helpers/deployLP');
 
@@ -10,12 +8,15 @@ const printState = async liquidPledgingState => {
   console.log(JSON.stringify(st, null, 2));
 };
 
+let accounts;
+
+config({}, (err, theAccounts) => {
+  accounts = theAccounts;
+});
+
 describe('NormalizePledge test', function() {
   this.timeout(0);
 
-  let ganache;
-  let web3;
-  let accounts;
   let liquidPledging;
   let liquidPledgingState;
   let giver1;
@@ -27,15 +28,6 @@ describe('NormalizePledge test', function() {
   let token;
 
   before(async () => {
-    ganache = Ganache.server({
-      gasLimit: 6700000,
-      total_accounts: 10,
-    });
-
-    ganache.listen(8545, '127.0.0.1');
-
-    web3 = new Web3('http://localhost:8545');
-    accounts = await web3.eth.getAccounts();
     delegate1 = accounts[2];
     delegate2 = accounts[3];
     adminProject1 = accounts[4];
@@ -52,22 +44,17 @@ describe('NormalizePledge test', function() {
     await token.approve(liquidPledging.$address, '0xFFFFFFFFFFFFFFFF', { from: giver2 });
   });
 
-  after(done => {
-    ganache.close();
-    done();
-  });
-
   it('Should add pledgeAdmins', async () => {
-    await liquidPledging.addGiver('Giver1', 'URLGiver1', 86400, 0, { from: giver1 }); // pledgeAdmin 1
-    await liquidPledging.addDelegate('Delegate1', 'URLDelegate1', 259200, 0, { from: delegate1 }); // pledgeAdmin 2
-    await liquidPledging.addDelegate('Delegate2', 'URLDelegate2', 0, 0, { from: delegate2 }); // pledgeAdmin 3
-    await liquidPledging.addProject('Project1', 'URLProject1', adminProject1, 0, 0, 0, {
+    await liquidPledging.addGiver('Giver1', 'URLGiver1', 86400, '0x0000000000000000000000000000000000000000', { from: giver1 }); // pledgeAdmin 1
+    await liquidPledging.addDelegate('Delegate1', 'URLDelegate1', 259200, '0x0000000000000000000000000000000000000000', { from: delegate1 }); // pledgeAdmin 2
+    await liquidPledging.addDelegate('Delegate2', 'URLDelegate2', 0, '0x0000000000000000000000000000000000000000', { from: delegate2 }); // pledgeAdmin 3
+    await liquidPledging.addProject('Project1', 'URLProject1', adminProject1, 0, 0, '0x0000000000000000000000000000000000000000', {
       from: adminProject1,
     }); // pledgeAdmin 4
-    await liquidPledging.addProject('Project2', 'URLProject2', adminProject2, 0, 0, 0, {
+    await liquidPledging.addProject('Project2', 'URLProject2', adminProject2, 0, 0, '0x0000000000000000000000000000000000000000', {
       from: adminProject2,
     }); // pledgeAdmin 5
-    await liquidPledging.addGiver('Giver2', 'URLGiver2', 0, 0, { from: giver2 }); // pledgeAdmin 6
+    await liquidPledging.addGiver('Giver2', 'URLGiver2', 0, '0x0000000000000000000000000000000000000000', { from: giver2 }); // pledgeAdmin 6
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 6);

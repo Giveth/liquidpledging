@@ -1,19 +1,15 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const generateClass = require('eth-contract-class').default;
-const Ganache = require('ganache-cli');
-const Web3 = require('web3');
+const { utils } = require('web3');
 const { assert } = require('chai');
 const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../index');
 
 const { StandardTokenTest, assertFail, LiquidPledgingMock, RecoveryVault } = test;
-const { utils } = Web3;
 
 const printState = async liquidPledgingState => {
   const st = await liquidPledgingState.getState();
   console.log(JSON.stringify(st, null, 2));
 };
-
 
 // const _RecoveryVault =  embark.require('Embark/contracts/RecoveryVault');
 // const RecoveryVault = ge
@@ -22,26 +18,25 @@ const printState = async liquidPledgingState => {
 
 let accounts;
 
-config({
-  // contracts: {
-  //   RecoveryVault: {},
-  //   LPVault: {},
-  //   LiquidPledgingMock: {}
-
+config(
+  {
+    // contracts: {
+    //   RecoveryVault: {},
+    //   LPVault: {},
+    //   LiquidPledgingMock: {}
     // "SimpleStorage": {
-      // args: [100],
-      // onDeploy: ["SimpleStorage.methods.setRegistar(web3.eth.defaultAccount).send()"] // example
+    // args: [100],
+    // onDeploy: ["SimpleStorage.methods.setRegistar(web3.eth.defaultAccount).send()"] // example
     // }
-  // }
-}, (err, theAccounts) => {
-  accounts = theAccounts;
-});
+    // }
+  },
+  (err, theAccounts) => {
+    accounts = theAccounts;
+  },
+);
 
 describe('LiquidPledging test', function() {
   this.timeout(0);
-  let ganache;
-  // let web3;
-  // let accounts;
   let liquidPledging;
   let liquidPledgingState;
   let vault;
@@ -60,15 +55,6 @@ describe('LiquidPledging test', function() {
   let giver2Token;
 
   before(async () => {
-    // ganache = Ganache.server({
-    //   gasLimit: 6700000,
-    //   total_accounts: 11,
-    // });
-
-    // ganache.listen(8545, '127.0.0.1');
-
-    // web3 = new Web3('http://localhost:8545');
-    // accounts = await web3.eth.getAccounts();
     giver1 = accounts[1];
     delegate1 = accounts[2];
     adminProject1 = accounts[3];
@@ -78,15 +64,8 @@ describe('LiquidPledging test', function() {
     giver2 = accounts[7];
     adminProject3 = accounts[8];
     recoveryVault = (await RecoveryVault.new(web3)).$address;
-    escapeHatchCaller = accounts[10];
-
-    // baseLP = new LPVault(web3, _LPVault)
+    escapeHatchCaller = accounts[9];
   });
-
-  // after(done => {
-  //   ganache.close();
-  //   done();
-  // });
 
   it('Should deploy LiquidPledging contract', async () => {
     const baseVault = await LPVault.new(web3);
@@ -148,7 +127,13 @@ describe('LiquidPledging test', function() {
     await giver2Token.approve(liquidPledging.$address, '0xFFFFFFFFFFFFFFFF', { from: giver2 });
   });
   it('Should create a giver', async () => {
-    await liquidPledging.addGiver('Giver1', 'URLGiver1', 86400, 0, { from: giver1, gas: 1000000 });
+    await liquidPledging.addGiver(
+      'Giver1',
+      'URLGiver1',
+      86400,
+      '0x0000000000000000000000000000000000000000',
+      { from: giver1, gas: 1000000 },
+    );
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 1);
@@ -175,7 +160,13 @@ describe('LiquidPledging test', function() {
     assert.equal(giver1Bal, web3.utils.toWei('999'));
   });
   it('Should create a delegate', async () => {
-    await liquidPledging.addDelegate('Delegate1', 'URLDelegate1', 0, 0, { from: delegate1 });
+    await liquidPledging.addDelegate(
+      'Delegate1',
+      'URLDelegate1',
+      0,
+      '0x0000000000000000000000000000000000000000',
+      { from: delegate1 },
+    );
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 2);
     const res = await liquidPledging.getPledgeAdmin(2);
@@ -201,9 +192,17 @@ describe('LiquidPledging test', function() {
     assert.equal(d[2], 'Delegate1');
   });
   it('Should create a 2 projects', async () => {
-    await liquidPledging.addProject('Project1', 'URLProject1', adminProject1, 0, 86400, 0, {
-      from: adminProject1,
-    });
+    await liquidPledging.addProject(
+      'Project1',
+      'URLProject1',
+      adminProject1,
+      0,
+      86400,
+      '0x0000000000000000000000000000000000000000',
+      {
+        from: adminProject1,
+      },
+    );
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 3);
@@ -216,9 +215,17 @@ describe('LiquidPledging test', function() {
     assert.equal(res[5], 0);
     assert.equal(res[6], false);
 
-    await liquidPledging.addProject('Project2', 'URLProject2', adminProject2, 0, 86400, 0, {
-      from: adminProject2,
-    });
+    await liquidPledging.addProject(
+      'Project2',
+      'URLProject2',
+      adminProject2,
+      0,
+      86400,
+      '0x0000000000000000000000000000000000000000',
+      {
+        from: adminProject2,
+      },
+    );
 
     const nAdmins2 = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins2, 4);
@@ -345,10 +352,24 @@ describe('LiquidPledging test', function() {
     assert.equal(utils.fromWei(st.pledges[4].amount), 0.12);
   });
   it('A subproject 2a and a delegate2 is created', async () => {
-    await liquidPledging.addProject('Project2a', 'URLProject2a', adminProject2a, 4, 86400, 0, {
-      from: adminProject2,
-    });
-    await liquidPledging.addDelegate('Delegate2', 'URLDelegate2', 0, 0, { from: delegate2 });
+    await liquidPledging.addProject(
+      'Project2a',
+      'URLProject2a',
+      adminProject2a,
+      4,
+      86400,
+      '0x0000000000000000000000000000000000000000',
+      {
+        from: adminProject2,
+      },
+    );
+    await liquidPledging.addDelegate(
+      'Delegate2',
+      'URLDelegate2',
+      0,
+      '0x0000000000000000000000000000000000000000',
+      { from: delegate2 },
+    );
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 6);
   });
@@ -452,9 +473,17 @@ describe('LiquidPledging test', function() {
   });
   it('Should allow childProject with different parentProject owner', async () => {
     const nAdminsBefore = await liquidPledging.numberOfPledgeAdmins();
-    await liquidPledging.addProject('Project3', 'URLProject3', adminProject3, 4, 86400, 0, {
-      from: adminProject3,
-    });
+    await liquidPledging.addProject(
+      'Project3',
+      'URLProject3',
+      adminProject3,
+      4,
+      86400,
+      '0x0000000000000000000000000000000000000000',
+      {
+        from: adminProject3,
+      },
+    );
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, utils.toDecimal(nAdminsBefore) + 1);
   });
@@ -462,23 +491,47 @@ describe('LiquidPledging test', function() {
   it('should throw if projectLevel > 20', async () => {
     let nAdmins = await liquidPledging.numberOfPledgeAdmins();
 
-    await liquidPledging.addProject('ProjectLevel0', '', adminProject1, 0, 86400, 0, {
-      from: adminProject1,
-      $extraGas: 100000,
-    });
-
-    for (let i = 2; i <= 20; i++) {
-      await liquidPledging.addProject(`ProjectLevel${i}`, '', adminProject1, ++nAdmins, 86400, 0, {
+    await liquidPledging.addProject(
+      'ProjectLevel0',
+      '',
+      adminProject1,
+      0,
+      86400,
+      '0x0000000000000000000000000000000000000000',
+      {
         from: adminProject1,
         $extraGas: 100000,
-      });
+      },
+    );
+
+    for (let i = 2; i <= 20; i++) {
+      await liquidPledging.addProject(
+        `ProjectLevel${i}`,
+        '',
+        adminProject1,
+        ++nAdmins,
+        86400,
+        '0x0000000000000000000000000000000000000000',
+        {
+          from: adminProject1,
+          $extraGas: 100000,
+        },
+      );
     }
 
     await assertFail(
-      liquidPledging.addProject('ProjectLevel21', '', adminProject1, ++nAdmins, 86400, 0, {
-        from: adminProject1,
-        gas: 4000000,
-      }),
+      liquidPledging.addProject(
+        'ProjectLevel21',
+        '',
+        adminProject1,
+        ++nAdmins,
+        86400,
+        '0x0000000000000000000000000000000000000000',
+        {
+          from: adminProject1,
+          gas: 4000000,
+        },
+      ),
     );
   });
 

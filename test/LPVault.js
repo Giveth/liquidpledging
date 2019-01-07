@@ -1,20 +1,20 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const TestRPC = require('ganache-cli');
-const Web3 = require('web3');
 const { assert } = require('chai');
 const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../index');
 
 const { StandardTokenTest, assertFail, LiquidPledgingMock, RecoveryVault } = test;
 
+let accounts;
+
+config({}, (err, theAccounts) => {
+  accounts = theAccounts;
+});
+
 describe('LPVault test', function() {
   this.timeout(0);
 
-  let testrpc;
-  let web3;
-  let accounts;
   let liquidPledging;
-  let liquidPledgingState;
   let vault;
   let vaultOwner;
   let escapeHatchCaller;
@@ -25,26 +25,12 @@ describe('LPVault test', function() {
   let token;
 
   before(async () => {
-    testrpc = TestRPC.server({
-      gasLimit: 6700000,
-      total_accounts: 10,
-    });
-
-    testrpc.listen(8545, '127.0.0.1');
-
-    web3 = new Web3('http://localhost:8545');
-    accounts = await web3.eth.getAccounts();
     giver1 = accounts[1];
     adminProject1 = accounts[2];
     vaultOwner = accounts[3];
     escapeHatchCaller = accounts[4];
     recoveryVault = (await RecoveryVault.new(web3)).$address;
     restrictedPaymentsConfirmer = accounts[5];
-  });
-
-  after(done => {
-    testrpc.close();
-    done();
   });
 
   it('Should deploy LPVault contract', async function() {
@@ -88,11 +74,22 @@ describe('LPVault test', function() {
       { $extraGas: 200000 },
     );
 
-    await liquidPledging.addGiver('Giver1', '', 0, '0x0', { from: giver1, $extraGas: 100000 });
-    await liquidPledging.addProject('Project1', '', adminProject1, 0, 0, '0x0', {
-      from: adminProject1,
+    await liquidPledging.addGiver('Giver1', '', 0, '0x0000000000000000000000000000000000000000', {
+      from: giver1,
       $extraGas: 100000,
     });
+    await liquidPledging.addProject(
+      'Project1',
+      '',
+      adminProject1,
+      0,
+      0,
+      '0x0000000000000000000000000000000000000000',
+      {
+        from: adminProject1,
+        $extraGas: 100000,
+      },
+    );
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 2);
