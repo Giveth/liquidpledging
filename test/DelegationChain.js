@@ -1,25 +1,18 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
 const { assert } = require('chai');
-const { test } = require('../index');
+const assertFail = require('./helpers/assertFail');
 const deployLP = require('./helpers/deployLP');
-
-const { assertFail } = test;
 
 const printState = async liquidPledgingState => {
   const st = await liquidPledgingState.getState();
   console.log(JSON.stringify(st, null, 2));
 };
 
-let accounts;
-
-config({}, (err, theAccounts) => {
-  accounts = theAccounts;
-});
-
 describe('DelegationChain test', function() {
   this.timeout(0);
 
+  let accounts;
   let liquidPledging;
   let liquidPledgingState;
   let giver1;
@@ -31,13 +24,15 @@ describe('DelegationChain test', function() {
   let token;
 
   before(async () => {
+    const deployment = await deployLP(web3);
+    accounts = deployment.accounts;
+
     delegate1 = accounts[2];
     delegate2 = accounts[3];
     delegate3 = accounts[4];
     adminProject1 = accounts[5];
     giver2 = accounts[6];
 
-    const deployment = await deployLP(web3);
     giver1 = deployment.giver1;
     vault = deployment.vault;
     liquidPledging = deployment.liquidPledging;
@@ -85,7 +80,13 @@ describe('DelegationChain test', function() {
         from: adminProject1,
       },
     ); // pledgeAdmin 5
-    await liquidPledging.addGiver('Giver2', 'URLGiver2', 0, '0x0000000000000000000000000000000000000000', { from: giver2 }); // pledgeAdmin 6
+    await liquidPledging.addGiver(
+      'Giver2',
+      'URLGiver2',
+      0,
+      '0x0000000000000000000000000000000000000000',
+      { from: giver2 },
+    ); // pledgeAdmin 6
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 6);

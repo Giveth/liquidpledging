@@ -1,19 +1,16 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
 const { assert } = require('chai');
-const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../index');
+const assertFail = require('./helpers/assertFail');
+const deployLP = require('./helpers/deployLP');
 
-const { StandardTokenTest, assertFail, LiquidPledgingMock, RecoveryVault } = test;
-
-let accounts;
-
-config({}, (err, theAccounts) => {
-  accounts = theAccounts;
-});
+const Kernel = embark.require('Embark/contracts/Kernel');
+const ACL = embark.require('Embark/contracts/ACL');
 
 describe('LPVault test', function() {
   this.timeout(0);
 
+  let accounts;
   let liquidPledging;
   let vault;
   let vaultOwner;
@@ -25,34 +22,26 @@ describe('LPVault test', function() {
   let token;
 
   before(async () => {
+    const deployment = await deployLP();
+    accounts = deployment.accounts;
+
     giver1 = accounts[1];
     adminProject1 = accounts[2];
     vaultOwner = accounts[3];
     escapeHatchCaller = accounts[4];
-    recoveryVault = (await RecoveryVault.new(web3)).$address;
     restrictedPaymentsConfirmer = accounts[5];
+
+    recoveryVault = deployment.recoveryVault;
+    vault = deployment.vault;
+    liquidPledging = deployment.liquidPledging;
+    liquidPledgingState = deployment.liquidPledgingState;
+    token = deployment.token;
   });
 
   it('Should deploy LPVault contract', async function() {
-    const baseVault = await LPVault.new(web3);
-    const baseLP = await LiquidPledgingMock.new(web3, {
-      gas: 6700000,
-    });
-    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address, { gas: 6700000 });
-
-    const r = await lpFactory.newLP(accounts[0], recoveryVault);
-
-    const vaultAddress = r.events.DeployVault.returnValues.vault;
-    vault = new LPVault(web3, vaultAddress);
-
-    const lpAddress = r.events.DeployLiquidPledging.returnValues.liquidPledging;
-    liquidPledging = new LiquidPledgingMock(web3, lpAddress);
-
-    liquidPledgingState = new LiquidPledgingState(liquidPledging);
-
     // set permissions
-    const kernel = new Kernel(web3, await liquidPledging.kernel());
-    acl = new ACL(web3, await kernel.acl());
+    const kernel = Kernel.at(await liquidPledging.kernel());
+    acl = ACL.at(await kernel.acl());
     await acl.createPermission(
       accounts[0],
       vault.$address,
@@ -93,10 +82,6 @@ describe('LPVault test', function() {
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 2);
-
-    token = await StandardTokenTest.new(web3);
-    await token.mint(giver1, web3.utils.toWei('1000'));
-    await token.approve(liquidPledging.$address, '0xFFFFFFFFFFFFFFFF', { from: giver1 });
   });
 
   it('Should hold funds from liquidPledging', async function() {

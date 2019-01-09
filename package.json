@@ -8,7 +8,7 @@
     "test": "test"
   },
   "scripts": {
-    "test": "npm run compile:sol && embark test",
+    "test": "embark test",
     "compile:sol": "embark build --contracts",
     "compile:js": "babel -d lib/ js/",
     "compile": "npm run compile:sol &&  npm run compile:js",
@@ -37,6 +37,7 @@
     "babel-cli": "^6.26.0",
     "babel-eslint": "^7.2.3",
     "babel-preset-env": "^1.6.0",
+    "embark-solc": "git+https://git@github.com/embark-framework/embark-solc.git#develop",
     "eslint-config-airbnb": "^15.0.1",
     "eslint-plugin-import": "^2.6.0",
     "eslint-plugin-jsx-a11y": "^6.0.2",
@@ -45,7 +46,6 @@
     "lerna": "^2.2.0",
     "mocha": "^3.5.0",
     "random-bytes": "^1.0.0",
-    "embark-solc": "git+https://git@github.com/embark-framework/embark-solc.git#develop",
     "web3": "1.0.0-beta.34"
   },
   "homepage": "https://github.com/Giveth/liquidpledging#readme",
@@ -53,6 +53,6 @@
     "@aragon/os": "3.1.9",
     "async": "^2.4.0",
     "chai": "^4.1.0",
-    "eth-contract-class": "^0.0.12"
+    "eth-contract-class": "^0.0.13-beta.1"
   }
 }

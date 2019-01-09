@@ -16,7 +16,8 @@
     "ipfs-api": "17.2.4"
   },
   "plugins": {
-    "embark-solc": {}
+    "embark-solc": {},
+    "eth-contract-class/embark": {}
   },
   "options": {
     "solc": {

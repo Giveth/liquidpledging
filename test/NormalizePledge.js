@@ -8,15 +8,10 @@ const printState = async liquidPledgingState => {
   console.log(JSON.stringify(st, null, 2));
 };
 
-let accounts;
-
-config({}, (err, theAccounts) => {
-  accounts = theAccounts;
-});
-
 describe('NormalizePledge test', function() {
   this.timeout(0);
 
+  let accounts;
   let liquidPledging;
   let liquidPledgingState;
   let giver1;
@@ -28,13 +23,15 @@ describe('NormalizePledge test', function() {
   let token;
 
   before(async () => {
+    const deployment = await deployLP();
+    accounts = deployment.accounts;
+    
     delegate1 = accounts[2];
     delegate2 = accounts[3];
     adminProject1 = accounts[4];
     adminProject2 = accounts[5];
     giver2 = accounts[6];
 
-    const deployment = await deployLP(web3);
     giver1 = deployment.giver1;
     liquidPledging = deployment.liquidPledging;
     liquidPledgingState = deployment.liquidPledgingState;

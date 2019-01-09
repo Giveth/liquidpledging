@@ -2,33 +2,39 @@
 /* eslint-disable no-await-in-loop */
 const { utils } = require('web3');
 const { assert } = require('chai');
-const { LPVault, LPFactory, LiquidPledgingState, Kernel, ACL, test } = require('../index');
 
-const { StandardTokenTest, assertFail, LiquidPledgingMock, RecoveryVault } = test;
+const LiquidPledgingState = require('../lib/liquidPledgingState');
+const assertFail = require('./helpers/assertFail');
 
 const printState = async liquidPledgingState => {
   const st = await liquidPledgingState.getState();
   console.log(JSON.stringify(st, null, 2));
 };
 
-// const _RecoveryVault =  embark.require('Embark/contracts/RecoveryVault');
-// const RecoveryVault = ge
-// const _LPVault =  embark.require('Embark/contracts/LPVault');
-// const _LiquidPledgingMock =  embark.require('Embark/contracts/LiquidPledgingMock');
+const RecoveryVault =  embark.require('Embark/contracts/RecoveryVault');
+const lpFactory = embark.require('Embark/contracts/LPFactory');
+const LPVault = embark.require('Embark/contracts/LPVault');
+const LiquidPledgingMock = embark.require('Embark/contracts/LiquidPledgingMock');
+const Kernel = embark.require('Embark/contracts/Kernel');
+const ACL = embark.require('Embark/contracts/ACL');
+const StandardTokenTest = embark.require('Embark/contracts/StandardToken');
 
 let accounts;
 
 config(
   {
-    // contracts: {
-    //   RecoveryVault: {},
-    //   LPVault: {},
-    //   LiquidPledgingMock: {}
-    // "SimpleStorage": {
-    // args: [100],
-    // onDeploy: ["SimpleStorage.methods.setRegistar(web3.eth.defaultAccount).send()"] // example
-    // }
-    // }
+    contracts: {
+      RecoveryVault: {},
+      LPVault: {},
+      LiquidPledgingMock: {},
+      LPFactory: {
+        args: {
+          _vaultBase: '$LPVault',
+          _lpBase: '$LiquidPledgingMock',
+        },
+      },
+      StandardToken: {},
+    }
   },
   (err, theAccounts) => {
     accounts = theAccounts;
@@ -63,24 +69,18 @@ describe('LiquidPledging test', function() {
     delegate2 = accounts[6];
     giver2 = accounts[7];
     adminProject3 = accounts[8];
-    recoveryVault = (await RecoveryVault.new(web3)).$address;
+    recoveryVault = RecoveryVault.$address;
     escapeHatchCaller = accounts[9];
   });
 
   it('Should deploy LiquidPledging contract', async () => {
-    const baseVault = await LPVault.new(web3);
-    const baseLP = await LiquidPledgingMock.new(web3, {
-      gas: 6700000,
-    });
-    lpFactory = await LPFactory.new(web3, baseVault.$address, baseLP.$address, { gas: 6700000 });
-
     const r = await lpFactory.newLP(accounts[0], recoveryVault);
 
     const vaultAddress = r.events.DeployVault.returnValues.vault;
-    vault = new LPVault(web3, vaultAddress);
+    vault = LPVault.at(vaultAddress);
 
     const lpAddress = r.events.DeployLiquidPledging.returnValues.liquidPledging;
-    liquidPledging = new LiquidPledgingMock(web3, lpAddress);
+    liquidPledging = LiquidPledgingMock.at(lpAddress);
 
     assert.isAbove(Number(await vault.getInitializationBlock()), 0);
     assert.isAbove(Number(await liquidPledging.getInitializationBlock()), 0);
@@ -88,8 +88,8 @@ describe('LiquidPledging test', function() {
     liquidPledgingState = new LiquidPledgingState(liquidPledging);
 
     // set permissions
-    const kernel = new Kernel(web3, await liquidPledging.kernel());
-    acl = new ACL(web3, await kernel.acl());
+    const kernel = Kernel.at(await liquidPledging.kernel());
+    acl = ACL.at(await kernel.acl());
     await acl.createPermission(
       accounts[0],
       vault.$address,
@@ -117,8 +117,8 @@ describe('LiquidPledging test', function() {
       { $extraGas: 200000 },
     );
 
-    giver1Token = await StandardTokenTest.new(web3);
-    giver2Token = await StandardTokenTest.new(web3);
+    giver1Token = StandardTokenTest;
+    giver2Token = await StandardTokenTest.new();
 
     await giver1Token.mint(giver1, web3.utils.toWei('1000'));
     await giver2Token.mint(giver2, web3.utils.toWei('1000'));
@@ -592,7 +592,6 @@ describe('LiquidPledging test', function() {
     await giver1Token.transfer(liquidPledging.$address, 1000, { from: giver1 });
     assert.equal(await giver1Token.balanceOf(liquidPledging.$address), 1000);
 
-    const kernel = new Kernel(web3, await liquidPledging.kernel());
     await liquidPledging.transferToVault(giver1Token.$address, { $extraGas: 100000 });
 
     assert.equal(await giver1Token.balanceOf(recoveryVault), 1000);

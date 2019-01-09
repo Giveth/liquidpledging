@@ -1,27 +1,20 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
 const chai = require('chai');
-const { test } = require('../index');
 const deployLP = require('./helpers/deployLP');
+const assertFail = require('./helpers/assertFail');
 
-const compilerOutput = require('../dist/contracts/TestSimpleProjectPluginFactory.json');
-const simpleProjectPluginFactoryAbi = compilerOutput.abiDefinition;
-const simpleProjectPluginFactoryByteCode = compilerOutput.code;
-const simpleProjectPluginRuntimeByteCode =
-  '0x' + require('../dist/contracts/TestSimpleProjectPlugin.json').runtimeBytecode;
+const TestSimpleProjectPlugin = embark.require('Embark/contracts/TestSimpleProjectPlugin');
+const TestSimpleProjectPluginFactory = embark.require(
+  'Embark/contracts/TestSimpleProjectPluginFactory',
+);
+
 const assert = chai.assert;
-
-const { assertFail } = test;
-
-let accounts;
-
-config({}, (err, theAccounts) => {
-  accounts = theAccounts;
-});
 
 describe('LiquidPledging plugins test', function() {
   this.timeout(0);
 
+  let accounts;
   let liquidPledging;
   let vault;
   let giver1;
@@ -29,10 +22,12 @@ describe('LiquidPledging plugins test', function() {
   let adminDelegate1;
 
   before(async () => {
+    const deployment = await deployLP(web3);
+    accounts = deployment.accounts;
+
     adminProject1 = accounts[2];
     adminDelegate1 = accounts[3];
 
-    const deployment = await deployLP(web3);
     giver1 = deployment.giver1;
     vault = deployment.vault;
     liquidPledging = deployment.liquidPledging;
@@ -74,21 +69,16 @@ describe('LiquidPledging plugins test', function() {
 
   it('Should deploy TestSimpleProjectPlugin and add project', async function() {
     // add plugin as valid plugin
-    const codeHash = web3.utils.soliditySha3(simpleProjectPluginRuntimeByteCode);
+    const codeHash = web3.utils.keccak256(TestSimpleProjectPlugin.$runtimeByteCode);
     await liquidPledging.addValidPluginContract(codeHash, { $extraGas: 200000 });
 
     // deploy new plugin
-    const factoryContract = await new web3.eth.Contract(simpleProjectPluginFactoryAbi)
-      .deploy({
-        data: simpleProjectPluginFactoryByteCode,
-        arguments: [],
-      })
-      .send({ from: adminProject1, gas: 5000000 });
-    factoryContract.setProvider(web3.currentProvider);
+    const factoryContract = await TestSimpleProjectPluginFactory.new({ from: adminProject1 });
 
-    await factoryContract.methods
-      .deploy(liquidPledging.$address, 'SimplePlugin1', '', 0)
-      .send({ from: adminProject1, gas: 5000000 });
+    await factoryContract.deploy(liquidPledging.$address, 'SimplePlugin1', '', 0, {
+      from: adminProject1,
+      gas: 5000000,
+    });
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 2);

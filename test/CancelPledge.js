@@ -1,25 +1,18 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
 const { assert } = require('chai');
-const { test } = require('../index');
+const assertFail = require('./helpers/assertFail');
 const deployLP = require('./helpers/deployLP');
-
-const { assertFail } = test;
 
 const printState = async liquidPledgingState => {
   const st = await liquidPledgingState.getState();
   console.log(JSON.stringify(st, null, 2));
 };
 
-let accounts;
-
-config({}, (err, theAccounts) => {
-  accounts = theAccounts;
-});
-
 describe('LiquidPledging cancelPledge normal scenario', function() {
   this.timeout(0);
 
+  let accounts;
   let liquidPledging;
   let liquidPledgingState;
   let giver1;
@@ -27,10 +20,12 @@ describe('LiquidPledging cancelPledge normal scenario', function() {
   let token;
 
   before(async () => {
+    const deployment = await deployLP(web3);
+    accounts = deployment.accounts;
+
     adminProject1 = accounts[2];
     adminProject2 = accounts[3];
 
-    const deployment = await deployLP(web3);
     giver1 = deployment.giver1;
     vault = deployment.vault;
     liquidPledging = deployment.liquidPledging;
