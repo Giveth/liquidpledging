@@ -27,12 +27,6 @@ describe('LPVault test', function() {
     vaultOwner = accounts[3];
     escapeHatchCaller = accounts[4];
     restrictedPaymentsConfirmer = accounts[5];
-
-    recoveryVault = deployment.recoveryVault;
-    vault = deployment.vault;
-    liquidPledging = deployment.liquidPledging;
-    liquidPledgingState = deployment.liquidPledgingState;
-    token = deployment.token;
   });
 
   it('Should deploy LPVault contract', async function() {

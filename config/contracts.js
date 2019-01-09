@@ -54,11 +54,21 @@ module.exports = {
       '$WEB3', // uses pre existing web3 object if available (e.g in Mist)
     ],
     contracts: {
+      RecoveryVault: {},
       LPVault: {},
       LiquidPledgingMock: {},
-      RecoveryVault: {},
+      Kernel: {
+        args: {
+          _shouldPetrify: 'false',
+        },
+      },
+      ACL: {},
+      DAOFactory: {
+        args: ['$Kernel', '$ACL', '0x0000000000000000000000000000000000000000'],
+      },
       LPFactory: {
         args: {
+          _daoFactory: '$DAOFactory',
           _vaultBase: '$LPVault',
           _lpBase: '$LiquidPledgingMock',
         },

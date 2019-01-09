@@ -6,6 +6,8 @@ const { assert } = require('chai');
 const deployLP = require('./helpers/deployLP');
 const assertFail = require('./helpers/assertFail');
 
+const { toBN, toWei, fromWei } = utils;
+
 const printState = async liquidPledgingState => {
   const st = await liquidPledgingState.getState();
   console.log(JSON.stringify(st, null, 2));
@@ -118,7 +120,9 @@ describe('LiquidPledging test', function() {
     assert.equal(res[4], 86400);
   });
   it('Should make a donation', async () => {
-    const r = await liquidPledging.donate(1, 1, giver1Token.$address, utils.toWei('1'), {
+    const giver1PreBal = await giver1Token.balanceOf(giver1);
+
+    await liquidPledging.donate(1, 1, giver1Token.$address, utils.toWei('1'), {
       from: giver1,
       $extraGas: 100000,
     });
@@ -128,9 +132,10 @@ describe('LiquidPledging test', function() {
     assert.equal(p.amount, utils.toWei('1'));
     assert.equal(p.owner, 1);
     const vaultBal = await giver1Token.balanceOf(vault.$address);
-    const giver1Bal = await giver1Token.balanceOf(giver1);
+    const giver1PostBal = await giver1Token.balanceOf(giver1);
+
     assert.equal(vaultBal, web3.utils.toWei('1'));
-    assert.equal(giver1Bal, web3.utils.toWei('999'));
+    assert.equal(giver1PostBal, toBN(giver1PreBal).sub(toBN(toWei('1'))).toString());
   });
   it('Should create a delegate', async () => {
     await liquidPledging.addDelegate(

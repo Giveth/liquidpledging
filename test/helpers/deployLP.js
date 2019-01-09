@@ -14,10 +14,14 @@ config(
       RecoveryVault: {},
       LPVault: {},
       LiquidPledgingMock: {},
-      Kernel: {},
+      Kernel: {
+        args: {
+          _shouldPetrify: 'false',
+        },
+      },
       ACL: {},
       DAOFactory: {
-        args: ['$Kernel','$ACL', '0x0000000000000000000000000000000000000000']
+        args: ['$Kernel', '$ACL', '0x0000000000000000000000000000000000000000'],
       },
       LPFactory: {
         args: {
@@ -27,7 +31,7 @@ config(
         },
       },
       StandardToken: {},
-    }
+    },
   },
   (err, theAccounts) => {
     accounts = theAccounts;
