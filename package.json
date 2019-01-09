@@ -11,7 +11,7 @@
     "test": "embark test",
     "compile:sol": "embark build --contracts",
     "compile:js": "babel -d lib/ js/",
-    "compile": "npm run compile:sol &&  npm run compile:js",
+    "compile": "npm run compile:sol && npm run compile:js",
     "build": "npm run compile",
     "prepublish": "npm run build"
   },
@@ -50,7 +50,7 @@
   },
   "homepage": "https://github.com/Giveth/liquidpledging#readme",
   "dependencies": {
-    "@aragon/os": "3.1.9",
+    "@aragon/os": "4.0.1",
     "async": "^2.4.0",
     "chai": "^4.1.0",
     "eth-contract-class": "^0.0.13-beta.1"

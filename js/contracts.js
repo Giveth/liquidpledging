@@ -4,6 +4,7 @@ const LPFactoryArtifact = require('../dist/contracts/LPFactory.json');
 const LiquidPledgingArtifact = require('../dist/contracts/LiquidPledging.json');
 const LPVaultArtifact = require('../dist/contracts/LPVault.json');
 const KernelArtifact = require('../dist/contracts/Kernel.json');
+const DAOFactoryArtifact = require('../dist/contracts/DAOFactory.json');
 const ACLArtifact = require('../dist/contracts/ACL.json');
 const AppProxyUpgradeableArtifact = require('../dist/contracts/AppProxyUpgradeable.json');
 const StandardTokenTestAtifact = require('../dist/contracts/StandardToken.json');
@@ -23,6 +24,10 @@ module.exports = {
   LPVault: generateClass(
     LPVaultArtifact.abiDefinition,
     LPVaultArtifact.code,
+  ),
+  DAOFactory: generateClass (
+    DAOFactoryArtifact.abiDefinition,
+    DAOFactoryArtifact.code,
   ),
   Kernel: generateClass(
     KernelArtifact.abiDefinition,

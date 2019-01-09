@@ -10,6 +10,7 @@ coverage
 dist
 build/
 lib/
+!contracts/lib
 node_modules/
 .DS_Store
 

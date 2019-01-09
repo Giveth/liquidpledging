@@ -22,10 +22,7 @@ describe('LPVault test', function() {
   let token;
 
   before(async () => {
-    const deployment = await deployLP();
-    accounts = deployment.accounts;
-
-    giver1 = accounts[1];
+    accounts = await web3.eth.getAccounts();
     adminProject1 = accounts[2];
     vaultOwner = accounts[3];
     escapeHatchCaller = accounts[4];
@@ -39,6 +36,16 @@ describe('LPVault test', function() {
   });
 
   it('Should deploy LPVault contract', async function() {
+    const deployment = await deployLP(web3);
+    giver1 = deployment.giver1;
+    vault = deployment.vault;
+    liquidPledging = deployment.liquidPledging;
+    liquidPledgingState = deployment.liquidPledgingState;
+    token = deployment.token;
+    recoveryVault = deployment.recoveryVault;
+  });
+
+  it('Should setup LPVault contract', async function() {
     // set permissions
     const kernel = Kernel.at(await liquidPledging.kernel());
     acl = ACL.at(await kernel.acl());

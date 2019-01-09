@@ -14,8 +14,14 @@ config(
       RecoveryVault: {},
       LPVault: {},
       LiquidPledgingMock: {},
+      Kernel: {},
+      ACL: {},
+      DAOFactory: {
+        args: ['$Kernel','$ACL', '0x0000000000000000000000000000000000000000']
+      },
       LPFactory: {
         args: {
+          _daoFactory: '$DAOFactory',
           _vaultBase: '$LPVault',
           _lpBase: '$LiquidPledgingMock',
         },
@@ -32,6 +38,7 @@ module.exports = async () => {
   const giver1 = accounts[1];
 
   const recoveryVault = RecoveryVault.$address;
+
   const r = await lpFactory.newLP(accounts[0], recoveryVault);
 
   const vaultAddress = r.events.DeployVault.returnValues.vault;

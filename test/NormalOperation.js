@@ -3,7 +3,7 @@
 const { utils } = require('web3');
 const { assert } = require('chai');
 
-const LiquidPledgingState = require('../lib/liquidPledgingState');
+const deployLP = require('./helpers/deployLP');
 const assertFail = require('./helpers/assertFail');
 
 const printState = async liquidPledgingState => {
@@ -11,38 +11,13 @@ const printState = async liquidPledgingState => {
   console.log(JSON.stringify(st, null, 2));
 };
 
-const RecoveryVault =  embark.require('Embark/contracts/RecoveryVault');
-const lpFactory = embark.require('Embark/contracts/LPFactory');
-const LPVault = embark.require('Embark/contracts/LPVault');
-const LiquidPledgingMock = embark.require('Embark/contracts/LiquidPledgingMock');
 const Kernel = embark.require('Embark/contracts/Kernel');
 const ACL = embark.require('Embark/contracts/ACL');
 const StandardTokenTest = embark.require('Embark/contracts/StandardToken');
 
-let accounts;
-
-config(
-  {
-    contracts: {
-      RecoveryVault: {},
-      LPVault: {},
-      LiquidPledgingMock: {},
-      LPFactory: {
-        args: {
-          _vaultBase: '$LPVault',
-          _lpBase: '$LiquidPledgingMock',
-        },
-      },
-      StandardToken: {},
-    }
-  },
-  (err, theAccounts) => {
-    accounts = theAccounts;
-  },
-);
-
 describe('LiquidPledging test', function() {
   this.timeout(0);
+  let accounts;
   let liquidPledging;
   let liquidPledgingState;
   let vault;
@@ -61,7 +36,7 @@ describe('LiquidPledging test', function() {
   let giver2Token;
 
   before(async () => {
-    giver1 = accounts[1];
+    accounts = await web3.eth.getAccounts();
     delegate1 = accounts[2];
     adminProject1 = accounts[3];
     adminProject2 = accounts[4];
@@ -69,24 +44,22 @@ describe('LiquidPledging test', function() {
     delegate2 = accounts[6];
     giver2 = accounts[7];
     adminProject3 = accounts[8];
-    recoveryVault = RecoveryVault.$address;
     escapeHatchCaller = accounts[9];
   });
 
   it('Should deploy LiquidPledging contract', async () => {
-    const r = await lpFactory.newLP(accounts[0], recoveryVault);
-
-    const vaultAddress = r.events.DeployVault.returnValues.vault;
-    vault = LPVault.at(vaultAddress);
-
-    const lpAddress = r.events.DeployLiquidPledging.returnValues.liquidPledging;
-    liquidPledging = LiquidPledgingMock.at(lpAddress);
+    const deployment = await deployLP(web3);
+    giver1 = deployment.giver1;
+    vault = deployment.vault;
+    liquidPledging = deployment.liquidPledging;
+    liquidPledgingState = deployment.liquidPledgingState;
+    recoveryVault = deployment.recoveryVault;
 
     assert.isAbove(Number(await vault.getInitializationBlock()), 0);
     assert.isAbove(Number(await liquidPledging.getInitializationBlock()), 0);
+  });
 
-    liquidPledgingState = new LiquidPledgingState(liquidPledging);
-
+  it('Should setup LiquidPledging contract', async () => {
     // set permissions
     const kernel = Kernel.at(await liquidPledging.kernel());
     acl = ACL.at(await kernel.acl());

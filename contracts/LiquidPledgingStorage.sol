@@ -1,17 +1,12 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.24;
 
 import "./ILiquidPledgingPlugin.sol";
+import "./ILPVault.sol";
 
-/// @dev This is an interface for `LPVault` which serves as a secure storage for
-///  the ETH that backs the Pledges, only after `LiquidPledging` authorizes
-///  payments can Pledges be converted for ETH
-interface ILPVault {
-    function authorizePayment(bytes32 _ref, address _dest, address _token, uint _amount) public;
-}
 
 /// This contract contains all state variables used in LiquidPledging contracts
 /// This is done to have everything in 1 location, b/c state variable layout
-/// is MUST have be the same when performing an upgrade.
+/// MUST be the same when performing an upgrade.
 contract LiquidPledgingStorage {
     enum PledgeAdminType { Giver, Delegate, Project }
     enum PledgeState { Pledged, Paying, Paid }
@@ -57,7 +52,4 @@ contract LiquidPledgingStorage {
     bool public whitelistDisabled = false;
 
     ILPVault public vault;
-
-    // reserve 50 slots for future upgrades.
-    uint[50] private storageOffset;
 }
