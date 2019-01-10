@@ -27,12 +27,12 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     uint constant MAX_SUBPROJECT_LEVEL = 20;
     uint constant MAX_INTERPROJECT_LEVEL = 20;
 
-    string private constant ERROR_MAX_SUBPROJECT = "LIQUIDPLEDGING_ADMIN_MAX_SUBPROJECT";
-    string internal constant ERROR_MAX_INTERPROJECT = "LIQUIDPLEDGING_ADMIN_MAX_INTERPROJECT";
-    string internal constant ERROR_INVALID_OWNER = "LIQUIDPLEDGING_ADMIN_INVALID_OWNER";
-    string internal constant ERROR_INVALID_ADMIN_TYPE = "LIQUIDPLEDGING_ADMIN_INVALID_ADMIN_TYPE";
-    string internal constant ERROR_INVALID_ADMIN = "LIQUIDPLEDGING_ADMIN_INVALID_ADMIN";
-    string internal constant ERROR_ADMIN_CANCELED = "LIQUIDPLEDGING_ADMIN_CANCELED";
+    string private constant ERROR_MAX_SUBPROJECT = "0";
+    string internal constant ERROR_MAX_INTERPROJECT = "1";
+    string internal constant ERROR_INVALID_OWNER = "2";
+    string internal constant ERROR_INVALID_ADMIN_TYPE = "3";
+    string internal constant ERROR_INVALID_ADMIN = "4";
+    string internal constant ERROR_ADMIN_CANCELED = "5";
 
 
     // Events

@@ -27,7 +27,7 @@ import "./LiquidPledgingBase.sol";
 ///  to allow for expanded functionality.
 contract LiquidPledging is LiquidPledgingBase {
 
-    string private constant ERROR_FAILED_TRANSFER = "LIQUIDPLEDGING_FAILED_TRANSFER";
+    string private constant ERROR_FAILED_TRANSFER = "13";
 
     /// Create a "giver" pledge admin for the sender & donate 
     /// @param idReceiver The Admin receiving the donation; can be any Admin:

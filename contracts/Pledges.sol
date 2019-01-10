@@ -30,9 +30,9 @@ contract Pledges is AragonApp, LiquidPledgingStorage {
     // a constant for when a delegate is requested that is not in the system
     uint64 constant  NOTFOUND = 0xFFFFFFFFFFFFFFFF;
 
-    string internal constant ERROR_INVALID_PLEDGE = "LIQUIDPLEDGING_PLEDGE_INVALID_PLEDGE";
-    string internal constant ERROR_INVALID_PLEDGE_STATE = "LIQUIDPLEDGING_PLEDGE_INVALID_PLEDGE_STATE";
-    string internal constant ERROR_MAX_DELEGATES = "LIQUIDPLEDGING_PLEDGE_MAX_DELEGATES";
+    string internal constant ERROR_INVALID_PLEDGE = "6";
+    string internal constant ERROR_INVALID_PLEDGE_STATE = "7";
+    string internal constant ERROR_MAX_DELEGATES = "8";
 
 /////////////////////////////
 // Public constant functions

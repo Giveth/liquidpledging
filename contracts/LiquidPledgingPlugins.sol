@@ -27,7 +27,7 @@ contract LiquidPledgingPlugins is AragonApp, LiquidPledgingStorage {
     // bytes32 constant public PLUGIN_MANAGER_ROLE = keccak256("PLUGIN_MANAGER_ROLE");
     bytes32 constant public _PLUGIN_MANAGER_ROLE = 0xd3c76383116f5940be0ff28f44aa486f936c612285d02d30e852699826c34d26;
 
-    string internal constant ERROR_INVALID_PLUGIN = "LIQUIDPLEDGING_PLUGIN_NOT_WHITELISTED";
+    string internal constant ERROR_INVALID_PLUGIN = "9";
 
     /**
     * @dev adds an instance of a plugin to the whitelist

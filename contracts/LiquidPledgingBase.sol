@@ -30,9 +30,9 @@ import "@aragon/os/contracts/apps/AragonApp.sol";
 ///  data structures
 contract LiquidPledgingBase is ILiquidPledging, AragonApp, LiquidPledgingStorage, PledgeAdmins, Pledges {
 
-    string private constant ERROR_INVALID_VAULT = "LIQUIDPLEDGING_INVALID_VAULT";
-    string internal constant ERROR_AMOUNT_CHECK = "LIQUIDPLEDGING_AMOUNT_CHECK";
-    string internal constant ERROR_INVALID_ADDRESS = "LIQUIDPLEDGING_INVALID_ADDRESS";
+    string private constant ERROR_INVALID_VAULT = "10";
+    string internal constant ERROR_AMOUNT_CHECK = "11";
+    string internal constant ERROR_INVALID_ADDRESS = "12";
 
     event Transfer(uint indexed from, uint indexed to, uint amount);
     event CancelProject(uint indexed idProject);
