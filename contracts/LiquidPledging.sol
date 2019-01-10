@@ -27,6 +27,8 @@ import "./LiquidPledgingBase.sol";
 ///  to allow for expanded functionality.
 contract LiquidPledging is LiquidPledgingBase {
 
+    string private constant ERROR_FAILED_TRANSFER = "LIQUIDPLEDGING_FAILED_TRANSFER";
+
     /// Create a "giver" pledge admin for the sender & donate 
     /// @param idReceiver The Admin receiving the donation; can be any Admin:
     ///  the Giver themselves, another Giver, a Delegate or a Project
@@ -47,7 +49,7 @@ contract LiquidPledging is LiquidPledgingBase {
     function addGiverAndDonate(uint64 idReceiver, address donorAddress, address token, uint amount)
         public
     {
-        require(donorAddress != 0);
+        require(donorAddress != 0x0, ERROR_INVALID_ADDRESS);
         // default to a 3 day (259200 seconds) commitTime
         uint64 idGiver = addGiver(donorAddress, "", "", 259200, ILiquidPledgingPlugin(0));
         donate(idGiver, idReceiver, token, amount);
@@ -66,14 +68,14 @@ contract LiquidPledging is LiquidPledgingBase {
     function donate(uint64 idGiver, uint64 idReceiver, address token, uint amount)
         public
     {
-        require(idGiver > 0); // prevent burning donations. idReceiver is checked in _transfer
-        require(amount > 0);
-        require(token != 0x0);
+        require(idGiver > 0, ERROR_INVALID_ADMIN); // prevent burning donations. idReceiver is checked in _transfer
+        require(amount > 0, ERROR_AMOUNT_CHECK);
+        require(token != 0x0, ERROR_INVALID_ADDRESS);
 
         PledgeAdmin storage sender = _findAdmin(idGiver);
-        require(sender.adminType == PledgeAdminType.Giver);
+        require(sender.adminType == PledgeAdminType.Giver, ERROR_INVALID_ADMIN_TYPE);
 
-        require(ERC20(token).transferFrom(msg.sender, address(vault), amount)); // transfer the token to the `vault`
+        require(ERC20(token).transferFrom(msg.sender, address(vault), amount), ERROR_FAILED_TRANSFER); // transfer the token to the `vault`
 
         uint64 idPledge = _findOrCreatePledge(
             idGiver,
@@ -122,7 +124,7 @@ contract LiquidPledging is LiquidPledgingBase {
         idPledge = normalizePledge(idPledge); // Updates pledge info 
 
         Pledge storage p = _findPledge(idPledge);
-        require(p.pledgeState == PledgeState.Pledged);
+        require(p.pledgeState == PledgeState.Pledged, ERROR_INVALID_PLEDGE_STATE);
         _checkAdminOwner(p.owner);
 
         uint64 idNewPledge = _findOrCreatePledge(
@@ -148,7 +150,7 @@ contract LiquidPledging is LiquidPledgingBase {
     function confirmPayment(uint64 idPledge, uint amount) public onlyVault {
         Pledge storage p = _findPledge(idPledge);
 
-        require(p.pledgeState == PledgeState.Paying);
+        require(p.pledgeState == PledgeState.Paying, ERROR_INVALID_PLEDGE_STATE);
 
         uint64 idNewPledge = _findOrCreatePledge(
             p.owner,
@@ -170,7 +172,7 @@ contract LiquidPledging is LiquidPledgingBase {
     function cancelPayment(uint64 idPledge, uint amount) public onlyVault {
         Pledge storage p = _findPledge(idPledge);
 
-        require(p.pledgeState == PledgeState.Paying);
+        require(p.pledgeState == PledgeState.Paying, ERROR_INVALID_PLEDGE_STATE);
 
         // When a payment is canceled, never is assigned to a project.
         uint64 idOldPledge = _findOrCreatePledge(
@@ -207,8 +209,8 @@ contract LiquidPledging is LiquidPledgingBase {
         idPledge = normalizePledge(idPledge);
 
         Pledge storage p = _findPledge(idPledge);
-        require(p.oldPledge != 0);
-        require(p.pledgeState == PledgeState.Pledged);
+        require(p.oldPledge != 0, ERROR_INVALID_PLEDGE);
+        require(p.pledgeState == PledgeState.Pledged, ERROR_INVALID_PLEDGE_STATE);
         _checkAdminOwner(p.owner);
 
         uint64 oldPledge = _getOldestPledgeNotCanceled(p.oldPledge);

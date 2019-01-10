@@ -30,6 +30,10 @@ import "@aragon/os/contracts/apps/AragonApp.sol";
 ///  data structures
 contract LiquidPledgingBase is ILiquidPledging, AragonApp, LiquidPledgingStorage, PledgeAdmins, Pledges {
 
+    string private constant ERROR_INVALID_VAULT = "LIQUIDPLEDGING_INVALID_VAULT";
+    string internal constant ERROR_AMOUNT_CHECK = "LIQUIDPLEDGING_AMOUNT_CHECK";
+    string internal constant ERROR_INVALID_ADDRESS = "LIQUIDPLEDGING_INVALID_ADDRESS";
+
     event Transfer(uint indexed from, uint indexed to, uint amount);
     event CancelProject(uint indexed idProject);
 
@@ -40,7 +44,7 @@ contract LiquidPledgingBase is ILiquidPledging, AragonApp, LiquidPledgingStorage
     /// @dev The `vault`is the only addresses that can call a function with this
     ///  modifier
     modifier onlyVault() {
-        require(msg.sender == address(vault));
+        require(msg.sender == address(vault), ERROR_INVALID_VAULT);
         _;
     }
 
@@ -50,7 +54,7 @@ contract LiquidPledgingBase is ILiquidPledging, AragonApp, LiquidPledgingStorage
 
     /// @param _vault The vault where the ETH backing the pledges is stored
     function initialize(address _vault) onlyInit public {
-        require(_vault != 0x0);
+        require(_vault != 0x0, ERROR_INVALID_ADDRESS);
         initialized();
 
         vault = ILPVault(_vault);
@@ -151,7 +155,7 @@ contract LiquidPledgingBase is ILiquidPledging, AragonApp, LiquidPledgingStorage
     /// @param idAdmin The id of the admin being checked
     function _checkAdminOwner(uint64 idAdmin) internal view {
         PledgeAdmin storage a = _findAdmin(idAdmin);
-        require(msg.sender == address(a.plugin) || msg.sender == a.addr);
+        require(msg.sender == address(a.plugin) || msg.sender == a.addr, ERROR_INVALID_OWNER);
     }
 
     function _transfer( 
@@ -161,13 +165,13 @@ contract LiquidPledgingBase is ILiquidPledging, AragonApp, LiquidPledgingStorage
         uint64 idReceiver
     ) internal
     {
-        require(idReceiver > 0); // prevent burning value
+        require(idReceiver > 0, ERROR_INVALID_ADMIN); // prevent burning value
         idPledge = normalizePledge(idPledge);
 
         Pledge storage p = _findPledge(idPledge);
         PledgeAdmin storage receiver = _findAdmin(idReceiver);
 
-        require(p.pledgeState == PledgeState.Pledged);
+        require(p.pledgeState == PledgeState.Pledged, ERROR_INVALID_PLEDGE_STATE);
 
         // If the sender is the owner of the Pledge
         if (p.owner == idSender) {
@@ -290,8 +294,8 @@ contract LiquidPledgingBase is ILiquidPledging, AragonApp, LiquidPledgingStorage
 
         // Ensure that the pledge is not already at max pledge depth
         // and the project has not been canceled
-        require(_getPledgeLevel(p) < MAX_INTERPROJECT_LEVEL);
-        require(!isProjectCanceled(idReceiver));
+        require(_getPledgeLevel(p) < MAX_INTERPROJECT_LEVEL, ERROR_MAX_INTERPROJECT);
+        require(!isProjectCanceled(idReceiver), ERROR_ADMIN_CANCELED);
 
         uint64 oldPledge = _findOrCreatePledge(
             p.owner,
@@ -354,7 +358,7 @@ contract LiquidPledgingBase is ILiquidPledging, AragonApp, LiquidPledgingStorage
     {
         Pledge storage p = _findPledge(idPledge);
 
-        require(p.delegationChain.length < MAX_DELEGATES);
+        require(p.delegationChain.length < MAX_DELEGATES, ERROR_MAX_DELEGATES);
         uint64[] memory newDelegationChain = new uint64[](
             p.delegationChain.length + 1
         );
@@ -424,8 +428,8 @@ contract LiquidPledgingBase is ILiquidPledging, AragonApp, LiquidPledgingStorage
     {
         Pledge storage p = _findPledge(idPledge);
 
-        require(_getPledgeLevel(p) < MAX_INTERPROJECT_LEVEL);
-        require(!isProjectCanceled(idReceiver));
+        require(_getPledgeLevel(p) < MAX_INTERPROJECT_LEVEL, ERROR_MAX_INTERPROJECT);
+        require(!isProjectCanceled(idReceiver), ERROR_ADMIN_CANCELED);
 
         uint64 toPledge = _findOrCreatePledge(
             p.owner,
@@ -456,10 +460,10 @@ contract LiquidPledgingBase is ILiquidPledging, AragonApp, LiquidPledgingStorage
         Pledge storage pFrom = _findPledge(from);
         Pledge storage pTo = _findPledge(to);
 
-        require(pFrom.amount >= amount);
+        require(pFrom.amount >= amount, ERROR_AMOUNT_CHECK);
         pFrom.amount -= amount;
         pTo.amount += amount;
-        require(pTo.amount >= amount);
+        require(pTo.amount >= amount, ERROR_AMOUNT_CHECK);
 
         emit Transfer(from, to, amount);
         _callPlugins(false, from, to, amount);
@@ -550,7 +554,7 @@ contract LiquidPledgingBase is ILiquidPledging, AragonApp, LiquidPledgingStorage
                     token,
                     amount
                 );
-                require(newAmount <= allowedAmount);
+                require(newAmount <= allowedAmount, ERROR_AMOUNT_CHECK);
                 allowedAmount = newAmount;
             } else {
                 admin.plugin.afterTransfer(

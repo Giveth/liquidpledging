@@ -42,6 +42,13 @@ contract LPVault is ILPVault, AragonApp {
     // bytes32 constant public _ESCAPE_HATCH_CALLER_ROLE = keccak256("ESCAPE_HATCH_CALLER_ROLE");
     bytes32 constant public _ESCAPE_HATCH_CALLER_ROLE = 0x5cfc63e96cb331fc218d6862d4ebcdb7abc1c4800aecb569045bebab5aa4a47a;
 
+    string private constant ERROR_INVALID_ADDRESS = "LPVAULT_INVALID_ADDRESS";
+    string private constant ERROR_INVALID_LIQUIDPLEDGING = "LPVAULT_INVALID_LIQUIDPLEDGING";
+    string private constant ERROR_INVALID_PAYMENT = "LPVAULT_INVALID_PAYMENT";
+    string private constant ERROR_INVALID_PAYMENT_STATE = "LPVAULT_INVALID_PAYMENT_STATE";
+    string private constant ERROR_FAILED_TRANSFER = "LPVAULT_FAILED_TRANSFER";
+    string private constant ERROR_NOT_AUTHORIZED = "LPVAULT_UNAUTHORIZED";
+
     event AutoPaySet(bool autoPay);
     event EscapeFundsCalled(address token, uint amount);
     event ConfirmPayment(uint indexed idPayment, bytes32 indexed ref);
@@ -80,14 +87,14 @@ contract LPVault is ILPVault, AragonApp {
     /// @dev The attached `LiquidPledging` contract is the only address that can
     ///  call a function with this modifier
     modifier onlyLiquidPledging() {
-        require(msg.sender == address(liquidPledging));
+        require(msg.sender == address(liquidPledging), ERROR_INVALID_LIQUIDPLEDGING);
         _;
     }
 
     /// @param _liquidPledging Address of the liquidPledging instance associated
     /// with this LPVault
     function initialize(address _liquidPledging) onlyInit external {
-        require(_liquidPledging != 0x0);
+        require(_liquidPledging != 0x0, ERROR_INVALID_ADDRESS);
         initialized();
 
         liquidPledging = ILiquidPledging(_liquidPledging);
@@ -141,7 +148,7 @@ contract LPVault is ILPVault, AragonApp {
     /// @param _idPayment Array lookup for the payment.
     function confirmPayment(uint _idPayment) public {
         Payment storage p = payments[_idPayment];
-        require(canPerform(msg.sender, _CONFIRM_PAYMENT_ROLE, arr(_idPayment, p.amount)));
+        require(canPerform(msg.sender, _CONFIRM_PAYMENT_ROLE, arr(_idPayment, p.amount)), ERROR_NOT_AUTHORIZED);
         _doConfirmPayment(_idPayment);
     }
 
@@ -197,15 +204,15 @@ contract LPVault is ILPVault, AragonApp {
     ///  payment id (internal function)
     /// @param _idPayment id number for the payment about to be fulfilled 
     function _doConfirmPayment(uint _idPayment) internal {
-        require(_idPayment < payments.length);
+        require(_idPayment < payments.length, ERROR_INVALID_PAYMENT);
         Payment storage p = payments[_idPayment];
-        require(p.state == PaymentStatus.Pending);
+        require(p.state == PaymentStatus.Pending, ERROR_INVALID_PAYMENT_STATE);
 
         p.state = PaymentStatus.Paid;
         liquidPledging.confirmPayment(uint64(p.ref), p.amount);
 
         ERC20 token = ERC20(p.token);
-        require(token.transfer(p.dest, p.amount)); // Transfers token to dest
+        require(token.transfer(p.dest, p.amount), ERROR_FAILED_TRANSFER); // Transfers token to dest
 
         emit ConfirmPayment(_idPayment, p.ref);
     }
@@ -213,9 +220,9 @@ contract LPVault is ILPVault, AragonApp {
     /// @notice Cancels a pending payment (internal function)
     /// @param _idPayment id number for the payment    
     function _doCancelPayment(uint _idPayment) internal authP(_CANCEL_PAYMENT_ROLE, arr(_idPayment)) {
-        require(_idPayment < payments.length);
+        require(_idPayment < payments.length, ERROR_INVALID_PAYMENT);
         Payment storage p = payments[_idPayment];
-        require(p.state == PaymentStatus.Pending);
+        require(p.state == PaymentStatus.Pending, ERROR_INVALID_PAYMENT_STATE);
 
         p.state = PaymentStatus.Canceled;
 

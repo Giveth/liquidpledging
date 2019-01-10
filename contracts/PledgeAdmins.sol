@@ -27,7 +27,13 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     uint constant MAX_SUBPROJECT_LEVEL = 20;
     uint constant MAX_INTERPROJECT_LEVEL = 20;
 
-    string private constant ERROR_MAX_SUBPROJECT = "LIQUIDPLEDGING_MAX_SUBPROJECT";
+    string private constant ERROR_MAX_SUBPROJECT = "LIQUIDPLEDGING_ADMIN_MAX_SUBPROJECT";
+    string internal constant ERROR_MAX_INTERPROJECT = "LIQUIDPLEDGING_ADMIN_MAX_INTERPROJECT";
+    string internal constant ERROR_INVALID_OWNER = "LIQUIDPLEDGING_ADMIN_INVALID_OWNER";
+    string internal constant ERROR_INVALID_ADMIN_TYPE = "LIQUIDPLEDGING_ADMIN_INVALID_ADMIN_TYPE";
+    string internal constant ERROR_INVALID_ADMIN = "LIQUIDPLEDGING_ADMIN_INVALID_ADMIN";
+    string internal constant ERROR_ADMIN_CANCELED = "LIQUIDPLEDGING_ADMIN_CANCELED";
+
 
     // Events
     event GiverAdded(uint64 indexed idGiver, string url);
@@ -111,8 +117,8 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     ) external 
     {
         PledgeAdmin storage giver = _findAdmin(idGiver);
-        require(msg.sender == giver.addr);
-        require(giver.adminType == PledgeAdminType.Giver); // Must be a Giver
+        require(msg.sender == giver.addr, ERROR_INVALID_OWNER);
+        require(giver.adminType == PledgeAdminType.Giver, ERROR_INVALID_ADMIN_TYPE); // Must be a Giver
         giver.addr = newAddr;
         giver.name = newName;
         giver.url = newUrl;
@@ -177,8 +183,8 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     ) external 
     {
         PledgeAdmin storage delegate = _findAdmin(idDelegate);
-        require(msg.sender == delegate.addr);
-        require(delegate.adminType == PledgeAdminType.Delegate);
+        require(msg.sender == delegate.addr, ERROR_INVALID_OWNER);
+        require(delegate.adminType == PledgeAdminType.Delegate, ERROR_INVALID_ADMIN_TYPE);
         delegate.addr = newAddr;
         delegate.name = newName;
         delegate.url = newUrl;
@@ -253,8 +259,8 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     {
         PledgeAdmin storage project = _findAdmin(idProject);
 
-        require(msg.sender == project.addr);
-        require(project.adminType == PledgeAdminType.Project);
+        require(msg.sender == project.addr, ERROR_INVALID_OWNER);
+        require(project.adminType == PledgeAdminType.Project, ERROR_INVALID_ADMIN_TYPE);
 
         project.addr = newAddr;
         project.name = newName;
@@ -340,7 +346,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     /// @param idAdmin The id for the Admin to lookup
     /// @return The PledgeAdmin struct for the specified Admin
     function _findAdmin(uint64 idAdmin) internal view returns (PledgeAdmin storage) {
-        require(idAdmin < admins.length);
+        require(idAdmin < admins.length, ERROR_INVALID_ADMIN);
         return admins[idAdmin];
     }
 

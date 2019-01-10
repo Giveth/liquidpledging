@@ -30,6 +30,10 @@ contract Pledges is AragonApp, LiquidPledgingStorage {
     // a constant for when a delegate is requested that is not in the system
     uint64 constant  NOTFOUND = 0xFFFFFFFFFFFFFFFF;
 
+    string internal constant ERROR_INVALID_PLEDGE = "LIQUIDPLEDGING_PLEDGE_INVALID_PLEDGE";
+    string internal constant ERROR_INVALID_PLEDGE_STATE = "LIQUIDPLEDGING_PLEDGE_INVALID_PLEDGE_STATE";
+    string internal constant ERROR_MAX_DELEGATES = "LIQUIDPLEDGING_PLEDGE_MAX_DELEGATES";
+
 /////////////////////////////
 // Public constant functions
 ////////////////////////////
@@ -123,7 +127,7 @@ contract Pledges is AragonApp, LiquidPledgingStorage {
     /// @param idPledge the id of the pledge to load from storage
     /// @return The Pledge
     function _findPledge(uint64 idPledge) internal view returns(Pledge storage) {
-        require(idPledge < pledges.length);
+        require(idPledge < pledges.length, ERROR_INVALID_PLEDGE);
         return pledges[idPledge];
     }
 

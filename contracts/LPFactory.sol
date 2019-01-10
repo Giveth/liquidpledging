@@ -12,13 +12,15 @@ contract LPFactory is LPConstants {
     address public vaultBase;
     address public lpBase;
 
+    string internal constant ERROR_INVALID_ADDRESS = "LPVAULT_INVALID_ADDRESS";
+
     event DeployVault(address vault);
     event DeployLiquidPledging(address liquidPledging);
 
     constructor(IDAOFactory _daoFactory, address _vaultBase, address _lpBase) public {
-        require(address(_daoFactory) != 0);
-        require(_vaultBase != 0);
-        require(_lpBase != 0);
+        require(address(_daoFactory) != 0, ERROR_INVALID_ADDRESS);
+        require(_vaultBase != 0, ERROR_INVALID_ADDRESS);
+        require(_lpBase != 0, ERROR_INVALID_ADDRESS);
         daoFactory = _daoFactory;
         vaultBase = _vaultBase;
         lpBase = _lpBase;
