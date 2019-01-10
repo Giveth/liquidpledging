@@ -1,12 +1,8 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const Ganache = require('ganache-cli');
-const Web3 = require('web3');
 const { assert } = require('chai');
-const { test } = require('../index');
+const assertFail = require('./helpers/assertFail');
 const deployLP = require('./helpers/deployLP');
-
-const { assertFail } = test;
 
 const printState = async liquidPledgingState => {
   const st = await liquidPledgingState.getState();
@@ -16,31 +12,20 @@ const printState = async liquidPledgingState => {
 describe('LiquidPledging cancelPledge normal scenario', function() {
   this.timeout(0);
 
-  let ganache;
-  let web3;
   let accounts;
   let liquidPledging;
   let liquidPledgingState;
-  let vault;
   let giver1;
   let adminProject1;
-  let adminProject2;
   let token;
 
   before(async () => {
-    ganache = Ganache.server({
-      gasLimit: 6700000,
-      total_accounts: 10,
-    });
+    const deployment = await deployLP(web3);
+    accounts = deployment.accounts;
 
-    ganache.listen(8545, '127.0.0.1');
-
-    web3 = new Web3('http://localhost:8545');
-    accounts = await web3.eth.getAccounts();
     adminProject1 = accounts[2];
     adminProject2 = accounts[3];
 
-    const deployment = await deployLP(web3);
     giver1 = deployment.giver1;
     vault = deployment.vault;
     liquidPledging = deployment.liquidPledging;
@@ -48,15 +33,18 @@ describe('LiquidPledging cancelPledge normal scenario', function() {
     token = deployment.token;
   });
 
-  after(done => {
-    ganache.close();
-    done();
-  });
-
   it('Should add project and donate ', async () => {
-    await liquidPledging.addProject('Project1', 'URLProject1', adminProject1, 0, 0, '0x0', {
-      from: adminProject1,
-    });
+    await liquidPledging.addProject(
+      'Project1',
+      'URLProject1',
+      adminProject1,
+      0,
+      0,
+      '0x0000000000000000000000000000000000000000',
+      {
+        from: adminProject1,
+      },
+    );
     await liquidPledging.addGiverAndDonate(1, token.$address, 1000, { from: giver1 });
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();

@@ -1,53 +1,58 @@
 const generateClass = require('eth-contract-class').default;
 
-const LPFactoryArtifact = require('../build/LPFactory.json');
-const LiquidPledgingArtifact = require('../build/LiquidPledging.json');
-const LPVaultArtifact = require('../build/LPVault.json');
-const KernelArtifact = require('../build/Kernel.json');
-const ACLArtifact = require('../build/ACL.json');
-const AppProxyUpgradeableArtifact = require('../build/AppProxyUpgradeable.json');
-const StandardTokenTestAtifact = require('../build/StandardToken.json');
-const LiquidPledgingMockArtifact = require('../build/LiquidPledgingMock.json');
-const RecoveryVaultArtifact = require('../build/RecoveryVault.json');
+const LPFactoryArtifact = require('../dist/contracts/LPFactory.json');
+const LiquidPledgingArtifact = require('../dist/contracts/LiquidPledging.json');
+const LPVaultArtifact = require('../dist/contracts/LPVault.json');
+const KernelArtifact = require('../dist/contracts/Kernel.json');
+const DAOFactoryArtifact = require('../dist/contracts/DAOFactory.json');
+const ACLArtifact = require('../dist/contracts/ACL.json');
+const AppProxyUpgradeableArtifact = require('../dist/contracts/AppProxyUpgradeable.json');
+const StandardTokenTestAtifact = require('../dist/contracts/StandardToken.json');
+const LiquidPledgingMockArtifact = require('../dist/contracts/LiquidPledgingMock.json');
+const RecoveryVaultArtifact = require('../dist/contracts/RecoveryVault.json');
 
 module.exports = {
   LiquidPledging: generateClass(
-    LiquidPledgingArtifact.compilerOutput.abi,
-    LiquidPledgingArtifact.compilerOutput.evm.bytecode.object,
+    LiquidPledgingArtifact.abiDefinition,
+    LiquidPledgingArtifact.code,
   ),
   LPFactory: generateClass(
-    LPFactoryArtifact.compilerOutput.abi,
-    LPFactoryArtifact.compilerOutput.evm.bytecode.object,
+    LPFactoryArtifact.abiDefinition,
+    LPFactoryArtifact.code,
   ),
   LiquidPledgingState: require('../lib/liquidPledgingState.js'),
   LPVault: generateClass(
-    LPVaultArtifact.compilerOutput.abi,
-    LPVaultArtifact.compilerOutput.evm.bytecode.object,
+    LPVaultArtifact.abiDefinition,
+    LPVaultArtifact.code,
+  ),
+  DAOFactory: generateClass (
+    DAOFactoryArtifact.abiDefinition,
+    DAOFactoryArtifact.code,
   ),
   Kernel: generateClass(
-    KernelArtifact.compilerOutput.abi,
-    KernelArtifact.compilerOutput.evm.bytecode.object,
+    KernelArtifact.abiDefinition,
+    KernelArtifact.code,
   ),
   ACL: generateClass(
-    ACLArtifact.compilerOutput.abi,
-    ACLArtifact.compilerOutput.evm.bytecode.object,
+    ACLArtifact.abiDefinition,
+    ACLArtifact.code,
   ),
   AppProxyUpgradeable: generateClass(
-    AppProxyUpgradeableArtifact.compilerOutput.abi,
-    AppProxyUpgradeableArtifact.compilerOutput.evm.bytecode.object,
+    AppProxyUpgradeableArtifact.abiDefinition,
+    AppProxyUpgradeableArtifact.code,
   ),
   test: {
     RecoveryVault: generateClass(
-      RecoveryVaultArtifact.compilerOutput.abi,
-      RecoveryVaultArtifact.compilerOutput.evm.bytecode.object,
+      RecoveryVaultArtifact.abiDefinition,
+      RecoveryVaultArtifact.code,
     ),
     StandardTokenTest: generateClass(
-      StandardTokenTestAtifact.compilerOutput.abi,
-      StandardTokenTestAtifact.compilerOutput.evm.bytecode.object,
+      StandardTokenTestAtifact.abiDefinition,
+      StandardTokenTestAtifact.code,
     ),
     LiquidPledgingMock: generateClass(
-      LiquidPledgingMockArtifact.compilerOutput.abi,
-      LiquidPledgingMockArtifact.compilerOutput.evm.bytecode.object,
+      LiquidPledgingMockArtifact.abiDefinition,
+      LiquidPledgingMockArtifact.code,
     ),
   },
 };

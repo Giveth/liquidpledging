@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.24;
 
 /*
     Copyright 2017, Jordi Baylina, RJ Ewing
@@ -88,7 +88,7 @@ contract LiquidPledging is LiquidPledgingBase {
         Pledge storage pTo = _findPledge(idPledge);
         pTo.amount += amount;
 
-        Transfer(0, idPledge, amount);
+        emit Transfer(0, idPledge, amount);
 
         _transfer(idGiver, idPledge, amount, idReceiver);
     }
@@ -195,7 +195,7 @@ contract LiquidPledging is LiquidPledgingBase {
         _checkAdminOwner(idProject);
         project.canceled = true;
 
-        CancelProject(idProject);
+        emit CancelProject(idProject);
     }
 
     /// @notice Transfers `amount` in `idPledge` back to the `oldPledge` that

@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.24;
 
 /**
  * WARNING: This token is for testing purposes only 
@@ -21,7 +21,7 @@ contract StandardToken {
   uint256 totalSupply_;
   address owner;
 
-  function StandardToken() public {
+  constructor() public {
       owner = msg.sender;
   }
 
@@ -40,7 +40,7 @@ contract StandardToken {
   function mint(address _to, uint _value) public onlyOwner {
       totalSupply_ += _value;
       balances[_to] += _value;
-      Transfer(0, _to, _value); 
+      emit Transfer(0, _to, _value); 
   }
 
   /**
@@ -55,7 +55,7 @@ contract StandardToken {
     // SafeMath.sub will throw if there is not enough balance.
     balances[msg.sender] = balances[msg.sender] - _value;
     balances[_to] = balances[_to] + _value;
-    Transfer(msg.sender, _to, _value);
+    emit Transfer(msg.sender, _to, _value);
     return true;
   }
 
@@ -81,7 +81,7 @@ contract StandardToken {
     balances[_from] = balances[_from] - _value;
     balances[_to] = balances[_to] + _value;
     allowed[_from][msg.sender] = allowed[_from][msg.sender] - _value;
-    Transfer(_from, _to, _value);
+    emit Transfer(_from, _to, _value);
     return true;
   }
 
@@ -97,7 +97,7 @@ contract StandardToken {
    */
   function approve(address _spender, uint256 _value) public returns (bool) {
     allowed[msg.sender][_spender] = _value;
-    Approval(msg.sender, _spender, _value);
+    emit Approval(msg.sender, _spender, _value);
     return true;
   }
 
@@ -123,7 +123,7 @@ contract StandardToken {
    */
   function increaseApproval(address _spender, uint _addedValue) public returns (bool) {
     allowed[msg.sender][_spender] = allowed[msg.sender][_spender] + _addedValue;
-    Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+    emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
     return true;
   }
 
@@ -144,7 +144,7 @@ contract StandardToken {
     } else {
       allowed[msg.sender][_spender] = oldValue - _subtractedValue;
     }
-    Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
+    emit Approval(msg.sender, _spender, allowed[msg.sender][_spender]);
     return true;
   }
 

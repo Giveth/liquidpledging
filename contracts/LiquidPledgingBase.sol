@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.24;
 
 /*
     Copyright 2017, Jordi Baylina
@@ -19,6 +19,7 @@ pragma solidity ^0.4.18;
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+import "./ILiquidPledging.sol";
 import "./LiquidPledgingStorage.sol";
 import "./PledgeAdmins.sol";
 import "./Pledges.sol";
@@ -27,7 +28,7 @@ import "@aragon/os/contracts/apps/AragonApp.sol";
 /// @dev `LiquidPledgingBase` is the base level contract used to carry out
 ///  liquidPledging's most basic functions, mostly handling and searching the
 ///  data structures
-contract LiquidPledgingBase is AragonApp, LiquidPledgingStorage, PledgeAdmins, Pledges {
+contract LiquidPledgingBase is ILiquidPledging, AragonApp, LiquidPledgingStorage, PledgeAdmins, Pledges {
 
     event Transfer(uint indexed from, uint indexed to, uint amount);
     event CancelProject(uint indexed idProject);
@@ -460,7 +461,7 @@ contract LiquidPledgingBase is AragonApp, LiquidPledgingStorage, PledgeAdmins, P
         pTo.amount += amount;
         require(pTo.amount >= amount);
 
-        Transfer(from, to, amount);
+        emit Transfer(from, to, amount);
         _callPlugins(false, from, to, amount);
     }
 

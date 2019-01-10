@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.24;
 
 /*
     Copyright 2017, Jordi Baylina, RJ Ewing
@@ -26,6 +26,8 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
     // Limits inserted to prevent large loops that could prevent canceling
     uint constant MAX_SUBPROJECT_LEVEL = 20;
     uint constant MAX_INTERPROJECT_LEVEL = 20;
+
+    string private constant ERROR_MAX_SUBPROJECT = "LIQUIDPLEDGING_MAX_SUBPROJECT";
 
     // Events
     event GiverAdded(uint64 indexed idGiver, string url);
@@ -71,7 +73,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         ILiquidPledgingPlugin plugin
     ) public returns (uint64 idGiver)
     {
-        require(isValidPlugin(plugin)); // Plugin check
+        require(isValidPlugin(plugin), ERROR_INVALID_PLUGIN); // Plugin check
 
         idGiver = uint64(admins.length);
 
@@ -88,7 +90,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
                 url)
         );
 
-        GiverAdded(idGiver, url);
+        emit GiverAdded(idGiver, url);
     }
 
     /// @notice Updates a Giver's info to change the address, name, url, or
@@ -116,7 +118,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         giver.url = newUrl;
         giver.commitTime = newCommitTime;
 
-        GiverUpdated(idGiver, newUrl);
+        emit GiverUpdated(idGiver, newUrl);
     }
 
     /// @notice Creates a Delegate Admin with the `msg.sender` as the Admin addr
@@ -136,7 +138,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         ILiquidPledgingPlugin plugin
     ) external returns (uint64 idDelegate) 
     {
-        require(isValidPlugin(plugin)); // Plugin check
+        require(isValidPlugin(plugin), ERROR_INVALID_PLUGIN); // Plugin check
 
         idDelegate = uint64(admins.length);
 
@@ -152,7 +154,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
                 url)
         );
 
-        DelegateAdded(idDelegate, url);
+        emit DelegateAdded(idDelegate, url);
     }
 
     /// @notice Updates a Delegate's info to change the address, name, url, or
@@ -182,7 +184,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         delegate.url = newUrl;
         delegate.commitTime = newCommitTime;
 
-        DelegateUpdated(idDelegate, newUrl);
+        emit DelegateUpdated(idDelegate, newUrl);
     }
 
     /// @notice Creates a Project Admin with the `msg.sender` as the Admin addr
@@ -206,12 +208,12 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         ILiquidPledgingPlugin plugin
     ) external returns (uint64 idProject) 
     {
-        require(isValidPlugin(plugin));
+        require(isValidPlugin(plugin), ERROR_INVALID_PLUGIN);
 
         if (parentProject != 0) {
             PledgeAdmin storage a = _findAdmin(parentProject);
             // getProjectLevel will check that parentProject has a `Project` adminType
-            require(_getProjectLevel(a) < MAX_SUBPROJECT_LEVEL);
+            require(_getProjectLevel(a) < MAX_SUBPROJECT_LEVEL, ERROR_MAX_SUBPROJECT);
         }
 
         idProject = uint64(admins.length);
@@ -228,7 +230,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
                 url)
         );
 
-        ProjectAdded(idProject, url);
+        emit ProjectAdded(idProject, url);
     }
 
     /// @notice Updates a Project's info to change the address, name, url, or
@@ -259,7 +261,7 @@ contract PledgeAdmins is AragonApp, LiquidPledgingPlugins {
         project.url = newUrl;
         project.commitTime = newCommitTime;
 
-        ProjectUpdated(idProject, newUrl);
+        emit ProjectUpdated(idProject, newUrl);
     }
 
 /////////////////////////////

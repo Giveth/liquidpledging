@@ -1,4 +1,4 @@
-pragma solidity ^0.4.18;
+pragma solidity ^0.4.24;
 
 import "../LiquidPledging.sol";
 
@@ -12,7 +12,7 @@ contract TestSimpleDelegatePlugin {
     event BeforeTransfer(uint64 pledgeAdmin, uint64 pledgeFrom, uint64 pledgeTo, uint64 context, uint amount);
     event AfterTransfer(uint64 pledgeAdmin, uint64 pledgeFrom, uint64 pledgeTo, uint64 context, uint amount);
 
-    function TestSimpleDelegatePlugin(LiquidPledging _liquidPledging) public {
+    constructor(LiquidPledging _liquidPledging) public {
         require(msg.sender != tx.origin); // Avoids being created directly by mistake.
         liquidPledging = _liquidPledging;
         initPending = true;
@@ -37,7 +37,7 @@ contract TestSimpleDelegatePlugin {
     ) external returns (uint maxAllowed) {
         require(!initPending);
         maxAllowed;
-        BeforeTransfer(pledgeAdmin, pledgeFrom, pledgeTo, context, amount);
+        emit BeforeTransfer(pledgeAdmin, pledgeFrom, pledgeTo, context, amount);
     }
 
     function afterTransfer(
@@ -48,14 +48,14 @@ contract TestSimpleDelegatePlugin {
         uint amount
     ) external {
         require(!initPending);
-        AfterTransfer(pledgeAdmin, pledgeFrom, pledgeTo, context, amount);
+        emit AfterTransfer(pledgeAdmin, pledgeFrom, pledgeTo, context, amount);
     }
 
 }
 
 contract TestSimpleDelegatePluginFactory {
 
-    function TestSimpleDelegatePluginFactory(
+    constructor(
         LiquidPledging liquidPledging,
         string name,
         string url,

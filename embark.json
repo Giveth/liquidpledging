@@ -1,0 +1,31 @@
+{
+  "contracts": [
+    "contracts/**",
+    "./node_modules/@aragon/os/contracts/{kernel/Kernel.sol,acl/ACL.sol,apps/AppProxyUpgradeable.sol,factory/DAOFactory.sol}"
+  ],
+  "app": {},
+  "buildDir": "dist/",
+  "config": {
+    "contracts": "config/contracts.js",
+    "blockchain": "config/blockchain.js",
+    "storage": false,
+    "namesystem": false,
+    "communication": false,
+    "webserver": false
+  },
+  "versions": {
+    "web3": "1.0.0-beta",
+    "solc": "0.4.24",
+    "ipfs-api": "17.2.4"
+  },
+  "plugins": {
+    "embark-solc": {},
+    "eth-contract-class/embark": {}
+  },
+  "options": {
+    "solc": {
+      "optimize": true,
+      "optimize-runs": 200
+    }
+  }
+}

@@ -1,64 +1,43 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
-const Ganache = require('ganache-cli');
-const Web3 = require('web3');
 const chai = require('chai');
-const { test } = require('../index');
 const deployLP = require('./helpers/deployLP');
+const assertFail = require('./helpers/assertFail');
 
-const { compilerOutput } = require('../build/TestSimpleProjectPluginFactory.json');
-const simpleProjectPluginFactoryAbi = compilerOutput.abi;
-const simpleProjectPluginFactoryByteCode = compilerOutput.evm.bytecode.object;
-const simpleProjectPluginRuntimeByteCode = '0x' + require('../build/TestSimpleProjectPlugin.json').compilerOutput.evm.deployedBytecode.object;
+const TestSimpleProjectPlugin = embark.require('Embark/contracts/TestSimpleProjectPlugin');
+const TestSimpleProjectPluginFactory = embark.require(
+  'Embark/contracts/TestSimpleProjectPluginFactory',
+);
+
 const assert = chai.assert;
-
-const { assertFail } = test;
-
-const printState = async liquidPledgingState => {
-  const st = await liquidPledgingState.getState();
-  console.log(JSON.stringify(st, null, 2));
-};
 
 describe('LiquidPledging plugins test', function() {
   this.timeout(0);
 
-  let ganache;
-  let web3;
   let accounts;
   let liquidPledging;
-  let liquidPledgingState;
   let vault;
   let giver1;
   let adminProject1;
   let adminDelegate1;
 
   before(async () => {
-    ganache = Ganache.server({
-      gasLimit: 6700000,
-      total_accounts: 10,
-    });
+    const deployment = await deployLP(web3);
+    accounts = deployment.accounts;
 
-    ganache.listen(8545, '127.0.0.1');
-
-    web3 = new Web3('http://localhost:8545');
-    accounts = await web3.eth.getAccounts();
     adminProject1 = accounts[2];
     adminDelegate1 = accounts[3];
 
-    const deployment = await deployLP(web3);
     giver1 = deployment.giver1;
     vault = deployment.vault;
     liquidPledging = deployment.liquidPledging;
     liquidPledgingState = deployment.liquidPledgingState;
   });
 
-  after(done => {
-    ganache.close();
-    done();
-  });
-
   it('Should create create giver with no plugin', async function() {
-    await liquidPledging.addGiver('Giver1', '', 0, '0x0', { from: adminProject1 });
+    await liquidPledging.addGiver('Giver1', '', 0, '0x0000000000000000000000000000000000000000', {
+      from: adminProject1,
+    });
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 1);
@@ -90,21 +69,16 @@ describe('LiquidPledging plugins test', function() {
 
   it('Should deploy TestSimpleProjectPlugin and add project', async function() {
     // add plugin as valid plugin
-    const codeHash = web3.utils.soliditySha3(simpleProjectPluginRuntimeByteCode);
+    const codeHash = web3.utils.keccak256(TestSimpleProjectPlugin.$runtimeByteCode);
     await liquidPledging.addValidPluginContract(codeHash, { $extraGas: 200000 });
 
     // deploy new plugin
-    const factoryContract = await new web3.eth.Contract(simpleProjectPluginFactoryAbi)
-      .deploy({
-        data: simpleProjectPluginFactoryByteCode,
-        arguments: [],
-      })
-      .send({ from: adminProject1, gas: 5000000 });
-    factoryContract.setProvider(web3.currentProvider);
+    const factoryContract = await TestSimpleProjectPluginFactory.new({ from: adminProject1 });
 
-    await factoryContract.methods
-      .deploy(liquidPledging.$address, 'SimplePlugin1', '', 0)
-      .send({ from: adminProject1, gas: 5000000 });
+    await factoryContract.deploy(liquidPledging.$address, 'SimplePlugin1', '', 0, {
+      from: adminProject1,
+      gas: 5000000,
+    });
 
     const nAdmins = await liquidPledging.numberOfPledgeAdmins();
     assert.equal(nAdmins, 2);
