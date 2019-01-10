@@ -1,6 +1,4 @@
-js
-.babelrc
-!build
-build/contracts/solcStandard*
+coverage
+.embark
 .vscode
 .idea

@@ -1,4 +1,4 @@
-const contracts = require('./lib/contracts');
+const contracts = require('./js/contracts');
 contracts.test.assertFail = require('./test/helpers/assertFail');
 contracts.test.deployLP = require('./test/helpers/deployLP');
 

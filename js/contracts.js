@@ -20,7 +20,7 @@ module.exports = {
     LPFactoryArtifact.abiDefinition,
     LPFactoryArtifact.code,
   ),
-  LiquidPledgingState: require('../lib/liquidPledgingState.js'),
+  LiquidPledgingState: require('../js/liquidPledgingState.js'),
   LPVault: generateClass(
     LPVaultArtifact.abiDefinition,
     LPVaultArtifact.code,
