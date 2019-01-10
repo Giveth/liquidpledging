@@ -1,0 +1,86 @@
+{
+  "contractName": "RecoveryVault",
+  "source": "./contracts/test/RecoveryVault.sol",
+  "compilerOutput": {
+    "abi": [
+      {
+        "payable": true,
+        "stateMutability": "payable",
+        "type": "fallback"
+      }
+    ],
+    "evm": {
+      "bytecode": {
+        "object": "60606040523415600e57600080fd5b603280601b6000396000f30060606040520000a165627a7a72305820749d1c4692d461beb40110eca0d450ed5ce507e5a40e04582e7a2ccceda8d36a0029",
+        "sourceMap": "76:61:12:-;;;;;;;;;;;;;;;;;"
+      },
+      "deployedBytecode": {
+        "object": "60606040520000a165627a7a72305820749d1c4692d461beb40110eca0d450ed5ce507e5a40e04582e7a2ccceda8d36a0029",
+        "sourceMap": "76:61:12:-;;;"
+      },
+      "methodIdentifiers": {}
+    }
+  },
+  "sources": {
+    "./contracts/test/RecoveryVault.sol": {
+      "id": 12,
+      "keccak256": "0x7e45491fe5a74f22e794b5f6bf137ab89e3334f700f0331a4fd4a974d0405c3b",
+      "file": "/Users/satya/Development/liquidpledging/contracts/test/RecoveryVault.sol"
+    }
+  },
+  "compiler": {
+    "name": "solc",
+    "keccak256": "0x7e45491fe5a74f22e794b5f6bf137ab89e3334f700f0331a4fd4a974d0405c3b",
+    "version": "0.4.18+commit.9cf6e910",
+    "settings": {
+      "remappings": [
+        "@aragon/os/contracts/kernel/Kernel.sol=./node_modules/@aragon/os/contracts/kernel/Kernel.sol",
+        "@aragon/os/contracts/acl/IACL.sol=./node_modules/@aragon/os/contracts/acl/IACL.sol",
+        "@aragon/os/contracts/common/IVaultRecoverable.sol=./node_modules/@aragon/os/contracts/common/IVaultRecoverable.sol",
+        "@aragon/os/contracts/kernel/IKernel.sol=./node_modules/@aragon/os/contracts/kernel/IKernel.sol",
+        "@aragon/os/contracts/kernel/KernelStorage.sol=./node_modules/@aragon/os/contracts/kernel/KernelStorage.sol",
+        "@aragon/os/contracts/acl/ACLSyntaxSugar.sol=./node_modules/@aragon/os/contracts/acl/ACLSyntaxSugar.sol",
+        "@aragon/os/contracts/lib/misc/ERCProxy.sol=./node_modules/@aragon/os/contracts/lib/misc/ERCProxy.sol",
+        "@aragon/os/contracts/apps/AppStorage.sol=./node_modules/@aragon/os/contracts/apps/AppStorage.sol",
+        "@aragon/os/contracts/common/Initializable.sol=./node_modules/@aragon/os/contracts/common/Initializable.sol",
+        "@aragon/os/contracts/common/IsContract.sol=./node_modules/@aragon/os/contracts/common/IsContract.sol",
+        "@aragon/os/contracts/common/EtherTokenConstant.sol=./node_modules/@aragon/os/contracts/common/EtherTokenConstant.sol",
+        "@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol=./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol",
+        "@aragon/os/contracts/lib/zeppelin/token/ERC20.sol=./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20.sol",
+        "@aragon/os/contracts/common/VaultRecoverable.sol=./node_modules/@aragon/os/contracts/common/VaultRecoverable.sol",
+        "@aragon/os/contracts/common/DelegateProxy.sol=./node_modules/@aragon/os/contracts/common/DelegateProxy.sol",
+        "@aragon/os/contracts/common/DepositableDelegateProxy.sol=./node_modules/@aragon/os/contracts/common/DepositableDelegateProxy.sol",
+        "@aragon/os/contracts/apps/AppProxyBase.sol=./node_modules/@aragon/os/contracts/apps/AppProxyBase.sol",
+        "@aragon/os/contracts/apps/AppProxyUpgradeable.sol=./node_modules/@aragon/os/contracts/apps/AppProxyUpgradeable.sol",
+        "@aragon/os/contracts/apps/AppProxyPinned.sol=./node_modules/@aragon/os/contracts/apps/AppProxyPinned.sol",
+        "@aragon/os/contracts/factory/AppProxyFactory.sol=./node_modules/@aragon/os/contracts/factory/AppProxyFactory.sol",
+        "@aragon/os/contracts/acl/ACL.sol=./node_modules/@aragon/os/contracts/acl/ACL.sol",
+        "@aragon/os/contracts/evmscript/ScriptHelpers.sol=./node_modules/@aragon/os/contracts/evmscript/ScriptHelpers.sol",
+        "@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol=./node_modules/@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol",
+        "@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol=./node_modules/@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol",
+        "@aragon/os/contracts/evmscript/EVMScriptRunner.sol=./node_modules/@aragon/os/contracts/evmscript/EVMScriptRunner.sol",
+        "@aragon/os/contracts/apps/AragonApp.sol=./node_modules/@aragon/os/contracts/apps/AragonApp.sol"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "useLiteralContent": true
+      },
+      "outputSelection": {
+        "*": {
+          "*": [
+            "metadata",
+            "evm.bytecode.object",
+            "evm.bytecode.sourceMap",
+            "abi",
+            "evm.methodIdentifiers",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.sourceMap"
+          ]
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,413 @@
+{
+  "contractName": "AppProxyUpgradeable",
+  "source": "./node_modules/@aragon/os/contracts/apps/AppProxyUpgradeable.sol",
+  "compilerOutput": {
+    "abi": [
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "APM_NODE",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "FWD_GAS_LIMIT",
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "KERNEL_APP_ID",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "APP_ADDR_NAMESPACE",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "KERNEL_APP",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "FORWARDING",
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "proxyType",
+        "outputs": [
+          {
+            "name": "proxyTypeId",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "pure",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "implementation",
+        "outputs": [
+          {
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "CORE_NAMESPACE",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "UPGRADEABLE",
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "appId",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "ACL_APP",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "ACL_APP_ID",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "ETH_NODE",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "kernel",
+        "outputs": [
+          {
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "APP_BASES_NAMESPACE",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "inputs": [
+          {
+            "name": "_kernel",
+            "type": "address"
+          },
+          {
+            "name": "_appId",
+            "type": "bytes32"
+          },
+          {
+            "name": "_initializePayload",
+            "type": "bytes"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "payable": true,
+        "stateMutability": "payable",
+        "type": "fallback"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "name": "sender",
+            "type": "address"
+          },
+          {
+            "indexed": false,
+            "name": "value",
+            "type": "uint256"
+          }
+        ],
+        "name": "ProxyDeposit",
+        "type": "event"
+      }
+    ],
+    "evm": {
+      "bytecode": {
+        "object": "6060604052341561000f57600080fd5b60405161086838038061086883398101604052808051919060200180519190602001805160008054600160a060020a031916600160a060020a0387161781556001859055920191849150839083906100738364010000000061013081026104af1704565b905060008251111561012457610095816401000000006105d36101f382021704565b15156100a057600080fd5b80600160a060020a03168260405180828051906020019080838360005b838110156100d55780820151838201526020016100bd565b50505050905090810190601f1680156101025780820380516001836020036101000a031916815260200191505b509150506000604051808303818561646e5a03f4915050151561012457600080fd5b50505050505050610220565b60008054600160a060020a03166342c71f1d7ff1f3eb40f5bc1ad1344716ced8b8a0431d840b5783aea1fd01786bc26f35ac0f8460405191825260208201526040908101905180910390206000604051602001526040517c010000000000000000000000000000000000000000000000000000000063ffffffff84160281526004810191909152602401602060405180830381600087803b15156101d357600080fd5b6102c65a03f115156101e457600080fd5b50505060405180519392505050565b600080600160a060020a038316151561020f576000915061021a565b823b90506000811191505b50919050565b6106398061022f6000396000f3006060604052600436106100e55763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416630972077881146101a75780630ceafa2a146101cc5780631113ed0d146101df578063178e6079146101f257806325012699146102055780632b2584f6146102185780634555d5c91461022b5780635c60da1b1461023e578063756f60491461027a5780637e84a4ff1461028d57806380afdea8146102a0578063a3b4b07f146102b3578063cbcc65eb146102c6578063cc473be3146102d9578063d4aae0c4146102ec578063db8a61d4146102ff575b60006127105a1015610160576000341180156100ff575036155b151561010a57600080fd5b7f15eeaa57c7bd188c1388020bcadc2c436ec60d647d36ef5b9eb3c742217ddee1333460405173ffffffffffffffffffffffffffffffffffffffff909216825260208201526040908101905180910390a16101a4565b610168610312565b90506101a4816000368080601f016020809104026020016040519081016040528181529291906020840183838082843750610324945050505050565b50005b34156101b257600080fd5b6101ba610334565b60405190815260200160405180910390f35b34156101d757600080fd5b6101ba610358565b34156101ea57600080fd5b6101ba61035e565b34156101fd57600080fd5b6101ba610382565b341561021057600080fd5b6101ba6103a6565b341561022357600080fd5b6101ba6103ca565b341561023657600080fd5b6101ba6103cf565b341561024957600080fd5b610251610312565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b341561028557600080fd5b6101ba6103d4565b341561029857600080fd5b6101ba6103f8565b34156102ab57600080fd5b6101ba6103fd565b34156102be57600080fd5b6101ba610403565b34156102d157600080fd5b6101ba610427565b34156102e457600080fd5b6101ba61044b565b34156102f757600080fd5b61025161046f565b341561030a57600080fd5b6101ba61048b565b600061031f6001546104af565b905090565b6103308282600061057f565b5050565b7f9065c3e7f7b7ef1ef4e53d2d0b8e0cef02874ab020c1ece79d5f0d3d0111c0ba81565b61271081565b7f3b4bf6bf3ad5000ecf0f989d5befde585c6860fea3e574a4fab4c49d1c177d9c81565b7fd6f028ca0e8edb4a8c9757ca4fdccab25fa1e0317da1188108f7d2dee14902fb81565b7f2b7d19d0575c228f8d9326801e14149d284dc5bb7b1541c5ad712ae4b2fcaadb81565b600181565b600290565b7fc681a85306374a5ab27f0bbc385296a54bcd314a1948b6cf61c4ea1bc44bb9f881565b600281565b60015481565b7f4b8e03a458a6ccec5d9077c2490964c1333dd3c72e2db408d7d9a7a36ef5c41a81565b7fe3262375f45a6e2026b7e7b18c2b807434f2508fe1a2a3dfb493c7df8f4aad6a81565b7f93cdeb708b7545dc668eb9280176169d1c33cfd8ed6f04690a0bcc88a93fc4ae81565b60005473ffffffffffffffffffffffffffffffffffffffff1681565b7ff1f3eb40f5bc1ad1344716ced8b8a0431d840b5783aea1fd01786bc26f35ac0f81565b6000805473ffffffffffffffffffffffffffffffffffffffff166342c71f1d7ff1f3eb40f5bc1ad1344716ced8b8a0431d840b5783aea1fd01786bc26f35ac0f8460405191825260208201526040908101905180910390206000604051602001526040517c010000000000000000000000000000000000000000000000000000000063ffffffff84160281526004810191909152602401602060405180830381600087803b151561055f57600080fd5b6102c65a03f1151561057057600080fd5b50505060405180519392505050565b600080600061058d866105d3565b151561059857600080fd5b5061271060008086516020880189855a03f43d93509150838310156105bc57600080fd5b604051836000823e8280156105cf578482f35b8482fd5b60008073ffffffffffffffffffffffffffffffffffffffff831615156105fc5760009150610607565b823b90506000811191505b509190505600a165627a7a72305820895f234175a08cf1e720c849d0a8cac2b0493e2bdb51daf7334ddce8699bbf8d0029",
+        "sourceMap": "56:892:22:-;;;392:170;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;885:15:20;561:16;;-1:-1:-1;;;;;;561:16:20;-1:-1:-1;;;;;561:16:20;;;;;-1:-1:-1;587:14:20;;;392:170:22;;;561:16:20;;-1:-1:-1;587:14:20;;392:170:22;;903:17:20;587:14;903:10;;;;;;:17;:::i;:::-;885:35;;1029:1;1001:18;:25;:29;997:307;;;1054:19;1065:7;1054:10;;;;;;:19;:::i;:::-;1046:28;;;;;;;;1252:7;-1:-1:-1;;;;;1252:20:20;1273:18;1252:40;;;;;;;;;;;;;23:1:-1;8:100;33:3;30:1;27:2;8:100;;;99:1;94:3;90;84:5;71:3;;;64:6;52:2;45:3;8:100;;;12:14;3:109;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1244:49:20;;;;;;;;463:847;;;;392:170:22;;;56:892;;1316:145:20;1375:7;1401:6;;-1:-1:-1;;;;;1401:6:20;:13;724:66:39;1446:6:20;1415:38;;;;;;;;;;;;;;;;;;;;1401:53;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1316:145;-1:-1:-1;;;1316:145:20:o;53:244:30:-;113:4;;-1:-1:-1;;;;;133:21:30;;;129:64;;;177:5;170:12;;;;129:64;256:7;244:11;236:28;;289:1;282:4;:8;275:15;;53:244;;;;;:::o;56:892:22:-;;;;;;;"
+      },
+      "deployedBytecode": {
+        "object": "6060604052600436106100e55763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416630972077881146101a75780630ceafa2a146101cc5780631113ed0d146101df578063178e6079146101f257806325012699146102055780632b2584f6146102185780634555d5c91461022b5780635c60da1b1461023e578063756f60491461027a5780637e84a4ff1461028d57806380afdea8146102a0578063a3b4b07f146102b3578063cbcc65eb146102c6578063cc473be3146102d9578063d4aae0c4146102ec578063db8a61d4146102ff575b60006127105a1015610160576000341180156100ff575036155b151561010a57600080fd5b7f15eeaa57c7bd188c1388020bcadc2c436ec60d647d36ef5b9eb3c742217ddee1333460405173ffffffffffffffffffffffffffffffffffffffff909216825260208201526040908101905180910390a16101a4565b610168610312565b90506101a4816000368080601f016020809104026020016040519081016040528181529291906020840183838082843750610324945050505050565b50005b34156101b257600080fd5b6101ba610334565b60405190815260200160405180910390f35b34156101d757600080fd5b6101ba610358565b34156101ea57600080fd5b6101ba61035e565b34156101fd57600080fd5b6101ba610382565b341561021057600080fd5b6101ba6103a6565b341561022357600080fd5b6101ba6103ca565b341561023657600080fd5b6101ba6103cf565b341561024957600080fd5b610251610312565b60405173ffffffffffffffffffffffffffffffffffffffff909116815260200160405180910390f35b341561028557600080fd5b6101ba6103d4565b341561029857600080fd5b6101ba6103f8565b34156102ab57600080fd5b6101ba6103fd565b34156102be57600080fd5b6101ba610403565b34156102d157600080fd5b6101ba610427565b34156102e457600080fd5b6101ba61044b565b34156102f757600080fd5b61025161046f565b341561030a57600080fd5b6101ba61048b565b600061031f6001546104af565b905090565b6103308282600061057f565b5050565b7f9065c3e7f7b7ef1ef4e53d2d0b8e0cef02874ab020c1ece79d5f0d3d0111c0ba81565b61271081565b7f3b4bf6bf3ad5000ecf0f989d5befde585c6860fea3e574a4fab4c49d1c177d9c81565b7fd6f028ca0e8edb4a8c9757ca4fdccab25fa1e0317da1188108f7d2dee14902fb81565b7f2b7d19d0575c228f8d9326801e14149d284dc5bb7b1541c5ad712ae4b2fcaadb81565b600181565b600290565b7fc681a85306374a5ab27f0bbc385296a54bcd314a1948b6cf61c4ea1bc44bb9f881565b600281565b60015481565b7f4b8e03a458a6ccec5d9077c2490964c1333dd3c72e2db408d7d9a7a36ef5c41a81565b7fe3262375f45a6e2026b7e7b18c2b807434f2508fe1a2a3dfb493c7df8f4aad6a81565b7f93cdeb708b7545dc668eb9280176169d1c33cfd8ed6f04690a0bcc88a93fc4ae81565b60005473ffffffffffffffffffffffffffffffffffffffff1681565b7ff1f3eb40f5bc1ad1344716ced8b8a0431d840b5783aea1fd01786bc26f35ac0f81565b6000805473ffffffffffffffffffffffffffffffffffffffff166342c71f1d7ff1f3eb40f5bc1ad1344716ced8b8a0431d840b5783aea1fd01786bc26f35ac0f8460405191825260208201526040908101905180910390206000604051602001526040517c010000000000000000000000000000000000000000000000000000000063ffffffff84160281526004810191909152602401602060405180830381600087803b151561055f57600080fd5b6102c65a03f1151561057057600080fd5b50505060405180519392505050565b600080600061058d866105d3565b151561059857600080fd5b5061271060008086516020880189855a03f43d93509150838310156105bc57600080fd5b604051836000823e8280156105cf578482f35b8482fd5b60008073ffffffffffffffffffffffffffffffffffffffff831615156105fc5760009150610607565b823b90506000811191505b509190505600a165627a7a72305820895f234175a08cf1e720c849d0a8cac2b0493e2bdb51daf7334ddce8699bbf8d0029",
+        "sourceMap": "56:892:22:-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;444:14:26;190:5:25;238:7:26;:23;234:298;;;297:1;285:9;:13;:37;;;;-1:-1:-1;302:8:26;:20;285:37;277:46;;;;;;;;337:35;350:10;362:9;337:35;;;;;;;;;;;;;;;;;;;;;;;234:298;;;461:16;:14;:16::i;:::-;444:33;;491:30;504:6;512:8;;491:30;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;491:12:26;;-1:-1:-1;;;;;491:30:26:i;:::-;170:368;56:892:22;1020:101:39;;;;;;;;;;;;;;;;;;;;;;;;;;;150:45:25;;;;;;;;;;;;1127:106:39;;;;;;;;;;;;796:111;;;;;;;;;;;;1239:103;;;;;;;;;;;;51:38:40;;;;;;;;;;;;848:98:22;;;;;;;;;;;;650:97;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;565:107:39;;;;;;;;;;;;95:39:40;;;;;;;;;;;;113:20:23;;;;;;;;;;;;1457:100:39;;;;;;;;;;;;1348:103;;;;;;;;;;;;913:101;;;;;;;;;;;;86:21:23;;;;;;;;;;;;678:112:39;;;;;;;;;;;;650:97:22;697:7;723:17;734:5;;723:10;:17::i;:::-;716:24;;650:97;:::o;458:111:25:-;530:32;543:4;549:9;560:1;530:12;:32::i;:::-;458:111;;:::o;1020:101:39:-;1055:66;1020:101;:::o;150:45:25:-;190:5;150:45;:::o;1127:106:39:-;1167:66;1127:106;:::o;796:111::-;841:66;796:111;:::o;1239:103::-;1276:66;1239:103;:::o;51:38:40:-;88:1;51:38;:::o;848:98:22:-;133:1:40;848:98:22;:::o;565:107:39:-;606:66;565:107;:::o;95:39:40:-;133:1;95:39;:::o;113:20:23:-;;;;:::o;1457:100:39:-;1491:66;1457:100;:::o;1348:103::-;1385:66;1348:103;:::o;913:101::-;948:66;913:101;:::o;86:21:23:-;;;;;;:::o;678:112:39:-;724:66;678:112;:::o;1316:145:20:-;1375:7;1401:6;;;;:13;724:66:39;1446:6:20;1415:38;;;;;;;;;;;;;;;;;;;;1401:53;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1316:145;-1:-1:-1;;;1316:145:20:o;931:817:25:-;1062:12;1084:14;1108:21;1035:16;1046:4;1035:10;:16::i;:::-;1027:25;;;;;;;;-1:-1:-1;190:5:25;1276:1;;1261:9;1255:5;1248:4;1237:9;1233:3;1227:4;1211:13;1206:3;1202;1189:12;1299:14;;-1:-1:-1;1179:99:25;-1:-1:-1;1341:22:25;;;;1333:31;;;;;;1415:4;1409:5;1456:4;1453:1;1448:3;1433:14;1655:6;1662:28;;;;1725:4;1720:3;1713:6;1662:28;1683:4;1678:3;1671:6;53:244:30;113:4;;133:21;;;;129:64;;;177:5;170:12;;;;129:64;256:7;244:11;236:28;;289:1;282:4;:8;275:15;;53:244;;;;;:::o"
+      },
+      "methodIdentifiers": {
+        "ACL_APP()": "a3b4b07f",
+        "ACL_APP_ID()": "cbcc65eb",
+        "APM_NODE()": "09720778",
+        "APP_ADDR_NAMESPACE()": "178e6079",
+        "APP_BASES_NAMESPACE()": "db8a61d4",
+        "CORE_NAMESPACE()": "756f6049",
+        "ETH_NODE()": "cc473be3",
+        "FORWARDING()": "2b2584f6",
+        "FWD_GAS_LIMIT()": "0ceafa2a",
+        "KERNEL_APP()": "25012699",
+        "KERNEL_APP_ID()": "1113ed0d",
+        "UPGRADEABLE()": "7e84a4ff",
+        "appId()": "80afdea8",
+        "implementation()": "5c60da1b",
+        "kernel()": "d4aae0c4",
+        "proxyType()": "4555d5c9"
+      }
+    }
+  },
+  "sources": {
+    "./node_modules/@aragon/os/contracts/acl/IACL.sol": {
+      "id": 19,
+      "keccak256": "0xa120fc32d8d2c5096d605b0fe012d5b1e4a62118952a25a18bac5210f4fceede",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/acl/IACL.sol"
+    },
+    "./node_modules/@aragon/os/contracts/apps/AppProxyBase.sol": {
+      "id": 20,
+      "keccak256": "0xc084b7b69ae72fb0dcbbf426517aa65fd5842309dea77831a993d0f5fff01c10",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/apps/AppProxyBase.sol"
+    },
+    "./node_modules/@aragon/os/contracts/apps/AppProxyUpgradeable.sol": {
+      "id": 22,
+      "keccak256": "0x399a61bef2ea0035edf7adc57f731620bc2f6d044e715ac6f894e51e16d3f1b9",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/apps/AppProxyUpgradeable.sol"
+    },
+    "./node_modules/@aragon/os/contracts/apps/AppStorage.sol": {
+      "id": 23,
+      "keccak256": "0x8b9205a3fdf9d94fb1461d2c2d32335803122aa75d3fa8cf0b982796fd040c25",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/apps/AppStorage.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/DelegateProxy.sol": {
+      "id": 25,
+      "keccak256": "0xc08eb0dec7d649648c9e15f7d3906fc979f62b6cb7cccc6553d6bf4d2ed2f63a",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/DelegateProxy.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/DepositableDelegateProxy.sol": {
+      "id": 26,
+      "keccak256": "0x91bf6e5fa17af2d12f5923d5da45a42de8a1b75a54d466705a3140fc3606db18",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/DepositableDelegateProxy.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/IVaultRecoverable.sol": {
+      "id": 28,
+      "keccak256": "0xf6ed3f4043aee4526c9563c83f74d701141dd81a988f1be463ba6a18e09ba2c3",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/IVaultRecoverable.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/IsContract.sol": {
+      "id": 30,
+      "keccak256": "0xee6df8a68ea442a2c0414ee70d95eb3e197425ce372a28bfda01888b0d9446f1",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/IsContract.sol"
+    },
+    "./node_modules/@aragon/os/contracts/kernel/IKernel.sol": {
+      "id": 37,
+      "keccak256": "0x1f0c5def4ecec01abcbb07eea3312e0a4683d81a81c2475d66f06c5c3b8585cd",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/kernel/IKernel.sol"
+    },
+    "./node_modules/@aragon/os/contracts/kernel/KernelStorage.sol": {
+      "id": 39,
+      "keccak256": "0x0081232c1c7a013e1cb31868d7950f980286c09b05c767a4102ca4090cd6ef9a",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/kernel/KernelStorage.sol"
+    },
+    "./node_modules/@aragon/os/contracts/lib/misc/ERCProxy.sol": {
+      "id": 40,
+      "keccak256": "0xba656dc63cdfe99f80d29e0a4e15538e7915aada88ba52967a1de063225611ca",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/lib/misc/ERCProxy.sol"
+    }
+  },
+  "compiler": {
+    "name": "solc",
+    "keccak256": "0x399a61bef2ea0035edf7adc57f731620bc2f6d044e715ac6f894e51e16d3f1b9",
+    "version": "0.4.18+commit.9cf6e910",
+    "settings": {
+      "remappings": [
+        "@aragon/os/contracts/kernel/Kernel.sol=./node_modules/@aragon/os/contracts/kernel/Kernel.sol",
+        "@aragon/os/contracts/acl/IACL.sol=./node_modules/@aragon/os/contracts/acl/IACL.sol",
+        "@aragon/os/contracts/common/IVaultRecoverable.sol=./node_modules/@aragon/os/contracts/common/IVaultRecoverable.sol",
+        "@aragon/os/contracts/kernel/IKernel.sol=./node_modules/@aragon/os/contracts/kernel/IKernel.sol",
+        "@aragon/os/contracts/kernel/KernelStorage.sol=./node_modules/@aragon/os/contracts/kernel/KernelStorage.sol",
+        "@aragon/os/contracts/acl/ACLSyntaxSugar.sol=./node_modules/@aragon/os/contracts/acl/ACLSyntaxSugar.sol",
+        "@aragon/os/contracts/lib/misc/ERCProxy.sol=./node_modules/@aragon/os/contracts/lib/misc/ERCProxy.sol",
+        "@aragon/os/contracts/apps/AppStorage.sol=./node_modules/@aragon/os/contracts/apps/AppStorage.sol",
+        "@aragon/os/contracts/common/Initializable.sol=./node_modules/@aragon/os/contracts/common/Initializable.sol",
+        "@aragon/os/contracts/common/IsContract.sol=./node_modules/@aragon/os/contracts/common/IsContract.sol",
+        "@aragon/os/contracts/common/EtherTokenConstant.sol=./node_modules/@aragon/os/contracts/common/EtherTokenConstant.sol",
+        "@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol=./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol",
+        "@aragon/os/contracts/lib/zeppelin/token/ERC20.sol=./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20.sol",
+        "@aragon/os/contracts/common/VaultRecoverable.sol=./node_modules/@aragon/os/contracts/common/VaultRecoverable.sol",
+        "@aragon/os/contracts/common/DelegateProxy.sol=./node_modules/@aragon/os/contracts/common/DelegateProxy.sol",
+        "@aragon/os/contracts/common/DepositableDelegateProxy.sol=./node_modules/@aragon/os/contracts/common/DepositableDelegateProxy.sol",
+        "@aragon/os/contracts/apps/AppProxyBase.sol=./node_modules/@aragon/os/contracts/apps/AppProxyBase.sol",
+        "@aragon/os/contracts/apps/AppProxyUpgradeable.sol=./node_modules/@aragon/os/contracts/apps/AppProxyUpgradeable.sol",
+        "@aragon/os/contracts/apps/AppProxyPinned.sol=./node_modules/@aragon/os/contracts/apps/AppProxyPinned.sol",
+        "@aragon/os/contracts/factory/AppProxyFactory.sol=./node_modules/@aragon/os/contracts/factory/AppProxyFactory.sol",
+        "@aragon/os/contracts/acl/ACL.sol=./node_modules/@aragon/os/contracts/acl/ACL.sol",
+        "@aragon/os/contracts/evmscript/ScriptHelpers.sol=./node_modules/@aragon/os/contracts/evmscript/ScriptHelpers.sol",
+        "@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol=./node_modules/@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol",
+        "@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol=./node_modules/@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol",
+        "@aragon/os/contracts/evmscript/EVMScriptRunner.sol=./node_modules/@aragon/os/contracts/evmscript/EVMScriptRunner.sol",
+        "@aragon/os/contracts/apps/AragonApp.sol=./node_modules/@aragon/os/contracts/apps/AragonApp.sol"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "useLiteralContent": true
+      },
+      "outputSelection": {
+        "*": {
+          "*": [
+            "metadata",
+            "evm.bytecode.object",
+            "evm.bytecode.sourceMap",
+            "abi",
+            "evm.methodIdentifiers",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.sourceMap"
+          ]
+        }
+      }
+    }
+  }
+}

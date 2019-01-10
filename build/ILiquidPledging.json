@@ -1,0 +1,205 @@
+{
+  "contractName": "ILiquidPledging",
+  "source": "./contracts/LPVault.sol",
+  "compilerOutput": {
+    "abi": [
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "name": "idPledge",
+            "type": "uint64"
+          },
+          {
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "confirmPayment",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "name": "idPledge",
+            "type": "uint64"
+          },
+          {
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "cancelPayment",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      }
+    ],
+    "evm": {
+      "bytecode": {
+        "object": "",
+        "sourceMap": ""
+      },
+      "deployedBytecode": {
+        "object": "",
+        "sourceMap": ""
+      },
+      "methodIdentifiers": {
+        "cancelPayment(uint64,uint256)": "e9c211e2",
+        "confirmPayment(uint64,uint256)": "2ee88808"
+      }
+    }
+  },
+  "sources": {
+    "./contracts/LPVault.sol": {
+      "id": 3,
+      "keccak256": "0x2cae6ff214175f87d073cf0c48e0906e9289dcec286a669dd8e69d8809b2052a",
+      "file": "/Users/satya/Development/liquidpledging/contracts/LPVault.sol"
+    },
+    "./contracts/LiquidPledgingACLHelpers.sol": {
+      "id": 5,
+      "keccak256": "0xb675a7a788bf656d4c3c78f3b4cf6645afb432939d1a4c38d70e01d068b0ce62",
+      "file": "/Users/satya/Development/liquidpledging/contracts/LiquidPledgingACLHelpers.sol"
+    },
+    "./node_modules/@aragon/os/contracts/acl/ACLSyntaxSugar.sol": {
+      "id": 17,
+      "keccak256": "0xb60f567383dd66e25eaf0925320fdff8d5c57d4f1f74a7a53a9573b61876340e",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/acl/ACLSyntaxSugar.sol"
+    },
+    "./node_modules/@aragon/os/contracts/acl/IACL.sol": {
+      "id": 18,
+      "keccak256": "0xa120fc32d8d2c5096d605b0fe012d5b1e4a62118952a25a18bac5210f4fceede",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/acl/IACL.sol"
+    },
+    "./node_modules/@aragon/os/contracts/apps/AppStorage.sol": {
+      "id": 22,
+      "keccak256": "0x8b9205a3fdf9d94fb1461d2c2d32335803122aa75d3fa8cf0b982796fd040c25",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/apps/AppStorage.sol"
+    },
+    "./node_modules/@aragon/os/contracts/apps/AragonApp.sol": {
+      "id": 23,
+      "keccak256": "0x04bd38b82d31aff08b67def2e1637482fdb91f1f44f4ec497f4e7416c5f83dfb",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/apps/AragonApp.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/EtherTokenConstant.sol": {
+      "id": 26,
+      "keccak256": "0x160b651ec349ce381646d8ba24b873a61ab4bf0d60315b9644a175283a574b94",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/EtherTokenConstant.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/IVaultRecoverable.sol": {
+      "id": 27,
+      "keccak256": "0xf6ed3f4043aee4526c9563c83f74d701141dd81a988f1be463ba6a18e09ba2c3",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/IVaultRecoverable.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/Initializable.sol": {
+      "id": 28,
+      "keccak256": "0x1265fd5de8acf30e4b444f52cfdf91dcebb222fe05bdfc081f2fc0ea953ab5e4",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/Initializable.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/IsContract.sol": {
+      "id": 29,
+      "keccak256": "0xee6df8a68ea442a2c0414ee70d95eb3e197425ce372a28bfda01888b0d9446f1",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/IsContract.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/VaultRecoverable.sol": {
+      "id": 30,
+      "keccak256": "0x1b71cbea32aee6e65912e3447eb8001bdad127d421e0c4464bb8294f945d9cf1",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/VaultRecoverable.sol"
+    },
+    "./node_modules/@aragon/os/contracts/evmscript/EVMScriptRunner.sol": {
+      "id": 31,
+      "keccak256": "0x85d0a5051c5e867b0b15b756789911871ae746f36462cb774557682f90e7fa78",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/evmscript/EVMScriptRunner.sol"
+    },
+    "./node_modules/@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol": {
+      "id": 32,
+      "keccak256": "0x6a4beed810085f11cda9d50c3547ac4cc2100d9dc18ab4982ff11dd483410012",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol"
+    },
+    "./node_modules/@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol": {
+      "id": 33,
+      "keccak256": "0x460ff768028031e444267cad9d848b6e98182c3721d16013afd5949444701e84",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol"
+    },
+    "./node_modules/@aragon/os/contracts/evmscript/ScriptHelpers.sol": {
+      "id": 34,
+      "keccak256": "0x5bf6b2ceab21c1f8b31b6e797ae12974a655e46e142aeb12b3560ed912a4dd01",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/evmscript/ScriptHelpers.sol"
+    },
+    "./node_modules/@aragon/os/contracts/kernel/IKernel.sol": {
+      "id": 36,
+      "keccak256": "0x1f0c5def4ecec01abcbb07eea3312e0a4683d81a81c2475d66f06c5c3b8585cd",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/kernel/IKernel.sol"
+    },
+    "./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20.sol": {
+      "id": 40,
+      "keccak256": "0x48674c3983e4e9ba8f771d28e349833164934960a952966c17ae05f05fa84379",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20.sol"
+    },
+    "./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol": {
+      "id": 41,
+      "keccak256": "0x3ad7429b6f0a6330e8e89646aef39de99fa1fd8221e6a9dd55e3a9104908d585",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol"
+    }
+  },
+  "compiler": {
+    "name": "solc",
+    "keccak256": "0x2cae6ff214175f87d073cf0c48e0906e9289dcec286a669dd8e69d8809b2052a",
+    "version": "0.4.18+commit.9cf6e910",
+    "settings": {
+      "remappings": [
+        "@aragon/os/contracts/kernel/Kernel.sol=./node_modules/@aragon/os/contracts/kernel/Kernel.sol",
+        "@aragon/os/contracts/acl/IACL.sol=./node_modules/@aragon/os/contracts/acl/IACL.sol",
+        "@aragon/os/contracts/common/IVaultRecoverable.sol=./node_modules/@aragon/os/contracts/common/IVaultRecoverable.sol",
+        "@aragon/os/contracts/kernel/IKernel.sol=./node_modules/@aragon/os/contracts/kernel/IKernel.sol",
+        "@aragon/os/contracts/kernel/KernelStorage.sol=./node_modules/@aragon/os/contracts/kernel/KernelStorage.sol",
+        "@aragon/os/contracts/acl/ACLSyntaxSugar.sol=./node_modules/@aragon/os/contracts/acl/ACLSyntaxSugar.sol",
+        "@aragon/os/contracts/lib/misc/ERCProxy.sol=./node_modules/@aragon/os/contracts/lib/misc/ERCProxy.sol",
+        "@aragon/os/contracts/apps/AppStorage.sol=./node_modules/@aragon/os/contracts/apps/AppStorage.sol",
+        "@aragon/os/contracts/common/Initializable.sol=./node_modules/@aragon/os/contracts/common/Initializable.sol",
+        "@aragon/os/contracts/common/IsContract.sol=./node_modules/@aragon/os/contracts/common/IsContract.sol",
+        "@aragon/os/contracts/common/EtherTokenConstant.sol=./node_modules/@aragon/os/contracts/common/EtherTokenConstant.sol",
+        "@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol=./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol",
+        "@aragon/os/contracts/lib/zeppelin/token/ERC20.sol=./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20.sol",
+        "@aragon/os/contracts/common/VaultRecoverable.sol=./node_modules/@aragon/os/contracts/common/VaultRecoverable.sol",
+        "@aragon/os/contracts/common/DelegateProxy.sol=./node_modules/@aragon/os/contracts/common/DelegateProxy.sol",
+        "@aragon/os/contracts/common/DepositableDelegateProxy.sol=./node_modules/@aragon/os/contracts/common/DepositableDelegateProxy.sol",
+        "@aragon/os/contracts/apps/AppProxyBase.sol=./node_modules/@aragon/os/contracts/apps/AppProxyBase.sol",
+        "@aragon/os/contracts/apps/AppProxyUpgradeable.sol=./node_modules/@aragon/os/contracts/apps/AppProxyUpgradeable.sol",
+        "@aragon/os/contracts/apps/AppProxyPinned.sol=./node_modules/@aragon/os/contracts/apps/AppProxyPinned.sol",
+        "@aragon/os/contracts/factory/AppProxyFactory.sol=./node_modules/@aragon/os/contracts/factory/AppProxyFactory.sol",
+        "@aragon/os/contracts/acl/ACL.sol=./node_modules/@aragon/os/contracts/acl/ACL.sol",
+        "@aragon/os/contracts/evmscript/ScriptHelpers.sol=./node_modules/@aragon/os/contracts/evmscript/ScriptHelpers.sol",
+        "@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol=./node_modules/@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol",
+        "@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol=./node_modules/@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol",
+        "@aragon/os/contracts/evmscript/EVMScriptRunner.sol=./node_modules/@aragon/os/contracts/evmscript/EVMScriptRunner.sol",
+        "@aragon/os/contracts/apps/AragonApp.sol=./node_modules/@aragon/os/contracts/apps/AragonApp.sol"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "useLiteralContent": true
+      },
+      "outputSelection": {
+        "*": {
+          "*": [
+            "metadata",
+            "evm.bytecode.object",
+            "evm.bytecode.sourceMap",
+            "abi",
+            "evm.methodIdentifiers",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.sourceMap"
+          ]
+        }
+      }
+    }
+  }
+}

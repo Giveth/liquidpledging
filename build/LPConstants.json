@@ -1,0 +1,252 @@
+{
+  "contractName": "LPConstants",
+  "source": "./contracts/LPConstants.sol",
+  "compilerOutput": {
+    "abi": [
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "APM_NODE",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "KERNEL_APP_ID",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "APP_ADDR_NAMESPACE",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "KERNEL_APP",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "LP_APP_ID",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "CORE_NAMESPACE",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "ACL_APP",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "ACL_APP_ID",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "ETH_NODE",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "VAULT_APP_ID",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "APP_BASES_NAMESPACE",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ],
+    "evm": {
+      "bytecode": {
+        "object": "6060604052341561000f57600080fd5b61036e8061001e6000396000f3006060604052600436106100ae5763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416630972077881146100b35780631113ed0d146100d8578063178e6079146100eb57806325012699146100fe5780633074426714610111578063756f604914610124578063a3b4b07f14610137578063cbcc65eb1461014a578063cc473be31461015d578063d2dd420f14610170578063db8a61d414610183575b600080fd5b34156100be57600080fd5b6100c6610196565b60405190815260200160405180910390f35b34156100e357600080fd5b6100c66101ba565b34156100f657600080fd5b6100c66101de565b341561010957600080fd5b6100c6610202565b341561011c57600080fd5b6100c6610226565b341561012f57600080fd5b6100c661025a565b341561014257600080fd5b6100c661027e565b341561015557600080fd5b6100c66102a2565b341561016857600080fd5b6100c66102c6565b341561017b57600080fd5b6100c66102ea565b341561018e57600080fd5b6100c661031e565b7f9065c3e7f7b7ef1ef4e53d2d0b8e0cef02874ab020c1ece79d5f0d3d0111c0ba81565b7f3b4bf6bf3ad5000ecf0f989d5befde585c6860fea3e574a4fab4c49d1c177d9c81565b7fd6f028ca0e8edb4a8c9757ca4fdccab25fa1e0317da1188108f7d2dee14902fb81565b7f2b7d19d0575c228f8d9326801e14149d284dc5bb7b1541c5ad712ae4b2fcaadb81565b6040517f6c6971756964506c656467696e670000000000000000000000000000000000008152600e01604051809103902081565b7fc681a85306374a5ab27f0bbc385296a54bcd314a1948b6cf61c4ea1bc44bb9f881565b7f4b8e03a458a6ccec5d9077c2490964c1333dd3c72e2db408d7d9a7a36ef5c41a81565b7fe3262375f45a6e2026b7e7b18c2b807434f2508fe1a2a3dfb493c7df8f4aad6a81565b7f93cdeb708b7545dc668eb9280176169d1c33cfd8ed6f04690a0bcc88a93fc4ae81565b6040517f7661756c740000000000000000000000000000000000000000000000000000008152600501604051809103902081565b7ff1f3eb40f5bc1ad1344716ced8b8a0431d840b5783aea1fd01786bc26f35ac0f815600a165627a7a7230582013149dec5d0a4aef472f95e2d7c97238d5b2be0ab72262f5be61c4758d99a3d80029",
+        "sourceMap": "83:175:1:-;;;;;;;;;;;;;;;;;"
+      },
+      "deployedBytecode": {
+        "object": "6060604052600436106100ae5763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416630972077881146100b35780631113ed0d146100d8578063178e6079146100eb57806325012699146100fe5780633074426714610111578063756f604914610124578063a3b4b07f14610137578063cbcc65eb1461014a578063cc473be31461015d578063d2dd420f14610170578063db8a61d414610183575b600080fd5b34156100be57600080fd5b6100c6610196565b60405190815260200160405180910390f35b34156100e357600080fd5b6100c66101ba565b34156100f657600080fd5b6100c66101de565b341561010957600080fd5b6100c6610202565b341561011c57600080fd5b6100c6610226565b341561012f57600080fd5b6100c661025a565b341561014257600080fd5b6100c661027e565b341561015557600080fd5b6100c66102a2565b341561016857600080fd5b6100c66102c6565b341561017b57600080fd5b6100c66102ea565b341561018e57600080fd5b6100c661031e565b7f9065c3e7f7b7ef1ef4e53d2d0b8e0cef02874ab020c1ece79d5f0d3d0111c0ba81565b7f3b4bf6bf3ad5000ecf0f989d5befde585c6860fea3e574a4fab4c49d1c177d9c81565b7fd6f028ca0e8edb4a8c9757ca4fdccab25fa1e0317da1188108f7d2dee14902fb81565b7f2b7d19d0575c228f8d9326801e14149d284dc5bb7b1541c5ad712ae4b2fcaadb81565b6040517f6c6971756964506c656467696e670000000000000000000000000000000000008152600e01604051809103902081565b7fc681a85306374a5ab27f0bbc385296a54bcd314a1948b6cf61c4ea1bc44bb9f881565b7f4b8e03a458a6ccec5d9077c2490964c1333dd3c72e2db408d7d9a7a36ef5c41a81565b7fe3262375f45a6e2026b7e7b18c2b807434f2508fe1a2a3dfb493c7df8f4aad6a81565b7f93cdeb708b7545dc668eb9280176169d1c33cfd8ed6f04690a0bcc88a93fc4ae81565b6040517f7661756c740000000000000000000000000000000000000000000000000000008152600501604051809103902081565b7ff1f3eb40f5bc1ad1344716ced8b8a0431d840b5783aea1fd01786bc26f35ac0f815600a165627a7a7230582013149dec5d0a4aef472f95e2d7c97238d5b2be0ab72262f5be61c4758d99a3d80029",
+        "sourceMap": "83:175:1:-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1020:101:39;;;;;;;;;;;;;;;;;;;;;;;;;;;1127:106;;;;;;;;;;;;796:111;;;;;;;;;;;;1239:103;;;;;;;;;;;;192:63:1;;;;;;;;;;;;565:107:39;;;;;;;;;;;;1457:100;;;;;;;;;;;;1348:103;;;;;;;;;;;;913:101;;;;;;;;;;;;129:57:1;;;;;;;;;;;;678:112:39;;;;;;;;;;;;1020:101;1055:66;1020:101;:::o;1127:106::-;1167:66;1127:106;:::o;796:111::-;841:66;796:111;:::o;1239:103::-;1276:66;1239:103;:::o;192:63:1:-;228:27;;;;;;;;;;;;;;192:63;:::o;565:107:39:-;606:66;565:107;:::o;1457:100::-;1491:66;1457:100;:::o;1348:103::-;1385:66;1348:103;:::o;913:101::-;948:66;913:101;:::o;129:57:1:-;168:18;;;;;;;;;;;;;;129:57;:::o;678:112:39:-;724:66;678:112;:::o"
+      },
+      "methodIdentifiers": {
+        "ACL_APP()": "a3b4b07f",
+        "ACL_APP_ID()": "cbcc65eb",
+        "APM_NODE()": "09720778",
+        "APP_ADDR_NAMESPACE()": "178e6079",
+        "APP_BASES_NAMESPACE()": "db8a61d4",
+        "CORE_NAMESPACE()": "756f6049",
+        "ETH_NODE()": "cc473be3",
+        "KERNEL_APP()": "25012699",
+        "KERNEL_APP_ID()": "1113ed0d",
+        "LP_APP_ID()": "30744267",
+        "VAULT_APP_ID()": "d2dd420f"
+      }
+    }
+  },
+  "sources": {
+    "./contracts/LPConstants.sol": {
+      "id": 1,
+      "keccak256": "0x558e8800a807b65c952c7d731ca1c5c42539d734df4d545f801ecff0f0cd2314",
+      "file": "/Users/satya/Development/liquidpledging/contracts/LPConstants.sol"
+    },
+    "./node_modules/@aragon/os/contracts/kernel/KernelStorage.sol": {
+      "id": 39,
+      "keccak256": "0x0081232c1c7a013e1cb31868d7950f980286c09b05c767a4102ca4090cd6ef9a",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/kernel/KernelStorage.sol"
+    }
+  },
+  "compiler": {
+    "name": "solc",
+    "keccak256": "0x558e8800a807b65c952c7d731ca1c5c42539d734df4d545f801ecff0f0cd2314",
+    "version": "0.4.18+commit.9cf6e910",
+    "settings": {
+      "remappings": [
+        "@aragon/os/contracts/kernel/Kernel.sol=./node_modules/@aragon/os/contracts/kernel/Kernel.sol",
+        "@aragon/os/contracts/acl/IACL.sol=./node_modules/@aragon/os/contracts/acl/IACL.sol",
+        "@aragon/os/contracts/common/IVaultRecoverable.sol=./node_modules/@aragon/os/contracts/common/IVaultRecoverable.sol",
+        "@aragon/os/contracts/kernel/IKernel.sol=./node_modules/@aragon/os/contracts/kernel/IKernel.sol",
+        "@aragon/os/contracts/kernel/KernelStorage.sol=./node_modules/@aragon/os/contracts/kernel/KernelStorage.sol",
+        "@aragon/os/contracts/acl/ACLSyntaxSugar.sol=./node_modules/@aragon/os/contracts/acl/ACLSyntaxSugar.sol",
+        "@aragon/os/contracts/lib/misc/ERCProxy.sol=./node_modules/@aragon/os/contracts/lib/misc/ERCProxy.sol",
+        "@aragon/os/contracts/apps/AppStorage.sol=./node_modules/@aragon/os/contracts/apps/AppStorage.sol",
+        "@aragon/os/contracts/common/Initializable.sol=./node_modules/@aragon/os/contracts/common/Initializable.sol",
+        "@aragon/os/contracts/common/IsContract.sol=./node_modules/@aragon/os/contracts/common/IsContract.sol",
+        "@aragon/os/contracts/common/EtherTokenConstant.sol=./node_modules/@aragon/os/contracts/common/EtherTokenConstant.sol",
+        "@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol=./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol",
+        "@aragon/os/contracts/lib/zeppelin/token/ERC20.sol=./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20.sol",
+        "@aragon/os/contracts/common/VaultRecoverable.sol=./node_modules/@aragon/os/contracts/common/VaultRecoverable.sol",
+        "@aragon/os/contracts/common/DelegateProxy.sol=./node_modules/@aragon/os/contracts/common/DelegateProxy.sol",
+        "@aragon/os/contracts/common/DepositableDelegateProxy.sol=./node_modules/@aragon/os/contracts/common/DepositableDelegateProxy.sol",
+        "@aragon/os/contracts/apps/AppProxyBase.sol=./node_modules/@aragon/os/contracts/apps/AppProxyBase.sol",
+        "@aragon/os/contracts/apps/AppProxyUpgradeable.sol=./node_modules/@aragon/os/contracts/apps/AppProxyUpgradeable.sol",
+        "@aragon/os/contracts/apps/AppProxyPinned.sol=./node_modules/@aragon/os/contracts/apps/AppProxyPinned.sol",
+        "@aragon/os/contracts/factory/AppProxyFactory.sol=./node_modules/@aragon/os/contracts/factory/AppProxyFactory.sol",
+        "@aragon/os/contracts/acl/ACL.sol=./node_modules/@aragon/os/contracts/acl/ACL.sol",
+        "@aragon/os/contracts/evmscript/ScriptHelpers.sol=./node_modules/@aragon/os/contracts/evmscript/ScriptHelpers.sol",
+        "@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol=./node_modules/@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol",
+        "@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol=./node_modules/@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol",
+        "@aragon/os/contracts/evmscript/EVMScriptRunner.sol=./node_modules/@aragon/os/contracts/evmscript/EVMScriptRunner.sol",
+        "@aragon/os/contracts/apps/AragonApp.sol=./node_modules/@aragon/os/contracts/apps/AragonApp.sol"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "useLiteralContent": true
+      },
+      "outputSelection": {
+        "*": {
+          "*": [
+            "metadata",
+            "evm.bytecode.object",
+            "evm.bytecode.sourceMap",
+            "abi",
+            "evm.methodIdentifiers",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.sourceMap"
+          ]
+        }
+      }
+    }
+  }
+}

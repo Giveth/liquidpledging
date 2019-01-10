@@ -1,0 +1,468 @@
+{
+  "contractName": "Pledges",
+  "source": "./contracts/Pledges.sol",
+  "compilerOutput": {
+    "abi": [
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "APP_ADDR_NAMESPACE",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "whitelistDisabled",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "numberOfPledges",
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "getRecoveryVault",
+        "outputs": [
+          {
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "name": "idPledge",
+            "type": "uint64"
+          }
+        ],
+        "name": "getPledge",
+        "outputs": [
+          {
+            "name": "amount",
+            "type": "uint256"
+          },
+          {
+            "name": "owner",
+            "type": "uint64"
+          },
+          {
+            "name": "nDelegates",
+            "type": "uint64"
+          },
+          {
+            "name": "intendedProject",
+            "type": "uint64"
+          },
+          {
+            "name": "commitTime",
+            "type": "uint64"
+          },
+          {
+            "name": "oldPledge",
+            "type": "uint64"
+          },
+          {
+            "name": "token",
+            "type": "address"
+          },
+          {
+            "name": "pledgeState",
+            "type": "uint8"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "EVMSCRIPT_REGISTRY_APP_ID",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "name": "token",
+            "type": "address"
+          }
+        ],
+        "name": "allowRecoverability",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "appId",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "ETH",
+        "outputs": [
+          {
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "getInitializationBlock",
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "EVMSCRIPT_REGISTRY_APP",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bytes32"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "name": "_token",
+            "type": "address"
+          }
+        ],
+        "name": "transferToVault",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "name": "_sender",
+            "type": "address"
+          },
+          {
+            "name": "_role",
+            "type": "bytes32"
+          },
+          {
+            "name": "params",
+            "type": "uint256[]"
+          }
+        ],
+        "name": "canPerform",
+        "outputs": [
+          {
+            "name": "",
+            "type": "bool"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "kernel",
+        "outputs": [
+          {
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [
+          {
+            "name": "_script",
+            "type": "bytes"
+          }
+        ],
+        "name": "getExecutor",
+        "outputs": [
+          {
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "vault",
+        "outputs": [
+          {
+            "name": "",
+            "type": "address"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      }
+    ],
+    "evm": {
+      "bytecode": {
+        "object": "60606040526069805460ff19169055341561001957600080fd5b610b5d806100286000396000f3006060604052600436106100cc5763ffffffff60e060020a600035041663178e607981146100d15780631c8e8568146100f65780632a8ec8cc1461011d57806332f0a3b5146101305780633f657a461461015f57806360b1e057146101ef5780637e7db6e11461020257806380afdea8146102215780638322fff2146102345780638b3dd749146102475780639b3fdf4c1461025a5780639d4941d81461026d578063a1658fad1461028e578063d4aae0c4146102f1578063f92a79ff14610304578063fbfa77cf14610355575b600080fd5b34156100dc57600080fd5b6100e4610368565b60405190815260200160405180910390f35b341561010157600080fd5b61010961038c565b604051901515815260200160405180910390f35b341561012857600080fd5b6100e4610395565b341561013b57600080fd5b61014361039f565b604051600160a060020a03909116815260200160405180910390f35b341561016a57600080fd5b61017f67ffffffffffffffff6004351661041f565b60405188815267ffffffffffffffff8089166020830152878116604083015286811660608301528581166080830152841660a0820152600160a060020a03831660c082015260e081018260028111156101d457fe5b60ff1681526020019850505050505050505060405180910390f35b34156101fa57600080fd5b6100e46105d7565b341561020d57600080fd5b610109600160a060020a03600435166105fb565b341561022c57600080fd5b6100e4610601565b341561023f57600080fd5b610143610607565b341561025257600080fd5b6100e461060c565b341561026557600080fd5b6100e4610612565b341561027857600080fd5b61028c600160a060020a0360043516610636565b005b341561029957600080fd5b61010960048035600160a060020a03169060248035919060649060443590810190830135806020808202016040519081016040528093929190818152602001838360200280828437509496506107ae95505050505050565b34156102fc57600080fd5b6101436108ec565b341561030f57600080fd5b61014360046024813581810190830135806020601f820181900481020160405190810160405281815292919060208401838380828437509496506108fb95505050505050565b341561036057600080fd5b6101436109d7565b7fd6f028ca0e8edb4a8c9757ca4fdccab25fa1e0317da1188108f7d2dee14902fb81565b60695460ff1681565b6065546000190190565b60008054600160a060020a031615156103b757600080fd5b60008054600160a060020a0316906332f0a3b590604051602001526040518163ffffffff1660e060020a028152600401602060405180830381600087803b151561040057600080fd5b6102c65a03f1151561041157600080fd5b505050604051805191505090565b600080600080600080600080610433610ad3565b61043c8a6109eb565b610100604051908101604052908160008201548152602001600182018054806020026020016040519081016040528092919081815260200182805480156104d657602002820191906000526020600020906000905b82829054906101000a900467ffffffffffffffff1667ffffffffffffffff16815260200190600801906020826007010492830192600103820291508084116104915790505b505050918352505060028281015467ffffffffffffffff80821660208501526801000000000000000082048116604085015270010000000000000000000000000000000082048116606085015278010000000000000000000000000000000000000000000000009091041660808301526003830154600160a060020a03811660a084015260c09092019174010000000000000000000000000000000000000000900460ff169081111561058557fe5b600281111561059057fe5b90525090508051985080604001519750806020015151965080606001519550806080015194508060a0015193508060c0015192508060e00151915050919395975091939597565b7fddbcfd564f642ab5627cf68b9b7d374fb4f8a36e941a75d89c87998cef03bd6181565b50600190565b60015481565b600081565b60035490565b7f34f01c17e9be6ddbf2c61f37b5b1fb9f1a090a975006581ad19bda1c4d38287181565b600080610642836105fb565b151561064d57600080fd5b61065561039f565b915061066082610a33565b151561066b57600080fd5b600160a060020a03831615156106bd5781600160a060020a03166108fc30600160a060020a0316319081150290604051600060405180830381858888f1935050505015156106b857600080fd5b6107a9565b82600160a060020a03166370a082313060006040516020015260405160e060020a63ffffffff8416028152600160a060020a039091166004820152602401602060405180830381600087803b151561071457600080fd5b6102c65a03f1151561072557600080fd5b5050506040518051915050600160a060020a03831663a9059cbb838360006040516020015260405160e060020a63ffffffff8516028152600160a060020a0390921660048301526024820152604401602060405180830381600087803b151561078d57600080fd5b6102c65a03f1151561079e57600080fd5b505050604051805150505b505050565b60006107b8610b1f565b600080845111156107d157835160200290508391508082525b600054600160a060020a031615806108e2575060008054600160a060020a03169063fdef91069088903090899087906040516020015260405160e060020a63ffffffff8716028152600160a060020a0380861660048301908152908516602483015260448201849052608060648301908152909160840183818151815260200191508051906020019080838360005b83811015610878578082015183820152602001610860565b50505050905090810190601f1680156108a55780820380516001836020036101000a031916815260200191505b5095505050505050602060405180830381600087803b15156108c657600080fd5b6102c65a03f115156108d757600080fd5b505050604051805190505b9695505050505050565b600054600160a060020a031681565b6000610905610a60565b600160a060020a03166304bf2a7f836000604051602001526040518263ffffffff1660e060020a0281526004018080602001828103825283818151815260200191508051906020019080838360005b8381101561096c578082015183820152602001610954565b50505050905090810190601f1680156109995780820380516001836020036101000a031916815260200191505b5092505050602060405180830381600087803b15156109b757600080fd5b6102c65a03f115156109c857600080fd5b50505060405180519392505050565b6069546101009004600160a060020a031681565b60655460009067ffffffffffffffff831610610a0657600080fd5b6065805467ffffffffffffffff8416908110610a1e57fe5b90600052602060002090600402019050919050565b600080600160a060020a0383161515610a4f5760009150610a5a565b823b90506000811191505b50919050565b600080548190600160a060020a03166342c71f1d7f34f01c17e9be6ddbf2c61f37b5b1fb9f1a090a975006581ad19bda1c4d382871836040516020015260405160e060020a63ffffffff84160281526004810191909152602401602060405180830381600087803b15156109b757600080fd5b6101006040519081016040528060008152602001610aef610b1f565b815260006020820181905260408201819052606082018190526080820181905260a0820181905260c09091015290565b602060405190810160405260008152905600a165627a7a723058202e590826a18c6d14d092552465affcbb488da76110aaae4fe2b3ef38c01d7e7e0029",
+        "sourceMap": "920:5090:11:-;;;2538:37:9;;;-1:-1:-1;;2538:37:9;;;920:5090:11;;;;;;;;;;;;;;"
+      },
+      "deployedBytecode": {
+        "object": "6060604052600436106100cc5763ffffffff60e060020a600035041663178e607981146100d15780631c8e8568146100f65780632a8ec8cc1461011d57806332f0a3b5146101305780633f657a461461015f57806360b1e057146101ef5780637e7db6e11461020257806380afdea8146102215780638322fff2146102345780638b3dd749146102475780639b3fdf4c1461025a5780639d4941d81461026d578063a1658fad1461028e578063d4aae0c4146102f1578063f92a79ff14610304578063fbfa77cf14610355575b600080fd5b34156100dc57600080fd5b6100e4610368565b60405190815260200160405180910390f35b341561010157600080fd5b61010961038c565b604051901515815260200160405180910390f35b341561012857600080fd5b6100e4610395565b341561013b57600080fd5b61014361039f565b604051600160a060020a03909116815260200160405180910390f35b341561016a57600080fd5b61017f67ffffffffffffffff6004351661041f565b60405188815267ffffffffffffffff8089166020830152878116604083015286811660608301528581166080830152841660a0820152600160a060020a03831660c082015260e081018260028111156101d457fe5b60ff1681526020019850505050505050505060405180910390f35b34156101fa57600080fd5b6100e46105d7565b341561020d57600080fd5b610109600160a060020a03600435166105fb565b341561022c57600080fd5b6100e4610601565b341561023f57600080fd5b610143610607565b341561025257600080fd5b6100e461060c565b341561026557600080fd5b6100e4610612565b341561027857600080fd5b61028c600160a060020a0360043516610636565b005b341561029957600080fd5b61010960048035600160a060020a03169060248035919060649060443590810190830135806020808202016040519081016040528093929190818152602001838360200280828437509496506107ae95505050505050565b34156102fc57600080fd5b6101436108ec565b341561030f57600080fd5b61014360046024813581810190830135806020601f820181900481020160405190810160405281815292919060208401838380828437509496506108fb95505050505050565b341561036057600080fd5b6101436109d7565b7fd6f028ca0e8edb4a8c9757ca4fdccab25fa1e0317da1188108f7d2dee14902fb81565b60695460ff1681565b6065546000190190565b60008054600160a060020a031615156103b757600080fd5b60008054600160a060020a0316906332f0a3b590604051602001526040518163ffffffff1660e060020a028152600401602060405180830381600087803b151561040057600080fd5b6102c65a03f1151561041157600080fd5b505050604051805191505090565b600080600080600080600080610433610ad3565b61043c8a6109eb565b610100604051908101604052908160008201548152602001600182018054806020026020016040519081016040528092919081815260200182805480156104d657602002820191906000526020600020906000905b82829054906101000a900467ffffffffffffffff1667ffffffffffffffff16815260200190600801906020826007010492830192600103820291508084116104915790505b505050918352505060028281015467ffffffffffffffff80821660208501526801000000000000000082048116604085015270010000000000000000000000000000000082048116606085015278010000000000000000000000000000000000000000000000009091041660808301526003830154600160a060020a03811660a084015260c09092019174010000000000000000000000000000000000000000900460ff169081111561058557fe5b600281111561059057fe5b90525090508051985080604001519750806020015151965080606001519550806080015194508060a0015193508060c0015192508060e00151915050919395975091939597565b7fddbcfd564f642ab5627cf68b9b7d374fb4f8a36e941a75d89c87998cef03bd6181565b50600190565b60015481565b600081565b60035490565b7f34f01c17e9be6ddbf2c61f37b5b1fb9f1a090a975006581ad19bda1c4d38287181565b600080610642836105fb565b151561064d57600080fd5b61065561039f565b915061066082610a33565b151561066b57600080fd5b600160a060020a03831615156106bd5781600160a060020a03166108fc30600160a060020a0316319081150290604051600060405180830381858888f1935050505015156106b857600080fd5b6107a9565b82600160a060020a03166370a082313060006040516020015260405160e060020a63ffffffff8416028152600160a060020a039091166004820152602401602060405180830381600087803b151561071457600080fd5b6102c65a03f1151561072557600080fd5b5050506040518051915050600160a060020a03831663a9059cbb838360006040516020015260405160e060020a63ffffffff8516028152600160a060020a0390921660048301526024820152604401602060405180830381600087803b151561078d57600080fd5b6102c65a03f1151561079e57600080fd5b505050604051805150505b505050565b60006107b8610b1f565b600080845111156107d157835160200290508391508082525b600054600160a060020a031615806108e2575060008054600160a060020a03169063fdef91069088903090899087906040516020015260405160e060020a63ffffffff8716028152600160a060020a0380861660048301908152908516602483015260448201849052608060648301908152909160840183818151815260200191508051906020019080838360005b83811015610878578082015183820152602001610860565b50505050905090810190601f1680156108a55780820380516001836020036101000a031916815260200191505b5095505050505050602060405180830381600087803b15156108c657600080fd5b6102c65a03f115156108d757600080fd5b505050604051805190505b9695505050505050565b600054600160a060020a031681565b6000610905610a60565b600160a060020a03166304bf2a7f836000604051602001526040518263ffffffff1660e060020a0281526004018080602001828103825283818151815260200191508051906020019080838360005b8381101561096c578082015183820152602001610954565b50505050905090810190601f1680156109995780820380516001836020036101000a031916815260200191505b5092505050602060405180830381600087803b15156109b757600080fd5b6102c65a03f115156109c857600080fd5b50505060405180519392505050565b6069546101009004600160a060020a031681565b60655460009067ffffffffffffffff831610610a0657600080fd5b6065805467ffffffffffffffff8416908110610a1e57fe5b90600052602060002090600402019050919050565b600080600160a060020a0383161515610a4f5760009150610a5a565b823b90506000811191505b50919050565b600080548190600160a060020a03166342c71f1d7f34f01c17e9be6ddbf2c61f37b5b1fb9f1a090a975006581ad19bda1c4d382871836040516020015260405160e060020a63ffffffff84160281526004810191909152602401602060405180830381600087803b15156109b757600080fd5b6101006040519081016040528060008152602001610aef610b1f565b815260006020820181905260408201819052606082018190526080820181905260a0820181905260c09091015290565b602060405190810160405260008152905600a165627a7a723058202e590826a18c6d14d092552465affcbb488da76110aaae4fe2b3ef38c01d7e7e0029",
+        "sourceMap": "920:5090:11:-;;;;;;;;;-1:-1:-1;;;920:5090:11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;448:111:33;;;;;;;;;;;;;;;;;;;;;;;;;;;2538:37:9;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1446:98:11;;;;;;;;;;;;1226:226:23;;;;;;;;;;;;;;;-1:-1:-1;;;;;1226:226:23;;;;;;;;;;;;;;1905:613:11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;1905:613:11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;565:118:33;;;;;;;;;;;;1090:99:30;;;;;;;;;;-1:-1:-1;;;;;1090:99:30;;;;;113:20:22;;;;;;;;;;;;185:40:26;;;;;;;;;;;;358:107:28;;;;;;;;;;;;689:115:33;;;;;;;;;;;;497:393:30;;;;;;;;;;-1:-1:-1;;;;;497:393:30;;;;;;;726:494:23;;;;;;;;;;;;;-1:-1:-1;;;;;726:494:23;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;726:494:23;;-1:-1:-1;726:494:23;;-1:-1:-1;;;;;;726:494:23;86:21:22;;;;;;;;;;;;891:169:31;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;891:169:31;;-1:-1:-1;891:169:31;;-1:-1:-1;;;;;;891:169:31;2582:21:9;;;;;;;;;;;;448:111:33;493:66;448:111;:::o;2538:37:9:-;;;;;;:::o;1446:98:11:-;1519:7;:14;-1:-1:-1;;1519:18:11;1446:98;:::o;1226:226:23:-;1275:7;1390:6;;-1:-1:-1;;;;;1390:6:23;1382:20;;1374:29;;;;;;1420:6;;;-1:-1:-1;;;;;1420:6:23;;:23;;:25;;;;;;;;;;-1:-1:-1;;;1420:25:23;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;1226:226:23;:::o;1905:613:11:-;1972:11;1993:12;2015:17;2042:22;2074:17;2101:16;2127:13;2150:23;2190:15;;:::i;:::-;2208:21;2220:8;2208:11;:21::i;:::-;2190:39;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;2190:39:11;;;-1:-1:-1;;2190:39:11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;2190:39:11;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;2190:39:11;-1:-1:-1;2190:39:11;2248:8;2239:17;;2274:1;:7;;;2266:15;;2311:1;:17;;;:24;2291:45;;2364:1;:17;;;2346:35;;2404:1;:12;;;2391:25;;2438:1;:11;;;2426:23;;2467:1;:7;;;2459:15;;2498:1;:13;;;2484:27;;1905:613;;;;;;;;;;:::o;565:118:33:-;617:66;565:118;:::o;1090:99:30:-;-1:-1:-1;1178:4:30;;1090:99::o;113:20:22:-;;;;:::o;185:40:26:-;223:1;185:40;:::o;358:107:28:-;439:19;;358:107;:::o;689:115:33:-;738:66;689:115;:::o;497:393:30:-;603:13;776:14;565:27;585:6;565:19;:27::i;:::-;557:36;;;;;;;;619:18;:16;:18::i;:::-;603:34;;655:17;666:5;655:10;:17::i;:::-;647:26;;;;;;;;-1:-1:-1;;;;;688:13:30;;;684:200;;;717:5;-1:-1:-1;;;;;717:14:30;:28;732:4;-1:-1:-1;;;;;732:12:30;;717:28;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;684:200;;;799:6;-1:-1:-1;;;;;793:23:30;;817:4;793:29;;;;;;;;-1:-1:-1;;;793:29:30;;;;;;-1:-1:-1;;;;;793:29:30;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;;;;;;836:22:30;;;859:5;793:29;836:37;;;;;;;;-1:-1:-1;;;836:37:30;;;;;;-1:-1:-1;;;;;836:37:30;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;;684:200:30;497:393;;;:::o;726:494:23:-;817:4;833:16;;:::i;:::-;942:18;925:1;909:6;:13;:17;905:212;;;963:6;:13;979:2;963:18;942:39;;1029:6;1022:13;;1082:10;1077:3;1070:6;1004:103;1141:6;;-1:-1:-1;;;;;1141:6:23;1133:20;;:80;;-1:-1:-1;1157:6:23;;;-1:-1:-1;;;;;1157:6:23;;:20;;1178:7;;1195:4;;1202:5;;1209:3;;1157:56;;;;;;;-1:-1:-1;;;1157:56:23;;;;;;-1:-1:-1;;;;;1157:56:23;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;23:1:-1;8:100;33:3;30:1;27:2;8:100;;;99:1;94:3;90;84:5;71:3;;;64:6;52:2;45:3;8:100;;;12:14;3:109;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1133:80:23;1126:87;726:494;-1:-1:-1;;;;;;726:494:23:o;86:21:22:-;;;-1:-1:-1;;;;;86:21:22;;:::o;891:169:31:-;948:18;1004:21;:19;:21::i;:::-;-1:-1:-1;;;;;1004:39:31;;1044:7;1004:48;;;;;;;;;;;-1:-1:-1;;;1004:48:31;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;23:1:-1;8:100;33:3;30:1;27:2;8:100;;;99:1;94:3;90;84:5;71:3;;;64:6;52:2;45:3;8:100;;;12:14;3:109;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;891:169:31;-1:-1:-1;;;891:169:31:o;2582:21:9:-;;;;;;-1:-1:-1;;;;;2582:21:9;;:::o;4558:161:11:-;4663:7;:14;4618:6;;4652:25;;;;4644:34;;;;;;4695:7;:17;;;;;;;;;;;;;;;;;;;;;;4688:24;;4558:161;;;:::o;53:244:29:-;113:4;;-1:-1:-1;;;;;133:21:29;;;129:64;;;177:5;170:12;;;;129:64;256:7;244:11;236:28;;289:1;282:4;:8;275:15;;53:244;;;;;:::o;1088:200:31:-;1142:18;1195:6;;1142:18;;-1:-1:-1;;;;;1195:6:31;:13;738:66:33;1142:18:31;1195:37;;;;;;;-1:-1:-1;;;1195:37:31;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;920:5090:11;;;;;;;;;;;;;;;;;:::i;:::-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;:::o;:::-;;;;;;;;;;;;;:::o"
+      },
+      "methodIdentifiers": {
+        "APP_ADDR_NAMESPACE()": "178e6079",
+        "ETH()": "8322fff2",
+        "EVMSCRIPT_REGISTRY_APP()": "9b3fdf4c",
+        "EVMSCRIPT_REGISTRY_APP_ID()": "60b1e057",
+        "allowRecoverability(address)": "7e7db6e1",
+        "appId()": "80afdea8",
+        "canPerform(address,bytes32,uint256[])": "a1658fad",
+        "getExecutor(bytes)": "f92a79ff",
+        "getInitializationBlock()": "8b3dd749",
+        "getPledge(uint64)": "3f657a46",
+        "getRecoveryVault()": "32f0a3b5",
+        "kernel()": "d4aae0c4",
+        "numberOfPledges()": "2a8ec8cc",
+        "transferToVault(address)": "9d4941d8",
+        "vault()": "fbfa77cf",
+        "whitelistDisabled()": "1c8e8568"
+      }
+    }
+  },
+  "sources": {
+    "./contracts/ILiquidPledgingPlugin.sol": {
+      "id": 0,
+      "keccak256": "0x539d0f5e161acbabc3284727028de768be1405f22acbf515038266a3981c8e92",
+      "file": "/Users/satya/Development/liquidpledging/contracts/ILiquidPledgingPlugin.sol"
+    },
+    "./contracts/LiquidPledgingStorage.sol": {
+      "id": 9,
+      "keccak256": "0xd1f287f7471c80d4167f47a462930d83208c366f3858eb8b2e6dc923382a5f08",
+      "file": "/Users/satya/Development/liquidpledging/contracts/LiquidPledgingStorage.sol"
+    },
+    "./contracts/Pledges.sol": {
+      "id": 11,
+      "keccak256": "0x9c7a60dff92f94d518d0c4a40d5434cd23680f79fd364ae855575ae4ca683797",
+      "file": "/Users/satya/Development/liquidpledging/contracts/Pledges.sol"
+    },
+    "./node_modules/@aragon/os/contracts/acl/ACLSyntaxSugar.sol": {
+      "id": 17,
+      "keccak256": "0xb60f567383dd66e25eaf0925320fdff8d5c57d4f1f74a7a53a9573b61876340e",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/acl/ACLSyntaxSugar.sol"
+    },
+    "./node_modules/@aragon/os/contracts/acl/IACL.sol": {
+      "id": 18,
+      "keccak256": "0xa120fc32d8d2c5096d605b0fe012d5b1e4a62118952a25a18bac5210f4fceede",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/acl/IACL.sol"
+    },
+    "./node_modules/@aragon/os/contracts/apps/AppStorage.sol": {
+      "id": 22,
+      "keccak256": "0x8b9205a3fdf9d94fb1461d2c2d32335803122aa75d3fa8cf0b982796fd040c25",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/apps/AppStorage.sol"
+    },
+    "./node_modules/@aragon/os/contracts/apps/AragonApp.sol": {
+      "id": 23,
+      "keccak256": "0x04bd38b82d31aff08b67def2e1637482fdb91f1f44f4ec497f4e7416c5f83dfb",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/apps/AragonApp.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/EtherTokenConstant.sol": {
+      "id": 26,
+      "keccak256": "0x160b651ec349ce381646d8ba24b873a61ab4bf0d60315b9644a175283a574b94",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/EtherTokenConstant.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/IVaultRecoverable.sol": {
+      "id": 27,
+      "keccak256": "0xf6ed3f4043aee4526c9563c83f74d701141dd81a988f1be463ba6a18e09ba2c3",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/IVaultRecoverable.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/Initializable.sol": {
+      "id": 28,
+      "keccak256": "0x1265fd5de8acf30e4b444f52cfdf91dcebb222fe05bdfc081f2fc0ea953ab5e4",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/Initializable.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/IsContract.sol": {
+      "id": 29,
+      "keccak256": "0xee6df8a68ea442a2c0414ee70d95eb3e197425ce372a28bfda01888b0d9446f1",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/IsContract.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/VaultRecoverable.sol": {
+      "id": 30,
+      "keccak256": "0x1b71cbea32aee6e65912e3447eb8001bdad127d421e0c4464bb8294f945d9cf1",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/VaultRecoverable.sol"
+    },
+    "./node_modules/@aragon/os/contracts/evmscript/EVMScriptRunner.sol": {
+      "id": 31,
+      "keccak256": "0x85d0a5051c5e867b0b15b756789911871ae746f36462cb774557682f90e7fa78",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/evmscript/EVMScriptRunner.sol"
+    },
+    "./node_modules/@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol": {
+      "id": 32,
+      "keccak256": "0x6a4beed810085f11cda9d50c3547ac4cc2100d9dc18ab4982ff11dd483410012",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol"
+    },
+    "./node_modules/@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol": {
+      "id": 33,
+      "keccak256": "0x460ff768028031e444267cad9d848b6e98182c3721d16013afd5949444701e84",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol"
+    },
+    "./node_modules/@aragon/os/contracts/evmscript/ScriptHelpers.sol": {
+      "id": 34,
+      "keccak256": "0x5bf6b2ceab21c1f8b31b6e797ae12974a655e46e142aeb12b3560ed912a4dd01",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/evmscript/ScriptHelpers.sol"
+    },
+    "./node_modules/@aragon/os/contracts/kernel/IKernel.sol": {
+      "id": 36,
+      "keccak256": "0x1f0c5def4ecec01abcbb07eea3312e0a4683d81a81c2475d66f06c5c3b8585cd",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/kernel/IKernel.sol"
+    },
+    "./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20.sol": {
+      "id": 40,
+      "keccak256": "0x48674c3983e4e9ba8f771d28e349833164934960a952966c17ae05f05fa84379",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20.sol"
+    },
+    "./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol": {
+      "id": 41,
+      "keccak256": "0x3ad7429b6f0a6330e8e89646aef39de99fa1fd8221e6a9dd55e3a9104908d585",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol"
+    }
+  },
+  "compiler": {
+    "name": "solc",
+    "keccak256": "0x9c7a60dff92f94d518d0c4a40d5434cd23680f79fd364ae855575ae4ca683797",
+    "version": "0.4.18+commit.9cf6e910",
+    "settings": {
+      "remappings": [
+        "@aragon/os/contracts/kernel/Kernel.sol=./node_modules/@aragon/os/contracts/kernel/Kernel.sol",
+        "@aragon/os/contracts/acl/IACL.sol=./node_modules/@aragon/os/contracts/acl/IACL.sol",
+        "@aragon/os/contracts/common/IVaultRecoverable.sol=./node_modules/@aragon/os/contracts/common/IVaultRecoverable.sol",
+        "@aragon/os/contracts/kernel/IKernel.sol=./node_modules/@aragon/os/contracts/kernel/IKernel.sol",
+        "@aragon/os/contracts/kernel/KernelStorage.sol=./node_modules/@aragon/os/contracts/kernel/KernelStorage.sol",
+        "@aragon/os/contracts/acl/ACLSyntaxSugar.sol=./node_modules/@aragon/os/contracts/acl/ACLSyntaxSugar.sol",
+        "@aragon/os/contracts/lib/misc/ERCProxy.sol=./node_modules/@aragon/os/contracts/lib/misc/ERCProxy.sol",
+        "@aragon/os/contracts/apps/AppStorage.sol=./node_modules/@aragon/os/contracts/apps/AppStorage.sol",
+        "@aragon/os/contracts/common/Initializable.sol=./node_modules/@aragon/os/contracts/common/Initializable.sol",
+        "@aragon/os/contracts/common/IsContract.sol=./node_modules/@aragon/os/contracts/common/IsContract.sol",
+        "@aragon/os/contracts/common/EtherTokenConstant.sol=./node_modules/@aragon/os/contracts/common/EtherTokenConstant.sol",
+        "@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol=./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol",
+        "@aragon/os/contracts/lib/zeppelin/token/ERC20.sol=./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20.sol",
+        "@aragon/os/contracts/common/VaultRecoverable.sol=./node_modules/@aragon/os/contracts/common/VaultRecoverable.sol",
+        "@aragon/os/contracts/common/DelegateProxy.sol=./node_modules/@aragon/os/contracts/common/DelegateProxy.sol",
+        "@aragon/os/contracts/common/DepositableDelegateProxy.sol=./node_modules/@aragon/os/contracts/common/DepositableDelegateProxy.sol",
+        "@aragon/os/contracts/apps/AppProxyBase.sol=./node_modules/@aragon/os/contracts/apps/AppProxyBase.sol",
+        "@aragon/os/contracts/apps/AppProxyUpgradeable.sol=./node_modules/@aragon/os/contracts/apps/AppProxyUpgradeable.sol",
+        "@aragon/os/contracts/apps/AppProxyPinned.sol=./node_modules/@aragon/os/contracts/apps/AppProxyPinned.sol",
+        "@aragon/os/contracts/factory/AppProxyFactory.sol=./node_modules/@aragon/os/contracts/factory/AppProxyFactory.sol",
+        "@aragon/os/contracts/acl/ACL.sol=./node_modules/@aragon/os/contracts/acl/ACL.sol",
+        "@aragon/os/contracts/evmscript/ScriptHelpers.sol=./node_modules/@aragon/os/contracts/evmscript/ScriptHelpers.sol",
+        "@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol=./node_modules/@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol",
+        "@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol=./node_modules/@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol",
+        "@aragon/os/contracts/evmscript/EVMScriptRunner.sol=./node_modules/@aragon/os/contracts/evmscript/EVMScriptRunner.sol",
+        "@aragon/os/contracts/apps/AragonApp.sol=./node_modules/@aragon/os/contracts/apps/AragonApp.sol"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "useLiteralContent": true
+      },
+      "outputSelection": {
+        "*": {
+          "*": [
+            "metadata",
+            "evm.bytecode.object",
+            "evm.bytecode.sourceMap",
+            "abi",
+            "evm.methodIdentifiers",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.sourceMap"
+          ]
+        }
+      }
+    }
+  }
+}

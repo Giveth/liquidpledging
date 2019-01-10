@@ -1,0 +1,381 @@
+{
+  "contractName": "TestSimpleProjectPlugin",
+  "source": "./contracts/test/TestSimpleProjectPlugin.sol",
+  "compilerOutput": {
+    "abi": [
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "name": "liquidPledging",
+            "type": "address"
+          },
+          {
+            "name": "name",
+            "type": "string"
+          },
+          {
+            "name": "url",
+            "type": "string"
+          },
+          {
+            "name": "parentProject",
+            "type": "uint64"
+          }
+        ],
+        "name": "init",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": true,
+        "inputs": [],
+        "name": "idProject",
+        "outputs": [
+          {
+            "name": "",
+            "type": "uint64"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "view",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "name": "pledgeAdmin",
+            "type": "uint64"
+          },
+          {
+            "name": "pledgeFrom",
+            "type": "uint64"
+          },
+          {
+            "name": "pledgeTo",
+            "type": "uint64"
+          },
+          {
+            "name": "context",
+            "type": "uint64"
+          },
+          {
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "afterTransfer",
+        "outputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "constant": false,
+        "inputs": [
+          {
+            "name": "pledgeAdmin",
+            "type": "uint64"
+          },
+          {
+            "name": "pledgeFrom",
+            "type": "uint64"
+          },
+          {
+            "name": "pledgeTo",
+            "type": "uint64"
+          },
+          {
+            "name": "context",
+            "type": "uint64"
+          },
+          {
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "beforeTransfer",
+        "outputs": [
+          {
+            "name": "maxAllowed",
+            "type": "uint256"
+          }
+        ],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "function"
+      },
+      {
+        "inputs": [],
+        "payable": false,
+        "stateMutability": "nonpayable",
+        "type": "constructor"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "name": "pledgeAdmin",
+            "type": "uint64"
+          },
+          {
+            "indexed": false,
+            "name": "pledgeFrom",
+            "type": "uint64"
+          },
+          {
+            "indexed": false,
+            "name": "pledgeTo",
+            "type": "uint64"
+          },
+          {
+            "indexed": false,
+            "name": "context",
+            "type": "uint64"
+          },
+          {
+            "indexed": false,
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "BeforeTransfer",
+        "type": "event"
+      },
+      {
+        "anonymous": false,
+        "inputs": [
+          {
+            "indexed": false,
+            "name": "pledgeAdmin",
+            "type": "uint64"
+          },
+          {
+            "indexed": false,
+            "name": "pledgeFrom",
+            "type": "uint64"
+          },
+          {
+            "indexed": false,
+            "name": "pledgeTo",
+            "type": "uint64"
+          },
+          {
+            "indexed": false,
+            "name": "context",
+            "type": "uint64"
+          },
+          {
+            "indexed": false,
+            "name": "amount",
+            "type": "uint256"
+          }
+        ],
+        "name": "AfterTransfer",
+        "type": "event"
+      }
+    ],
+    "evm": {
+      "bytecode": {
+        "object": "6060604052341561000f57600080fd5b32600160a060020a031633600160a060020a03161415151561003057600080fd5b60008054604060020a60ff0219166801000000000000000017905561050b8061005a6000396000f3006060604052600436106100615763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416636e1c5d67811461006657806394edc35914610122578063ad1483c314610152578063d4edf5e514610187575b600080fd5b341561007157600080fd5b6101206004803573ffffffffffffffffffffffffffffffffffffffff169060446024803590810190830135806020601f8201819004810201604051908101604052818152929190602084018383808284378201915050505050509190803590602001908201803590602001908080601f0160208091040260200160405190810160405281815292919060208401838380828437509496505050923567ffffffffffffffff1692506101ce915050565b005b341561012d57600080fd5b6101356103c4565b60405167ffffffffffffffff909116815260200160405180910390f35b341561015d57600080fd5b61012067ffffffffffffffff600435811690602435811690604435811690606435166084356103d4565b341561019257600080fd5b6101bc67ffffffffffffffff60043581169060243581169060443581169060643516608435610458565b60405190815260200160405180910390f35b60005468010000000000000000900460ff1615156101eb57600080fd5b8373ffffffffffffffffffffffffffffffffffffffff166372116e92848430856000306000604051602001526040517c010000000000000000000000000000000000000000000000000000000063ffffffff891602815273ffffffffffffffffffffffffffffffffffffffff808616604483015267ffffffffffffffff808616606484015284166084830152821660a482015260c060048201908152908190602481019060c40189818151815260200191508051906020019080838360005b838110156102c25780820151838201526020016102aa565b50505050905090810190601f1680156102ef5780820380516001836020036101000a031916815260200191505b50838103825288818151815260200191508051906020019080838360005b8381101561032557808201518382015260200161030d565b50505050905090810190601f1680156103525780820380516001836020036101000a031916815260200191505b5098505050505050505050602060405180830381600087803b151561037657600080fd5b6102c65a03f1151561038757600080fd5b50505060405180516000805467ffffffffffffffff191667ffffffffffffffff929092169190911768ff0000000000000000191690555050505050565b60005467ffffffffffffffff1681565b60005468010000000000000000900460ff16156103f057600080fd5b7fd3b94fd0ec63b2f94d5dcc25db5025576f742d1da773c386b38e308b43841bba858585858560405167ffffffffffffffff9586168152938516602085015291841660408085019190915293166060830152608082015260a001905180910390a15050505050565b6000805468010000000000000000900460ff161561047557600080fd5b7fb5ecb36c4ccb2023ce7243cc977d0c33d9931336485a793d948379f39f700ea3868686868660405167ffffffffffffffff9586168152938516602085015291841660408085019190915293166060830152608082015260a001905180910390a1959450505050505600a165627a7a72305820c2a375dfd6fc4a5a28f386de6dbc808e8fda7c1baee727d2c1750e13d02ca0640029",
+        "sourceMap": "122:1422:13:-;;;436:164;;;;;;;;510:9;-1:-1:-1;;;;;496:23:13;:10;-1:-1:-1;;;;;496:23:13;;;488:32;;;;;;;;575:11;:18;;-1:-1:-1;;;;;;575:18:13;;;;;122:1422;;;;;;"
+      },
+      "deployedBytecode": {
+        "object": "6060604052600436106100615763ffffffff7c01000000000000000000000000000000000000000000000000000000006000350416636e1c5d67811461006657806394edc35914610122578063ad1483c314610152578063d4edf5e514610187575b600080fd5b341561007157600080fd5b6101206004803573ffffffffffffffffffffffffffffffffffffffff169060446024803590810190830135806020601f8201819004810201604051908101604052818152929190602084018383808284378201915050505050509190803590602001908201803590602001908080601f0160208091040260200160405190810160405281815292919060208401838380828437509496505050923567ffffffffffffffff1692506101ce915050565b005b341561012d57600080fd5b6101356103c4565b60405167ffffffffffffffff909116815260200160405180910390f35b341561015d57600080fd5b61012067ffffffffffffffff600435811690602435811690604435811690606435166084356103d4565b341561019257600080fd5b6101bc67ffffffffffffffff60043581169060243581169060443581169060643516608435610458565b60405190815260200160405180910390f35b60005468010000000000000000900460ff1615156101eb57600080fd5b8373ffffffffffffffffffffffffffffffffffffffff166372116e92848430856000306000604051602001526040517c010000000000000000000000000000000000000000000000000000000063ffffffff891602815273ffffffffffffffffffffffffffffffffffffffff808616604483015267ffffffffffffffff808616606484015284166084830152821660a482015260c060048201908152908190602481019060c40189818151815260200191508051906020019080838360005b838110156102c25780820151838201526020016102aa565b50505050905090810190601f1680156102ef5780820380516001836020036101000a031916815260200191505b50838103825288818151815260200191508051906020019080838360005b8381101561032557808201518382015260200161030d565b50505050905090810190601f1680156103525780820380516001836020036101000a031916815260200191505b5098505050505050505050602060405180830381600087803b151561037657600080fd5b6102c65a03f1151561038757600080fd5b50505060405180516000805467ffffffffffffffff191667ffffffffffffffff929092169190911768ff0000000000000000191690555050505050565b60005467ffffffffffffffff1681565b60005468010000000000000000900460ff16156103f057600080fd5b7fd3b94fd0ec63b2f94d5dcc25db5025576f742d1da773c386b38e308b43841bba858585858560405167ffffffffffffffff9586168152938516602085015291841660408085019190915293166060830152608082015260a001905180910390a15050505050565b6000805468010000000000000000900460ff161561047557600080fd5b7fb5ecb36c4ccb2023ce7243cc977d0c33d9931336485a793d948379f39f700ea3868686868660405167ffffffffffffffff9586168152938516602085015291841660408085019190915293166060830152608082015260a001905180910390a1959450505050505600a165627a7a72305820c2a375dfd6fc4a5a28f386de6dbc808e8fda7c1baee727d2c1750e13d02ca0640029",
+        "sourceMap": "122:1422:13:-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;606:323;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;-1:-1:-1;606:323:13;;-1:-1:-1;;;606:323:13;;;;;-1:-1:-1;606:323:13;;-1:-1:-1;;606:323:13;;;162:23;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1265:276;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;935:324;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;606:323;761:11;;;;;;;753:20;;;;;;;;795:14;:25;;;821:4;827:3;840:4;847:13;862:1;887:4;795:98;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;23:1:-1;8:100;33:3;30:1;27:2;8:100;;;99:1;94:3;90;84:5;71:3;;;64:6;52:2;45:3;8:100;;;12:14;3:109;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;23:1;8:100;33:3;30:1;27:2;8:100;;;99:1;94:3;90;84:5;71:3;;;64:6;52:2;45:3;8:100;;;12:14;3:109;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;783:9:13;:110;;-1:-1:-1;;783:110:13;;;;;;;;;;-1:-1:-1;;903:19:13;;;-1:-1:-1;;;;;606:323:13:o;162:23::-;;;;;;:::o;1265:276::-;1447:11;;;;;;;1446:12;1438:21;;;;;;1469:65;1483:11;1496:10;1508:8;1518:7;1527:6;1469:65;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;1265:276;;;;;:::o;935:324::-;1108:15;1144:11;;;;;;;1143:12;1135:21;;;;;;1186:66;1201:11;1214:10;1226:8;1236:7;1245:6;1186:66;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;935:324;;;;;;;:::o"
+      },
+      "methodIdentifiers": {
+        "afterTransfer(uint64,uint64,uint64,uint64,uint256)": "ad1483c3",
+        "beforeTransfer(uint64,uint64,uint64,uint64,uint256)": "d4edf5e5",
+        "idProject()": "94edc359",
+        "init(address,string,string,uint64)": "6e1c5d67"
+      }
+    }
+  },
+  "sources": {
+    "./contracts/ILiquidPledgingPlugin.sol": {
+      "id": 0,
+      "keccak256": "0x539d0f5e161acbabc3284727028de768be1405f22acbf515038266a3981c8e92",
+      "file": "/Users/satya/Development/liquidpledging/contracts/ILiquidPledgingPlugin.sol"
+    },
+    "./contracts/LiquidPledging.sol": {
+      "id": 4,
+      "keccak256": "0xa549270fe2f164f902b91543b5f3e0c41f1cf97a65f6a307a387534b900777e6",
+      "file": "/Users/satya/Development/liquidpledging/contracts/LiquidPledging.sol"
+    },
+    "./contracts/LiquidPledgingACLHelpers.sol": {
+      "id": 5,
+      "keccak256": "0xb675a7a788bf656d4c3c78f3b4cf6645afb432939d1a4c38d70e01d068b0ce62",
+      "file": "/Users/satya/Development/liquidpledging/contracts/LiquidPledgingACLHelpers.sol"
+    },
+    "./contracts/LiquidPledgingBase.sol": {
+      "id": 6,
+      "keccak256": "0xbd10aeb8cd8834c63bb58034f93ed213ee8ed4f38682cc3808bdf1f5c7d79df3",
+      "file": "/Users/satya/Development/liquidpledging/contracts/LiquidPledgingBase.sol"
+    },
+    "./contracts/LiquidPledgingPlugins.sol": {
+      "id": 8,
+      "keccak256": "0x109373f81759324d3d39f0b2b8fd02072c2b0e502901c14e1b06ca91a05a5ae2",
+      "file": "/Users/satya/Development/liquidpledging/contracts/LiquidPledgingPlugins.sol"
+    },
+    "./contracts/LiquidPledgingStorage.sol": {
+      "id": 9,
+      "keccak256": "0xd1f287f7471c80d4167f47a462930d83208c366f3858eb8b2e6dc923382a5f08",
+      "file": "/Users/satya/Development/liquidpledging/contracts/LiquidPledgingStorage.sol"
+    },
+    "./contracts/PledgeAdmins.sol": {
+      "id": 10,
+      "keccak256": "0x06bc6171a12d31aaa05dce4217e107555f8289182046a0bd8da615c38faae3f5",
+      "file": "/Users/satya/Development/liquidpledging/contracts/PledgeAdmins.sol"
+    },
+    "./contracts/Pledges.sol": {
+      "id": 11,
+      "keccak256": "0x9c7a60dff92f94d518d0c4a40d5434cd23680f79fd364ae855575ae4ca683797",
+      "file": "/Users/satya/Development/liquidpledging/contracts/Pledges.sol"
+    },
+    "./contracts/test/TestSimpleProjectPlugin.sol": {
+      "id": 13,
+      "keccak256": "0xa942aca3c4a33b75973b578708a0707c15807680f7ff4333149ec510fc7f33b0",
+      "file": "/Users/satya/Development/liquidpledging/contracts/test/TestSimpleProjectPlugin.sol"
+    },
+    "./node_modules/@aragon/os/contracts/acl/ACLSyntaxSugar.sol": {
+      "id": 16,
+      "keccak256": "0xb60f567383dd66e25eaf0925320fdff8d5c57d4f1f74a7a53a9573b61876340e",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/acl/ACLSyntaxSugar.sol"
+    },
+    "./node_modules/@aragon/os/contracts/acl/IACL.sol": {
+      "id": 17,
+      "keccak256": "0xa120fc32d8d2c5096d605b0fe012d5b1e4a62118952a25a18bac5210f4fceede",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/acl/IACL.sol"
+    },
+    "./node_modules/@aragon/os/contracts/apps/AppStorage.sol": {
+      "id": 21,
+      "keccak256": "0x8b9205a3fdf9d94fb1461d2c2d32335803122aa75d3fa8cf0b982796fd040c25",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/apps/AppStorage.sol"
+    },
+    "./node_modules/@aragon/os/contracts/apps/AragonApp.sol": {
+      "id": 22,
+      "keccak256": "0x04bd38b82d31aff08b67def2e1637482fdb91f1f44f4ec497f4e7416c5f83dfb",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/apps/AragonApp.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/EtherTokenConstant.sol": {
+      "id": 25,
+      "keccak256": "0x160b651ec349ce381646d8ba24b873a61ab4bf0d60315b9644a175283a574b94",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/EtherTokenConstant.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/IVaultRecoverable.sol": {
+      "id": 26,
+      "keccak256": "0xf6ed3f4043aee4526c9563c83f74d701141dd81a988f1be463ba6a18e09ba2c3",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/IVaultRecoverable.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/Initializable.sol": {
+      "id": 27,
+      "keccak256": "0x1265fd5de8acf30e4b444f52cfdf91dcebb222fe05bdfc081f2fc0ea953ab5e4",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/Initializable.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/IsContract.sol": {
+      "id": 28,
+      "keccak256": "0xee6df8a68ea442a2c0414ee70d95eb3e197425ce372a28bfda01888b0d9446f1",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/IsContract.sol"
+    },
+    "./node_modules/@aragon/os/contracts/common/VaultRecoverable.sol": {
+      "id": 29,
+      "keccak256": "0x1b71cbea32aee6e65912e3447eb8001bdad127d421e0c4464bb8294f945d9cf1",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/common/VaultRecoverable.sol"
+    },
+    "./node_modules/@aragon/os/contracts/evmscript/EVMScriptRunner.sol": {
+      "id": 30,
+      "keccak256": "0x85d0a5051c5e867b0b15b756789911871ae746f36462cb774557682f90e7fa78",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/evmscript/EVMScriptRunner.sol"
+    },
+    "./node_modules/@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol": {
+      "id": 31,
+      "keccak256": "0x6a4beed810085f11cda9d50c3547ac4cc2100d9dc18ab4982ff11dd483410012",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol"
+    },
+    "./node_modules/@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol": {
+      "id": 32,
+      "keccak256": "0x460ff768028031e444267cad9d848b6e98182c3721d16013afd5949444701e84",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol"
+    },
+    "./node_modules/@aragon/os/contracts/evmscript/ScriptHelpers.sol": {
+      "id": 33,
+      "keccak256": "0x5bf6b2ceab21c1f8b31b6e797ae12974a655e46e142aeb12b3560ed912a4dd01",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/evmscript/ScriptHelpers.sol"
+    },
+    "./node_modules/@aragon/os/contracts/kernel/IKernel.sol": {
+      "id": 35,
+      "keccak256": "0x1f0c5def4ecec01abcbb07eea3312e0a4683d81a81c2475d66f06c5c3b8585cd",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/kernel/IKernel.sol"
+    },
+    "./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20.sol": {
+      "id": 39,
+      "keccak256": "0x48674c3983e4e9ba8f771d28e349833164934960a952966c17ae05f05fa84379",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20.sol"
+    },
+    "./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol": {
+      "id": 40,
+      "keccak256": "0x3ad7429b6f0a6330e8e89646aef39de99fa1fd8221e6a9dd55e3a9104908d585",
+      "file": "/Users/satya/Development/liquidpledging/node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol"
+    }
+  },
+  "compiler": {
+    "name": "solc",
+    "keccak256": "0xa942aca3c4a33b75973b578708a0707c15807680f7ff4333149ec510fc7f33b0",
+    "version": "0.4.18+commit.9cf6e910",
+    "settings": {
+      "remappings": [
+        "@aragon/os/contracts/kernel/Kernel.sol=./node_modules/@aragon/os/contracts/kernel/Kernel.sol",
+        "@aragon/os/contracts/acl/IACL.sol=./node_modules/@aragon/os/contracts/acl/IACL.sol",
+        "@aragon/os/contracts/common/IVaultRecoverable.sol=./node_modules/@aragon/os/contracts/common/IVaultRecoverable.sol",
+        "@aragon/os/contracts/kernel/IKernel.sol=./node_modules/@aragon/os/contracts/kernel/IKernel.sol",
+        "@aragon/os/contracts/kernel/KernelStorage.sol=./node_modules/@aragon/os/contracts/kernel/KernelStorage.sol",
+        "@aragon/os/contracts/acl/ACLSyntaxSugar.sol=./node_modules/@aragon/os/contracts/acl/ACLSyntaxSugar.sol",
+        "@aragon/os/contracts/lib/misc/ERCProxy.sol=./node_modules/@aragon/os/contracts/lib/misc/ERCProxy.sol",
+        "@aragon/os/contracts/apps/AppStorage.sol=./node_modules/@aragon/os/contracts/apps/AppStorage.sol",
+        "@aragon/os/contracts/common/Initializable.sol=./node_modules/@aragon/os/contracts/common/Initializable.sol",
+        "@aragon/os/contracts/common/IsContract.sol=./node_modules/@aragon/os/contracts/common/IsContract.sol",
+        "@aragon/os/contracts/common/EtherTokenConstant.sol=./node_modules/@aragon/os/contracts/common/EtherTokenConstant.sol",
+        "@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol=./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20Basic.sol",
+        "@aragon/os/contracts/lib/zeppelin/token/ERC20.sol=./node_modules/@aragon/os/contracts/lib/zeppelin/token/ERC20.sol",
+        "@aragon/os/contracts/common/VaultRecoverable.sol=./node_modules/@aragon/os/contracts/common/VaultRecoverable.sol",
+        "@aragon/os/contracts/common/DelegateProxy.sol=./node_modules/@aragon/os/contracts/common/DelegateProxy.sol",
+        "@aragon/os/contracts/common/DepositableDelegateProxy.sol=./node_modules/@aragon/os/contracts/common/DepositableDelegateProxy.sol",
+        "@aragon/os/contracts/apps/AppProxyBase.sol=./node_modules/@aragon/os/contracts/apps/AppProxyBase.sol",
+        "@aragon/os/contracts/apps/AppProxyUpgradeable.sol=./node_modules/@aragon/os/contracts/apps/AppProxyUpgradeable.sol",
+        "@aragon/os/contracts/apps/AppProxyPinned.sol=./node_modules/@aragon/os/contracts/apps/AppProxyPinned.sol",
+        "@aragon/os/contracts/factory/AppProxyFactory.sol=./node_modules/@aragon/os/contracts/factory/AppProxyFactory.sol",
+        "@aragon/os/contracts/acl/ACL.sol=./node_modules/@aragon/os/contracts/acl/ACL.sol",
+        "@aragon/os/contracts/evmscript/ScriptHelpers.sol=./node_modules/@aragon/os/contracts/evmscript/ScriptHelpers.sol",
+        "@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol=./node_modules/@aragon/os/contracts/evmscript/IEVMScriptExecutor.sol",
+        "@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol=./node_modules/@aragon/os/contracts/evmscript/IEVMScriptRegistry.sol",
+        "@aragon/os/contracts/evmscript/EVMScriptRunner.sol=./node_modules/@aragon/os/contracts/evmscript/EVMScriptRunner.sol",
+        "@aragon/os/contracts/apps/AragonApp.sol=./node_modules/@aragon/os/contracts/apps/AragonApp.sol"
+      ],
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "metadata": {
+        "useLiteralContent": true
+      },
+      "outputSelection": {
+        "*": {
+          "*": [
+            "metadata",
+            "evm.bytecode.object",
+            "evm.bytecode.sourceMap",
+            "abi",
+            "evm.methodIdentifiers",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.sourceMap"
+          ]
+        }
+      }
+    }
+  }
+}
