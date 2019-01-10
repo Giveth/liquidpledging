@@ -34,7 +34,7 @@ Make sure you have [NodeJS](https://nodejs.org/) (v8.4.0 or higher) and [npm](ht
 You will also need to install embark globally using yarn
 
 ```
-yarn global add git+https://git@github.com/embark-framework/embark.git#34f5f97
+npm i -g embark@next
 ```
 
 ### Package
