@@ -1,5 +1,5 @@
 module.exports = function(liquidPledging) {
-  function $getPledge(idPledge) {
+  function getPledge(idPledge) {
     const pledge = {
       delegates: [],
     };
@@ -48,7 +48,7 @@ module.exports = function(liquidPledging) {
       });
   }
 
-  function $getAdmin(idAdmin) {
+  function getAdmin(idAdmin) {
     const admin = {};
     return liquidPledging.getPledgeAdmin(idAdmin).then(res => {
       if (res.adminType === '0') {
@@ -78,7 +78,7 @@ module.exports = function(liquidPledging) {
         liquidPledging.numberOfPledges().then(nPledges => {
           const promises = [];
           for (let i = 1; i <= nPledges; i += 1) {
-            promises.push(this.$getPledge(i));
+            promises.push(getPledge(i));
           }
           return Promise.all(promises);
         });
@@ -87,7 +87,7 @@ module.exports = function(liquidPledging) {
         liquidPledging.numberOfPledgeAdmins().then(nAdmins => {
           const promises = [];
           for (let i = 1; i <= nAdmins; i += 1) {
-            promises.push(this.$getAdmin(i));
+            promises.push(getAdmin(i));
           }
 
           return Promise.all(promises);

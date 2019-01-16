@@ -6,8 +6,6 @@ const LPVault = embark.require('Embark/contracts/LPVault');
 const LiquidPledgingMock = embark.require('Embark/contracts/LiquidPledgingMock');
 const StandardTokenTest = embark.require('Embark/contracts/StandardToken');
 
-let accounts;
-
 config(
   {
     contracts: {
@@ -39,6 +37,7 @@ config(
 );
 
 module.exports = async () => {
+  const accounts = await web3.eth.getAccounts();
   const giver1 = accounts[1];
 
   const recoveryVault = RecoveryVault.$address;
