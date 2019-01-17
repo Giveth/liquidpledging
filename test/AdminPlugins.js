@@ -1,7 +1,7 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
 const chai = require('chai');
-const deployLP = require('./helpers/deployLP');
+const { embarkConfig, deploy: deployLP } = require('./helpers/deployLP');
 const assertFail = require('./helpers/assertFail');
 
 const TestSimpleProjectPlugin = embark.require('Embark/contracts/TestSimpleProjectPlugin');
@@ -10,6 +10,8 @@ const TestSimpleProjectPluginFactory = embark.require(
 );
 
 const assert = chai.assert;
+
+embarkConfig();
 
 describe('LiquidPledging plugins test', function() {
   this.timeout(0);

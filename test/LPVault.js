@@ -2,10 +2,12 @@
 /* eslint-disable no-await-in-loop */
 const { assert } = require('chai');
 const assertFail = require('./helpers/assertFail');
-const deployLP = require('./helpers/deployLP');
+const { embarkConfig, deploy: deployLP } = require('./helpers/deployLP');
 
 const Kernel = embark.require('Embark/contracts/Kernel');
 const ACL = embark.require('Embark/contracts/ACL');
+
+embarkConfig();
 
 describe('LPVault test', function() {
   this.timeout(0);

@@ -2,12 +2,14 @@
 /* eslint-disable no-await-in-loop */
 const { assert } = require('chai');
 const assertFail = require('./helpers/assertFail');
-const deployLP = require('./helpers/deployLP');
+const { embarkConfig, deploy: deployLP } = require('./helpers/deployLP');
 
 const printState = async liquidPledgingState => {
   const st = await liquidPledgingState.getState();
   console.log(JSON.stringify(st, null, 2));
 };
+
+embarkConfig();
 
 describe('LiquidPledging cancelPledge normal scenario', function() {
   this.timeout(0);

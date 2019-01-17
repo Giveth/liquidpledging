@@ -1,5 +1,12 @@
 const contracts = require('./js/contracts');
-contracts.test.assertFail = require('./test/helpers/assertFail');
-contracts.test.deployLP = require('./test/helpers/deployLP');
+const assertFail = require('./test/helpers/assertFail');
+const { embarkConfig, deploy: deployLP } = require('./test/helpers/deployLP');
 
-module.exports = contracts;
+module.exports = {
+  ...contracts,
+  test: {
+    assertFail,
+    embarkConfig,
+    deployLP,
+  },
+};

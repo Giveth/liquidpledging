@@ -6,9 +6,9 @@ const LPVault = embark.require('Embark/contracts/LPVault');
 const LiquidPledgingMock = embark.require('Embark/contracts/LiquidPledgingMock');
 const StandardTokenTest = embark.require('Embark/contracts/StandardToken');
 
-config(
-  {
-    contracts: {
+const embarkConfig = (additionalContracts = {}) => {
+  const contracts = Object.assign(
+    {
       RecoveryVault: {},
       LPVault: {},
       LiquidPledgingMock: {},
@@ -30,13 +30,15 @@ config(
       },
       StandardToken: {},
     },
-  },
-  (err, theAccounts) => {
-    accounts = theAccounts;
-  },
-);
+    additionalContracts,
+  );
 
-module.exports = async () => {
+  config({ contracts }, (err, theAccounts) => {
+    accounts = theAccounts;
+  });
+};
+
+const deploy = async () => {
   const accounts = await web3.eth.getAccounts();
   const giver1 = accounts[1];
 
@@ -66,3 +68,5 @@ module.exports = async () => {
     giver1,
   };
 };
+
+module.exports = { embarkConfig, deploy };

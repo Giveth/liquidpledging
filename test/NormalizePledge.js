@@ -1,12 +1,14 @@
 /* eslint-env mocha */
 /* eslint-disable no-await-in-loop */
 const { assert } = require('chai');
-const deployLP = require('./helpers/deployLP');
+const { embarkConfig, deploy: deployLP } = require('./helpers/deployLP');
 
 const printState = async liquidPledgingState => {
   const st = await liquidPledgingState.getState();
   console.log(JSON.stringify(st, null, 2));
 };
+
+embarkConfig();
 
 describe('NormalizePledge test', function() {
   this.timeout(0);

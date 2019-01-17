@@ -3,7 +3,7 @@
 const { utils } = require('web3');
 const { assert } = require('chai');
 
-const deployLP = require('./helpers/deployLP');
+const { embarkConfig, deploy: deployLP } = require('./helpers/deployLP');
 const assertFail = require('./helpers/assertFail');
 
 const { toBN, toWei, fromWei } = utils;
@@ -16,6 +16,8 @@ const printState = async liquidPledgingState => {
 const Kernel = embark.require('Embark/contracts/Kernel');
 const ACL = embark.require('Embark/contracts/ACL');
 const StandardTokenTest = embark.require('Embark/contracts/StandardToken');
+
+embarkConfig();
 
 describe('LiquidPledging test', function() {
   this.timeout(0);
