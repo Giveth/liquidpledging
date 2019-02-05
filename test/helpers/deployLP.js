@@ -1,12 +1,7 @@
 const LiquidPledgingState = require('../../js/liquidPledgingState');
 
-const RecoveryVault = embark.require('Embark/contracts/RecoveryVault');
-const lpFactory = embark.require('Embark/contracts/LPFactory');
-const LPVault = embark.require('Embark/contracts/LPVault');
-const LiquidPledgingMock = embark.require('Embark/contracts/LiquidPledgingMock');
-const StandardTokenTest = embark.require('Embark/contracts/StandardToken');
-
 const embarkConfig = (additionalContracts = {}) => {
+  if (!embark) throw new Error('embarkConfig can only be within the Embark framework');
   const contracts = Object.assign(
     {
       RecoveryVault: {},
@@ -39,6 +34,12 @@ const embarkConfig = (additionalContracts = {}) => {
 };
 
 const deploy = async () => {
+  if (!embark) throw new Error('deployLP can only be within the Embark framework');
+  const RecoveryVault = embark.require('Embark/contracts/RecoveryVault');
+  const lpFactory = embark.require('Embark/contracts/LPFactory');
+  const LPVault = embark.require('Embark/contracts/LPVault');
+  const LiquidPledgingMock = embark.require('Embark/contracts/LiquidPledgingMock');
+  const StandardTokenTest = embark.require('Embark/contracts/StandardToken');
   const accounts = await web3.eth.getAccounts();
   const giver1 = accounts[1];
 

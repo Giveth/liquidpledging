@@ -8,5 +8,6 @@ module.exports = {
     assertFail,
     embarkConfig,
     deployLP,
+    ...contracts.test,
   },
 };
