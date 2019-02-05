@@ -81,7 +81,7 @@ contract LiquidPledging is LiquidPledgingBase {
         require(sender.adminType == PledgeAdminType.Giver);
 
         if (token == ETH) {
-            vault.transfer(amount);
+            address(vault).transfer(amount);
         } else {
             require(ERC20(token).transferFrom(msg.sender, address(vault), amount)); // transfer the token to the `vault`
         }
