@@ -87,7 +87,7 @@ describe('LPVault test', function() {
     assert.equal(nAdmins, 2);
   });
 
-  it('Should hold funds from liquidPledging', async function() {
+  it('Should hold tokens from liquidPledging', async function() {
     await liquidPledging.addGiverAndDonate(2, token.$address, 10000, {
       from: giver1,
       $extraGas: 100000,
@@ -95,6 +95,17 @@ describe('LPVault test', function() {
 
     const balance = await token.balanceOf(vault.$address);
     assert.equal(10000, balance);
+  });
+
+  it('Should hold eth from liquidPledging', async function () {
+    await liquidPledging.addGiverAndDonate(2, '0x0000000000000000000000000000000000000000', 0, {
+      from: giver1,
+      value: 10,
+      $extraGas: 200000,
+    });
+
+    const balance = await web3.eth.getBalance(vault.$address);
+    assert.equal(10, balance);
   });
 
   it('should restrict confirm payment to payments under specified amount', async function() {
@@ -114,8 +125,21 @@ describe('LPVault test', function() {
     await vault.confirmPayment(0, { from: restrictedPaymentsConfirmer, $extraGas: 200000 });
   });
 
+  it('should withdraw ETH', async function() {
+
+    await liquidPledging.withdraw(4, 5, { from: adminProject1, $extraGas: 200000 });
+
+    const preBalance = await web3.eth.getBalance(adminProject1);
+    await vault.confirmPayment(2, { from: restrictedPaymentsConfirmer, $extraGas: 200000 });
+
+    const postBalance = await web3.eth.getBalance(adminProject1);
+    assert.equal(Number(preBalance) + 5, postBalance)
+
+  })
+
   it('Only escapeHatchCaller role should be able to pull "escapeHatch"', async function() {
     const preVaultBalance = await token.balanceOf(vault.$address);
+    const preVaultBalanceETH = await web3.eth.getBalance(vault.$address);
 
     // transferToVault is a bit confusing, but is the name of the function in aragonOs
     // this is the escapeHatch and will transfer all funds to the recoveryVault
@@ -123,11 +147,16 @@ describe('LPVault test', function() {
     assert.equal(await token.balanceOf(vault.$address), preVaultBalance);
 
     await vault.transferToVault(token.$address, { from: escapeHatchCaller, $extraGas: 100000 });
+    await vault.transferToVault('0x0000000000000000000000000000000000000000', { from: escapeHatchCaller, $extraGas: 100000 });
 
     const vaultBalance = await token.balanceOf(vault.$address);
+    const vaultBalanceETH = await web3.eth.getBalance(vault.$address);
     assert.equal(0, vaultBalance);
+    assert.equal(0, vaultBalanceETH);
 
     const recoveryVaultBalance = await token.balanceOf(recoveryVault);
+    const recoveryVaultBalanceETH = await web3.eth.getBalance(recoveryVault);
     assert.equal(preVaultBalance, recoveryVaultBalance);
+    assert.equal(preVaultBalanceETH, recoveryVaultBalanceETH);
   });
 });

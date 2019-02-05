@@ -33,6 +33,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param token The address of the token being donated.
     /// @param amount The amount of tokens being donated
     function addGiverAndDonate(uint64 idReceiver, address token, uint amount)
+        payable
         public
     {
         addGiverAndDonate(idReceiver, msg.sender, token, amount);
@@ -45,6 +46,7 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param token The address of the token being donated.
     /// @param amount The amount of tokens being donated
     function addGiverAndDonate(uint64 idReceiver, address donorAddress, address token, uint amount)
+        payable
         public
     {
         require(donorAddress != 0);
@@ -64,16 +66,25 @@ contract LiquidPledging is LiquidPledgingBase {
     /// @param token The address of the token being donated.
     /// @param amount The amount of tokens being donated
     function donate(uint64 idGiver, uint64 idReceiver, address token, uint amount)
+        payable
         public
     {
         require(idGiver > 0); // prevent burning donations. idReceiver is checked in _transfer
+
+        if (token == ETH) {
+            amount = msg.value;
+        }
+
         require(amount > 0);
-        require(token != 0x0);
 
         PledgeAdmin storage sender = _findAdmin(idGiver);
         require(sender.adminType == PledgeAdminType.Giver);
 
-        require(ERC20(token).transferFrom(msg.sender, address(vault), amount)); // transfer the token to the `vault`
+        if (token == ETH) {
+            vault.transfer(amount);
+        } else {
+            require(ERC20(token).transferFrom(msg.sender, address(vault), amount)); // transfer the token to the `vault`
+        }
 
         uint64 idPledge = _findOrCreatePledge(
             idGiver,

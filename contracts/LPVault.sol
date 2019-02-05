@@ -25,13 +25,14 @@ pragma solidity ^0.4.24;
 ///  to allow for an optional escapeHatch to be implemented in case of issues;
 ///  future versions of this contract will be enabled for tokens
 import "@aragon/os/contracts/apps/AragonApp.sol";
+import "@aragon/os/contracts/common/DepositableStorage.sol";
 import "./ILiquidPledging.sol";
 import "./ILPVault.sol";
 
 
 /// @dev `LPVault` is a higher level contract built off of the `Escapable`
 ///  contract that holds funds for the liquid pledging system.
-contract LPVault is ILPVault, AragonApp {
+contract LPVault is ILPVault, AragonApp, DepositableStorage {
 
     // bytes32 constant public _CONFIRM_PAYMENT_ROLE = keccak256("CONFIRM_PAYMENT_ROLE");
     bytes32 constant public _CONFIRM_PAYMENT_ROLE = 0xe8d376fd78e6f5f651a4bd073ee95d38284b2e197d7a9e6aad3a164cdbd7153f;
@@ -89,6 +90,7 @@ contract LPVault is ILPVault, AragonApp {
     function initialize(address _liquidPledging) onlyInit external {
         require(_liquidPledging != 0x0);
         initialized();
+        setDepositable(true);
 
         liquidPledging = ILiquidPledging(_liquidPledging);
     }
@@ -193,6 +195,11 @@ contract LPVault is ILPVault, AragonApp {
     function SET_AUTOPAY_ROLE() external pure returns (bytes32) { return _SET_AUTOPAY_ROLE; }
     function ESCAPE_HATCH_CALLER_ROLE() external pure returns (bytes32) { return _ESCAPE_HATCH_CALLER_ROLE; }
 
+
+    /// @dev The fall back function allows ETH to be deposited into the LPVault
+    ///  through a simple send
+    function() external payable {}    
+
     /// @notice Transfers ETH according to the data held within the specified
     ///  payment id (internal function)
     /// @param _idPayment id number for the payment about to be fulfilled 
@@ -204,8 +211,12 @@ contract LPVault is ILPVault, AragonApp {
         p.state = PaymentStatus.Paid;
         liquidPledging.confirmPayment(uint64(p.ref), p.amount);
 
-        ERC20 token = ERC20(p.token);
-        require(token.transfer(p.dest, p.amount)); // Transfers token to dest
+        if (p.token == ETH) {
+            p.dest.transfer(p.amount);
+        } else {
+            ERC20 token = ERC20(p.token);
+            require(token.transfer(p.dest, p.amount)); // Transfers token to dest
+        }
 
         emit ConfirmPayment(_idPayment, p.ref);
     }

@@ -6,4 +6,6 @@ interface ILPVault {
     function initialize(address _vault) external; 
 
     function authorizePayment(bytes32 _ref, address _dest, address _token, uint _amount) external returns (uint);
+
+    function() external payable;
 }
