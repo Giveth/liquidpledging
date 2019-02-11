@@ -1,6 +1,6 @@
 {
   "name": "giveth-liquidpledging",
-  "version": "2.0.0-beta.3",
+  "version": "2.0.0-beta.4",
   "description": "Liquid Pledging Smart Contract",
   "main": "index.js",
   "directories": {

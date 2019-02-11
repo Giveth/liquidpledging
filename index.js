@@ -1,15 +1,15 @@
 const generateClass = require('eth-contract-class').default;
 
-const LPFactoryArtifact = require('../dist/contracts/LPFactory.json');
-const LiquidPledgingArtifact = require('../dist/contracts/LiquidPledging.json');
-const LPVaultArtifact = require('../dist/contracts/LPVault.json');
-const KernelArtifact = require('../dist/contracts/Kernel.json');
-const DAOFactoryArtifact = require('../dist/contracts/DAOFactory.json');
-const ACLArtifact = require('../dist/contracts/ACL.json');
-const AppProxyUpgradeableArtifact = require('../dist/contracts/AppProxyUpgradeable.json');
-const StandardTokenTestAtifact = require('../dist/contracts/StandardToken.json');
-const LiquidPledgingMockArtifact = require('../dist/contracts/LiquidPledgingMock.json');
-const RecoveryVaultArtifact = require('../dist/contracts/RecoveryVault.json');
+const LPFactoryArtifact = require('./dist/contracts/LPFactory.json');
+const LiquidPledgingArtifact = require('./dist/contracts/LiquidPledging.json');
+const LPVaultArtifact = require('./dist/contracts/LPVault.json');
+const KernelArtifact = require('./dist/contracts/Kernel.json');
+const DAOFactoryArtifact = require('./dist/contracts/DAOFactory.json');
+const ACLArtifact = require('./dist/contracts/ACL.json');
+const AppProxyUpgradeableArtifact = require('./dist/contracts/AppProxyUpgradeable.json');
+const StandardTokenTestAtifact = require('./dist/contracts/StandardToken.json');
+const LiquidPledgingMockArtifact = require('./dist/contracts/LiquidPledgingMock.json');
+const RecoveryVaultArtifact = require('./dist/contracts/RecoveryVault.json');
 const assertFail = require('./test/helpers/assertFail');
 const { embarkConfig, deploy: deployLP } = require('./test/helpers/deployLP');
 
@@ -22,7 +22,7 @@ module.exports = {
     LPFactoryArtifact.abiDefinition,
     LPFactoryArtifact.code,
   ),
-  LiquidPledgingState: require('../js/liquidPledgingState.js'),
+  LiquidPledgingState: require('./js/liquidPledgingState.js'),
   LPVault: generateClass(
     LPVaultArtifact.abiDefinition,
     LPVaultArtifact.code,
