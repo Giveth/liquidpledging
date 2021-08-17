@@ -1,6 +1,6 @@
 {
   "name": "giveth-liquidpledging",
-  "version": "2.0.0-beta.4",
+  "version": "2.0.0-beta.5",
   "description": "Liquid Pledging Smart Contract",
   "main": "index.js",
   "directories": {
@@ -31,23 +31,23 @@
     "url": "https://github.com/Giveth/liquidpledging/issues"
   },
   "devDependencies": {
-    "embark-solc": "git+https://git@github.com/embark-framework/embark-solc.git#develop",
+    "embark-solc": "^4.1.1",
     "eslint-config-airbnb": "^15.0.1",
     "eslint-plugin-import": "^2.6.0",
     "eslint-plugin-jsx-a11y": "^6.0.2",
     "eslint-plugin-react": "^7.1.0",
-    "ganache-cli": "^6.1.3",
-    "lerna": "^2.2.0",
+    "ganache-cli": "^6.12.2",
     "mocha": "^3.5.0",
     "random-bytes": "^1.0.0",
-    "web3": "1.0.0-beta.34"
+    "sha3": "^1.2.6",
+    "web3": "^1.5.2"
   },
   "homepage": "https://github.com/Giveth/liquidpledging#readme",
   "dependencies": {
     "@aragon/os": "4.0.1",
+    "@giveth/eth-contract-class": "^1.0.2",
     "async": "^2.4.0",
     "chai": "^4.1.0",
-    "embark": "4.0.0-beta.0",
-    "eth-contract-class": "^0.0.13-beta.1"
+    "embark": "^4.1.1"
   }
 }

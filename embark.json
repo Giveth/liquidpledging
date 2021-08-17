@@ -14,13 +14,13 @@
     "webserver": false
   },
   "versions": {
-    "web3": "1.0.0-beta",
+    "web3": "1.5.2",
     "solc": "0.4.24",
     "ipfs-api": "17.2.4"
   },
   "plugins": {
     "embark-solc": {},
-    "eth-contract-class/embark": {}
+    "@giveth/eth-contract-class/embark": {}
   },
   "options": {
     "solc": {
