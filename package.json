@@ -10,7 +10,7 @@
   "scripts": {
     "test": "embark test",
     "build": "embark build --contracts",
-    "prepublish": "npm run build"
+    "prepare": "npm run build"
   },
   "repository": {
     "type": "git",
