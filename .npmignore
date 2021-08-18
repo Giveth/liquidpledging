@@ -4,3 +4,10 @@ coverage
 .embark
 .vscode
 .idea
+embarkArtifacts
+.eslintrc
+.soliumignore
+.soliumrc.json
+test/*.js
+.travis.yml
+embark.json
