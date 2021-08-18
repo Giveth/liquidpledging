@@ -29,18 +29,18 @@ Welcome to the code for the liquidpledging contract, a new way to distribute don
     ```
 
 ### Requirements
-Make sure you have [NodeJS](https://nodejs.org/) (v8.4.0 or higher) and [npm](https://www.npmjs.com/) (5.4.1 or higher) installed.
+Make sure you have [NodeJS](https://nodejs.org/) (v10.x) and [npm](https://www.npmjs.com/) (6.x) installed.
 
 You will also need to install embark globally using yarn
 
 ```
-npm i -g embark@next
+npm i -g embark@4.1.1
 ```
 
 ### Package
 The liquidpledging contract is published as an npm package for developer convenience. To include it as a dependency in your package.json run this from your apps root dirctory.
 ```
- npm install liquidpledging --save
+ npm install @giveth/liquidpledging-class --save
 ```
 
 ## Run demo
