@@ -1,5 +1,5 @@
 {
-  "name": "@giveth/liquidpledging",
+  "name": "@giveth/liquidpledging-contract",
   "version": "2.0.0-beta.5",
   "description": "Liquid Pledging Smart Contract",
   "main": "index.js",
