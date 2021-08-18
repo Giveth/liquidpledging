@@ -1,4 +1,4 @@
-const generateClass = require('eth-contract-class').default;
+const generateClass = require('@giveth/eth-contract-class').default;
 
 const contracts = require('./lib/contracts');
 contracts.test.assertFail = require('./test/helpers/assertFail');
