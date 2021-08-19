@@ -1,6 +1,6 @@
 {
   "name": "@giveth/liquidpledging-contract",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Liquid Pledging Smart Contract",
   "main": "index.js",
   "directories": {
@@ -36,7 +36,8 @@
   "files": [
     "lib",
     "contracts",
-    "build/*.json"
+    "build/*.json",
+    "test/helpers"
   ],
   "devDependencies": {
     "babel-cli": "^6.26.0",
