@@ -46,7 +46,7 @@
   "dependencies": {
     "@aragon/os": "4.0.1",
     "@giveth/eth-contract-class": "^1.0.2",
-    "async": "^2.4.0",
+    "async": "^3.2.2",
     "chai": "^4.1.0",
     "embark": "^4.1.1"
   }
