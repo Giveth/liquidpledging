@@ -48,6 +48,6 @@
     "@giveth/eth-contract-class": "^1.0.2",
     "async": "^2.4.0",
     "chai": "^4.1.0",
-    "embark": "^4.1.1"
+    "embark": "^6.0.0"
   }
 }
